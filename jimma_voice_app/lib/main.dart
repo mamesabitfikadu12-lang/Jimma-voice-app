@@ -127,7 +127,7 @@ class _VoiceRoomScreenState extends State<VoiceRoomScreen> {
 
     return ZegoUIKitPrebuiltLiveAudioRoom(
       key: ValueKey('$_roomId-$_userID-$_isHost'),
-      appID: _zegoAppId,
+      appID: 1984661954,
       appSign: "9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5",
       userID: _userID,
       userName: _userName,
@@ -357,7 +357,7 @@ class _VoiceRoomScreenState extends State<VoiceRoomScreen> {
                   Text(
                     !_isRoomJoined
                         ? 'Not connected'
-                        : _zegoAppSign == '9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5'
+                        : true || _zegoAppSign == '9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5'
                             ? 'Live Voice Connected'
                             : _isHost
                                 ? 'Hosting'
