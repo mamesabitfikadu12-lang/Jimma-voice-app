@@ -128,7 +128,7 @@ class _VoiceRoomScreenState extends State<VoiceRoomScreen> {
     return ZegoUIKitPrebuiltLiveAudioRoom(
       key: ValueKey('$_roomId-$_userID-$_isHost'),
       appID: _zegoAppId,
-      appSign: _zegoAppSign,
+      appSign: "9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5",
       userID: _userID,
       userName: _userName,
       roomID: _roomId,
