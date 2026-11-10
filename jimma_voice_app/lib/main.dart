@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zego_uikit_prebuilt_live_audio_room/zego_uikit_prebuilt_live_audio_room.dart';
 
 void main() {
   runApp(const MyApp());
@@ -40,21 +41,111 @@ class _VoiceRoomScreenState extends State<VoiceRoomScreen> {
   static const _muted = Color(0xFF939B93);
   static const _etbPerUsd = 150.0;
   static const _packagePricesEtb = {10000: 10, 30000: 25, 60000: 50};
+  static const _zegoAppId = 1984661954;
+  static const _zegoAppSign = '9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5';
+  static const _roomId = '602841';
 
   int _coins = 30000;
   int _diamonds = 0;
-  final List<bool> _micActive = [true, false, true, false, false, false, false, false];
+  late final String _userID;
+  late final String _userName;
+  bool _isRoomJoined = false;
+  bool _isHost = false;
 
-  final List<_RoomSeat> _seats = const [
-    _RoomSeat('Abdi', 'HOST', Color(0xFF8C6F51), Icons.person),
-    _RoomSeat('Hana', 'SPEAKER', Color(0xFF9D6871), Icons.face_3),
-    _RoomSeat('Miki', 'SPEAKER', Color(0xFF577C70), Icons.face_6),
-    _RoomSeat('Seat 04', 'LISTENER', Color(0xFF65728B), Icons.person_outline),
-    _RoomSeat('Seat 05', 'LISTENER', Color(0xFF806F9A), Icons.person_outline),
-    _RoomSeat('Seat 06', 'LISTENER', Color(0xFF8E7557), Icons.person_outline),
-    _RoomSeat('Seat 07', 'LISTENER', Color(0xFF557F8A), Icons.person_outline),
-    _RoomSeat('Seat 08', 'LISTENER', Color(0xFF87635B), Icons.person_outline),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    final guestId = DateTime.now().microsecondsSinceEpoch;
+    _userID = 'guest_$guestId';
+    _userName = 'Guest${guestId % 100000}';
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showRoomOptions());
+  }
+
+  Future<void> _showRoomOptions() async {
+    final action = await showDialog<_RoomAction>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(_isRoomJoined ? 'Room options' : 'Join Jimma Voice Party'),
+        content: Text(
+          _isRoomJoined
+              ? 'Change your room role or leave the room.'
+              : 'Start the room as its host, or join as an audience member.',
+        ),
+        actions: [
+          if (_isRoomJoined)
+            TextButton(
+              onPressed: () => Navigator.pop(context, _RoomAction.leave),
+              child: const Text('Leave room'),
+            )
+          else
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Not now'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, _RoomAction.audience),
+            child: const Text('Join as audience'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, _RoomAction.host),
+            child: const Text('Start as host'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || action == null) return;
+    if (action == _RoomAction.leave) {
+      setState(() => _isRoomJoined = false);
+      return;
+    }
+
+    final isHost = action == _RoomAction.host;
+    if (_isRoomJoined && isHost == _isHost) return;
+
+    if (_isRoomJoined) {
+      setState(() => _isRoomJoined = false);
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+    }
+
+    setState(() {
+      _isHost = isHost;
+      _isRoomJoined = true;
+    });
+  }
+
+  Widget _buildZegoRoom() {
+    final config = _isHost
+        ? ZegoUIKitPrebuiltLiveAudioRoomConfig.host()
+        : ZegoUIKitPrebuiltLiveAudioRoomConfig.audience();
+    config.background = const ColoredBox(color: Color(0xFF101411));
+    config.seat.closeWhenJoining = false;
+    config.seat.soundWaveColor = _accent;
+    config.topMenuBar.buttons = const [];
+    config.duration.isVisible = false;
+
+    return ZegoUIKitPrebuiltLiveAudioRoom(
+      key: ValueKey('$_roomId-$_userID-$_isHost'),
+      appID: _zegoAppId,
+      appSign: _zegoAppSign,
+      userID: _userID,
+      userName: _userName,
+      roomID: _roomId,
+      config: config,
+      events: ZegoUIKitPrebuiltLiveAudioRoomEvents(
+        onError: (error) {
+          debugPrint('ZEGOCLOUD live room error: $error');
+          if (!mounted) return;
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(content: Text('ZEGOCLOUD connection error: $error')),
+            );
+        },
+      ),
+    );
+  }
 
   String _formatBalance(int value) => value.toString().replaceAllMapped(
         RegExp(r'\B(?=(\d{3})+(?!\d))'),
@@ -263,23 +354,28 @@ class _VoiceRoomScreenState extends State<VoiceRoomScreen> {
                   const Spacer(),
                   Icon(Icons.graphic_eq, size: 15, color: _accent),
                   const SizedBox(width: 5),
-                  Text('${_micActive.where((active) => active).length} speaking', style: const TextStyle(fontSize: 11, color: _muted)),
+                  Text(
+                    !_isRoomJoined
+                        ? 'Not connected'
+                        : _zegoAppSign == '9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5'
+                            ? 'Set AppSign'
+                            : _isHost
+                                ? 'Hosting'
+                                : 'Listening',
+                    style: const TextStyle(fontSize: 11, color: _muted),
+                  ),
                 ],
               ),
             ),
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 5, 16, 12),
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  crossAxisSpacing: 9,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 0.76,
-                ),
-                itemCount: _seats.length,
-                itemBuilder: (context, index) => _buildSeat(index),
-              ),
+              child: _isRoomJoined
+                  ? _buildZegoRoom()
+                  : const Center(
+                      child: Text(
+                        'Choose a room role to connect.',
+                        style: TextStyle(color: _muted),
+                      ),
+                    ),
             ),
             _buildWalletAndGifts(),
           ],
@@ -296,12 +392,16 @@ class _VoiceRoomScreenState extends State<VoiceRoomScreen> {
         child: Row(
           children: [
             IconButton(
-              tooltip: 'Leave room',
-              onPressed: () {},
+              tooltip: _isRoomJoined ? 'Room options' : 'Join room',
+              onPressed: _showRoomOptions,
               icon: const Icon(Icons.arrow_back_ios_new, size: 19),
             ),
             const Spacer(),
-            const Icon(Icons.more_horiz, size: 24),
+            IconButton(
+              tooltip: 'Room options',
+              onPressed: _showRoomOptions,
+              icon: const Icon(Icons.more_horiz, size: 24),
+            ),
           ],
         ),
       ),
@@ -347,11 +447,11 @@ class _VoiceRoomScreenState extends State<VoiceRoomScreen> {
                 const SizedBox(height: 5),
                 Row(
                   children: [
-                    const Text('Room  •  602841', style: TextStyle(color: _muted, fontSize: 11)),
+                    const Text('Room  •  $_roomId', style: TextStyle(color: _muted, fontSize: 11)),
                     const SizedBox(width: 9),
-                    const Icon(Icons.remove_red_eye_outlined, size: 13, color: _muted),
+                    Icon(_isHost ? Icons.mic : Icons.headphones, size: 13, color: _muted),
                     const SizedBox(width: 4),
-                    const Text('128', style: TextStyle(color: _muted, fontSize: 11)),
+                    Text(_isHost ? 'Host' : 'Audience', style: const TextStyle(color: _muted, fontSize: 11)),
                     const SizedBox(width: 8),
                     Icon(Icons.circle, size: 6, color: _accent),
                     const SizedBox(width: 4),
@@ -362,64 +462,6 @@ class _VoiceRoomScreenState extends State<VoiceRoomScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSeat(int index) {
-    final seat = _seats[index];
-    final active = _micActive[index];
-    final occupied = index < 3;
-    return Semantics(
-      button: true,
-      label: '${seat.name}, microphone ${active ? 'on' : 'off'}',
-      child: InkWell(
-        borderRadius: BorderRadius.circular(15),
-        onTap: () => setState(() => _micActive[index] = !active),
-        child: Container(
-          decoration: BoxDecoration(
-            color: active ? const Color(0xFF222C21) : const Color(0xFF191E1A),
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: active ? _accent.withValues(alpha: 0.52) : Colors.white.withValues(alpha: 0.045)),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: occupied ? seat.color : const Color(0xFF292F2B),
-                      border: Border.all(color: active ? _accent : Colors.white.withValues(alpha: 0.06), width: active ? 2 : 1),
-                    ),
-                    child: Icon(occupied ? seat.icon : Icons.add, color: occupied ? Colors.white : const Color(0xFF788078), size: 22),
-                  ),
-                  Positioned(
-                    right: -3,
-                    bottom: -2,
-                    child: Container(
-                      width: 19,
-                      height: 19,
-                      decoration: BoxDecoration(color: active ? _accent : const Color(0xFF303631), shape: BoxShape.circle, border: Border.all(color: const Color(0xFF191E1A), width: 2)),
-                      child: Icon(active ? Icons.mic : Icons.mic_off, size: 10, color: active ? const Color(0xFF1A2116) : const Color(0xFF929A93)),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 9),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: Text(seat.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-              ),
-              const SizedBox(height: 4),
-              Text(seat.role, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 8, color: active ? _accent : _muted, fontWeight: FontWeight.w700)),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -486,14 +528,7 @@ class _VoiceRoomScreenState extends State<VoiceRoomScreen> {
   }
 }
 
-class _RoomSeat {
-  const _RoomSeat(this.name, this.role, this.color, this.icon);
-
-  final String name;
-  final String role;
-  final Color color;
-  final IconData icon;
-}
+enum _RoomAction { host, audience, leave }
 
 class _PaymentMethod {
   const _PaymentMethod(this.name, this.category, this.icon, this.color);
