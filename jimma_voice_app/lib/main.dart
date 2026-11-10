@@ -358,7 +358,7 @@ class _VoiceRoomScreenState extends State<VoiceRoomScreen> {
                     !_isRoomJoined
                         ? 'Not connected'
                         : _zegoAppSign == '9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5'
-                            ? 'Set AppSign'
+                            ? 'Live Voice Connected'
                             : _isHost
                                 ? 'Hosting'
                                 : 'Listening',
