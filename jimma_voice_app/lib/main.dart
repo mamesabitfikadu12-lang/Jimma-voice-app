@@ -1,677 +1,355 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:zego_uikit_prebuilt_live_audio_room/zego_uikit_prebuilt_live_audio_room.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() { WidgetsFlutterBinding.ensureInitialized(); runApp(const JimmaApp()); }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
+class JimmaApp extends StatelessWidget {
+  const JimmaApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Jimma Voice Chat Family',
       debugShowCheckedModeBanner: false,
-      title: 'Jimma Voice Party',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF101411),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFB7F36B),
-          secondary: Color(0xFFFFC56D),
-          surface: Color(0xFF1A201C),
-        ),
-        fontFamily: 'Roboto',
-        useMaterial3: true,
-      ),
-      home: const VoiceRoomScreen(),
+      theme: ThemeData(useMaterial3: true, colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00B894)), scaffoldBackgroundColor: const Color(0xFFF4FBF9)),
+      home: const MainNav(),
     );
   }
 }
 
-class VoiceRoomScreen extends StatefulWidget {
-  const VoiceRoomScreen({super.key});
-
+class AppData {
+  static int coins = 30000, points = 12500, vip = 2, invited = 18;
+  static String uid = "8849201", name = "Jimma VIP King", invite = "JIMMA884";
+  static final tickets = <Map<String, dynamic>>[
+    {"id": "TCK-1042", "user": "User #492011", "title": "600 ETB -> 40,000 Coins", "msg": "Telebirr +251919108311", "status": "Pending", "coins": 40000},
+    {"id": "TCK-1041", "user": "User #773120", "title": "10 USDT -> 100,000 Coins", "msg": "TRC20 TYdr3JdbDzhxjfsGeU3yazNAmTbkHBuNcE", "status": "Resolved", "coins": 100000},
+  ];
+  static final payments = [
+    {"name": "Telebirr", "acc": "+251919108311", "cur": "ETB"},
+    {"name": "CBEBirr", "acc": "+251919108311", "cur": "ETB"},
+    {"name": "Siinqee Plus Wallet", "acc": "+251919108311", "cur": "ETB"},
+    {"name": "CBE Bank", "acc": "1000273060937", "cur": "ETB"},
+    {"name": "Awash Bank", "acc": "014251157710000", "cur": "ETB"},
+    {"name": "Dashen Bank", "acc": "2952945930711", "cur": "ETB"},
+    {"name": "Binance USDT (TRC20)", "acc": "TYdr3JdbDzhxjfsGeU3yazNAmTbkHBuNcE", "cur": "USDT"},
+  ];
+}
+class MainNav extends StatefulWidget {
+  const MainNav({super.key});
   @override
-  State<VoiceRoomScreen> createState() => _VoiceRoomScreenState();
+  State<MainNav> createState() => _MainNavState();
 }
 
-class _VoiceRoomScreenState extends State<VoiceRoomScreen> {
-  static const _accent = Color(0xFFB7F36B);
-  static const _muted = Color(0xFF939B93);
-  static const _etbPerUsd = 150.0;
-  static const _packagePricesEtb = {10000: 10, 30000: 25, 60000: 50};
-  static const _zegoAppId = 1984661954;
-  static const _zegoAppSign = '9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5';
-  static const _roomId = '602841';
-
-  int _coins = 30000;
-  int _diamonds = 0;
-  late final String _userID;
-  late final String _userName;
-  bool _isRoomJoined = false;
-  bool _isHost = false;
-
+class _MainNavState extends State<MainNav> {
+  int idx = 0;
+  void upd() => setState(() {});
   @override
-  void initState() {
-    super.initState();
-    final guestId = DateTime.now().microsecondsSinceEpoch;
-    _userID = 'guest_$guestId';
-    _userName = 'Guest${guestId % 100000}';
-    WidgetsBinding.instance.addPostFrameCallback((_) => _showRoomOptions());
-  }
-
-  Future<void> _showRoomOptions() async {
-    final action = await showDialog<_RoomAction>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(_isRoomJoined ? 'Room options' : 'Join Jimma Voice Party'),
-        content: Text(
-          _isRoomJoined
-              ? 'Change your room role or leave the room.'
-              : 'Start the room as its host, or join as an audience member.',
-        ),
-        actions: [
-          if (_isRoomJoined)
-            TextButton(
-              onPressed: () => Navigator.pop(context, _RoomAction.leave),
-              child: const Text('Leave room'),
-            )
-          else
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Not now'),
-            ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, _RoomAction.audience),
-            child: const Text('Join as audience'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, _RoomAction.host),
-            child: const Text('Start as host'),
-          ),
+  Widget build(BuildContext context) {
+    final pages = [RoomTab(onUpd: upd), const MomentTab(), const MsgTab(), MeTab(onUpd: upd)];
+    return Scaffold(
+      body: pages[idx],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: idx,
+        onTap: (i) => setState(() => idx = i),
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: const Color(0xFF00B894),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.graphic_eq), label: "Room"),
+          BottomNavigationBarItem(icon: Icon(Icons.explore), label: "Moment"),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: "Message"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Me"),
         ],
       ),
     );
-
-    if (!mounted || action == null) return;
-    if (action == _RoomAction.leave) {
-      setState(() => _isRoomJoined = false);
-      return;
-    }
-
-    final isHost = action == _RoomAction.host;
-    if (_isRoomJoined && isHost == _isHost) return;
-
-    if (_isRoomJoined) {
-      setState(() => _isRoomJoined = false);
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted) return;
-    }
-
-    setState(() {
-      _isHost = isHost;
-      _isRoomJoined = true;
-    });
   }
+}
 
-  Widget _buildZegoRoom() {
-    final config = _isHost
-        ? ZegoUIKitPrebuiltLiveAudioRoomConfig.host()
-        : ZegoUIKitPrebuiltLiveAudioRoomConfig.audience();
-    config.background = const ColoredBox(color: Color(0xFF101411));
-    config.seat.closeWhenJoining = false;
-    config.seat.soundWaveColor = _accent;
-    config.topMenuBar.buttons = const [];
-    config.duration.isVisible = false;
+class RoomTab extends StatefulWidget {
+  final VoidCallback onUpd;
+  const RoomTab({super.key, required this.onUpd});
+  @override
+  State<RoomTab> createState() => _RoomTabState();
+}
 
-    return ZegoUIKitPrebuiltLiveAudioRoom(
-      key: ValueKey('$_roomId-$_userID-$_isHost'),
-      appID: 1984661954,
-      appSign: "9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5",
-      userID: _userID,
-      userName: _userName,
-      roomID: _roomId,
-      config: config,
-      events: ZegoUIKitPrebuiltLiveAudioRoomEvents(
-        onError: (error) {
-          debugPrint('ZEGOCLOUD live room error: $error');
-          if (!mounted) return;
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(content: Text('ZEGOCLOUD connection error: $error')),
-            );
-        },
+class _RoomTabState extends State<RoomTab> {
+  String country = "All";
+  @override
+  Widget build(BuildContext context) {
+    final rooms = [
+      {"id": "602841", "title": "Jimma Voice Chat Family Official", "tag": "Official", "c": "Ethiopia", "u": 148},
+      {"id": "889102", "title": "Official Coin Seller & VIP Agency", "tag": "Coin Seller", "c": "International", "u": 94},
+      {"id": "334910", "title": "Oromo & Global Music Party", "tag": "Music", "c": "USA & Europe", "u": 76},
+      {"id": "551209", "title": "Lucky Island & Royal Spin Arena", "tag": "Games", "c": "Middle East", "u": 112},
+    ].where((r) => country == "All" || r["c"] == country).toList();
+
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.all(14),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF00B894), Color(0xFF00CEC9)]), borderRadius: BorderRadius.circular(20)),
+            child: Column(children: [
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                const Text("Jimma Voice Chat Family", style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+                Row(children: [
+                  IconButton(icon: const Icon(Icons.account_balance_wallet, color: Color(0xFFFFD700)), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RechargePage(onUpd: widget.onUpd)))),
+                  IconButton(icon: const Icon(Icons.add_circle, color: Colors.white), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LiveRoomPage(id: "602841", title: "My Voice Room", host: true, onUpd: widget.onUpd)))),
+                ]),
+              ]),
+              const SizedBox(height: 10),
+              InkWell(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SpinPage(onUpd: widget.onUpd))),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFFFB800), Color(0xFFFF8C00)]), borderRadius: BorderRadius.circular(14)),
+                  child: const Row(children: [
+                    Icon(Icons.casino, color: Colors.white, size: 32),
+                    SizedBox(width: 10),
+                    Expanded(child: Text("LUCKY ISLAND SPIN • Win up to 100,000 Coins!", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+                    Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                  ]),
+                ),
+              ),
+            ]),
+          ),
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: ["All", "Ethiopia", "International", "Middle East", "USA & Europe"].map((c) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(label: Text(c), selected: country == c, onSelected: (_) => setState(() => country = c)),
+            )).toList()),
+          ),
+          const SizedBox(height: 10),
+          ...rooms.map((r) => Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ListTile(
+              leading: const CircleAvatar(backgroundColor: Color(0xFF00B894), child: Icon(Icons.mic, color: Colors.white)),
+              title: Text(r["title"].toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text("ID: ${r["id"]} • ${r["tag"]} • ${r["c"]}"),
+              trailing: Text("${r["u"]} Live", style: const TextStyle(color: Color(0xFF00B894), fontWeight: FontWeight.bold)),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LiveRoomPage(id: r["id"].toString(), title: r["title"].toString(), host: true, onUpd: widget.onUpd))),
+            ),
+          )),
+        ],
       ),
     );
   }
+}
 
-  String _formatBalance(int value) => value.toString().replaceAllMapped(
-        RegExp(r'\B(?=(\d{3})+(?!\d))'),
-        (_) => ',',
-      );
+class LiveRoomPage extends StatefulWidget {
+  final String id, title;
+  final bool host;
+  final VoidCallback onUpd;
+  const LiveRoomPage({super.key, required this.id, required this.title, required this.host, required this.onUpd});
+  @override
+  State<LiveRoomPage> createState() => _LiveRoomPageState();
+}
 
-  String _formatPackagePrice(int amount, {required bool international}) {
-    final priceEtb = _packagePricesEtb[amount]!;
-    if (!international) return '$priceEtb ETB';
-    return '\$${(priceEtb / _etbPerUsd).toStringAsFixed(2)}';
-  }
-
-  void _sendGift(String name, int cost) {
-    if (_coins < cost) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Not enough coins. Top up to send this gift.')),
-      );
-      return;
-    }
-    setState(() {
-      _coins -= cost;
-      _diamonds += (cost * 0.7).round();
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$name sent. ${_formatBalance((cost * 0.7).round())} diamonds earned.')),
-    );
-  }
-
-  void _showTopUpSheet() {
-    const packages = [10000, 30000, 60000];
-    const methods = [
-      _PaymentMethod('Telebirr', 'Mobile money', Icons.phone_android, Color(0xFF7EE3C1)),
-      _PaymentMethod('M-Pesa', 'Mobile money', Icons.phone_android, Color(0xFF72D58B)),
-      _PaymentMethod('CBE', 'Ethiopian bank', Icons.account_balance, Color(0xFF77A8FF)),
-      _PaymentMethod('Awash', 'Ethiopian bank', Icons.account_balance, Color(0xFFFFA96D)),
-      _PaymentMethod('Abyssinia', 'Ethiopian bank', Icons.account_balance, Color(0xFFE9C65F)),
-      _PaymentMethod('USDT', 'Crypto', Icons.currency_exchange, Color(0xFF69C9A8)),
-      _PaymentMethod('Visa', 'Card', Icons.credit_card, Color(0xFF8FA9FF)),
-    ];
-
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        var selectedPackage = 30000;
-        var selectedMethod = 'Telebirr';
-        var isInternational = false;
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            final screenHeight = MediaQuery.sizeOf(context).height;
-            return Container(
-              constraints: BoxConstraints(maxHeight: screenHeight * 0.9),
-              decoration: const BoxDecoration(
-                color: Color(0xFF171D19),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 12, 10),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 34,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Colors.white24,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          const Spacer(),
-                          const Text('Top up coins', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                          const Spacer(),
-                          IconButton(
-                            tooltip: 'Close',
-                            onPressed: () => Navigator.pop(context),
-                            icon: const Icon(Icons.close, size: 20),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Flexible(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SegmentedButton<bool>(
-                              segments: const [
-                                ButtonSegment(value: false, label: Text('Ethiopia')),
-                                ButtonSegment(value: true, label: Text('International')),
-                              ],
-                              selected: {isInternational},
-                              showSelectedIcon: false,
-                              onSelectionChanged: (selection) {
-                                setSheetState(() {
-                                  isInternational = selection.first;
-                                  selectedMethod = isInternational ? 'USDT' : 'Telebirr';
-                                });
-                              },
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              isInternational ? 'Prices in USD / USDT' : 'Prices in ETB',
-                              style: const TextStyle(fontSize: 11, color: _muted),
-                            ),
-                            const SizedBox(height: 14),
-                            const Text('Choose a coin pack', style: TextStyle(fontSize: 13, color: _muted)),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: packages.map((amount) {
-                                final selected = selectedPackage == amount;
-                                return Expanded(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(right: amount == packages.last ? 0 : 8),
-                                    child: _PackageOption(
-                                      amount: amount,
-                                      price: _formatPackagePrice(amount, international: isInternational),
-                                      selected: selected,
-                                      onTap: () => setSheetState(() => selectedPackage = amount),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                            const SizedBox(height: 22),
-                            const Text('Payment method', style: TextStyle(fontSize: 13, color: _muted)),
-                            const SizedBox(height: 10),
-                            for (final section in isInternational ? ['International'] : ['Mobile money', 'Ethiopian banks', 'Other']) ...[
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8, bottom: 8),
-                                child: Text(
-                                  section,
-                                  style: const TextStyle(fontSize: 11, color: _muted, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: methods.where((method) {
-                                  if (isInternational) return method.name == 'USDT' || method.name == 'Visa';
-                                  if (section == 'Mobile money') return method.name == 'Telebirr' || method.name == 'M-Pesa';
-                                  if (section == 'Ethiopian banks') return ['CBE', 'Awash', 'Abyssinia'].contains(method.name);
-                                  return method.name == 'USDT' || method.name == 'Visa';
-                                }).map((method) {
-                                  return _PaymentOption(
-                                    method: method,
-                                    selected: selectedMethod == method.name,
-                                    onTap: () => setSheetState(() => selectedMethod = method.name),
-                                  );
-                                }).toList(),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: FilledButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(this.context).showSnackBar(
-                              SnackBar(content: Text('$selectedMethod payment is not connected yet.')),
-                            );
-                          },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _accent,
-                            foregroundColor: const Color(0xFF172012),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          ),
-                          child: Text('Continue with $selectedMethod', style: const TextStyle(fontWeight: FontWeight.w700)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
+class _LiveRoomPageState extends State<LiveRoomPage> {
+  void gift(String n, int c) {
+    if (AppData.coins < c) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Low Coins! Please Recharge."))); return; }
+    setState(() { AppData.coins -= c; AppData.points += c ~/ 2; });
+    widget.onUpd();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Sent $n (-$c Coins)!")));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(),
-            _buildRoomHeader(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 9),
-              child: Row(
-                children: [
-                  const Text('MIC SEATS', style: TextStyle(fontSize: 11, letterSpacing: 1.2, color: _muted, fontWeight: FontWeight.w700)),
-                  const Spacer(),
-                  Icon(Icons.graphic_eq, size: 15, color: _accent),
-                  const SizedBox(width: 5),
-                  Text(
-                    !_isRoomJoined
-                        ? 'Not connected'
-                        : true || _zegoAppSign == '9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5'
-                            ? 'Live Voice Connected'
-                            : _isHost
-                                ? 'Hosting'
-                                : 'Listening',
-                    style: const TextStyle(fontSize: 11, color: _muted),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: _isRoomJoined
-                  ? _buildZegoRoom()
-                  : const Center(
-                      child: Text(
-                        'Choose a room role to connect.',
-                        style: TextStyle(color: _muted),
-                      ),
-                    ),
-            ),
-            _buildWalletAndGifts(),
-          ],
+      appBar: AppBar(title: Text("${widget.title} (${AppData.coins} Coins)"), backgroundColor: const Color(0xFF062C24), foregroundColor: Colors.white),
+      body: Column(children: [
+        Expanded(
+          child: ZegoUIKitPrebuiltLiveAudioRoom(
+            appID: 1984661954,
+            appSign: "9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5",
+            userID: AppData.uid,
+            userName: AppData.name,
+            roomID: widget.id,
+            config: widget.host ? ZegoUIKitPrebuiltLiveAudioRoomConfig.host() : ZegoUIKitPrebuiltLiveAudioRoomConfig.audience(),
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 16, 0),
-      child: SizedBox(
-        height: 48,
-        child: Row(
-          children: [
-            IconButton(
-              tooltip: _isRoomJoined ? 'Room options' : 'Join room',
-              onPressed: _showRoomOptions,
-              icon: const Icon(Icons.arrow_back_ios_new, size: 19),
-            ),
-            const Spacer(),
-            IconButton(
-              tooltip: 'Room options',
-              onPressed: _showRoomOptions,
-              icon: const Icon(Icons.more_horiz, size: 24),
-            ),
-          ],
+        Container(
+          color: const Color(0xFF062C24),
+          padding: const EdgeInsets.all(10),
+          child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+            ElevatedButton(onPressed: () => gift("Coffee", 500), child: const Text("Coffee 500")),
+            ElevatedButton(onPressed: () => gift("Lion", 5000), child: const Text("Lion 5000")),
+            ElevatedButton(onPressed: () => gift("Car", 15000), child: const Text("Car 15000")),
+          ]),
         ),
-      ),
-    );
-  }
-
-  Widget _buildRoomHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 5, 20, 0),
-      child: Row(
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(17),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF738D48), Color(0xFF283A2A), Color(0xFF202720)],
-              ),
-            ),
-            child: const Icon(Icons.graphic_eq, color: _accent, size: 30),
-          ),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Flexible(
-                      child: Text('Jimma Voice Party', overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700)),
-                    ),
-                    const SizedBox(width: 7),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(color: const Color(0xFF522E2A), borderRadius: BorderRadius.circular(5)),
-                      child: const Text('LIVE', style: TextStyle(color: Color(0xFFFF8978), fontSize: 9, fontWeight: FontWeight.w800)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  children: [
-                    const Text('Room  •  $_roomId', style: TextStyle(color: _muted, fontSize: 11)),
-                    const SizedBox(width: 9),
-                    Icon(_isHost ? Icons.mic : Icons.headphones, size: 13, color: _muted),
-                    const SizedBox(width: 4),
-                    Text(_isHost ? 'Host' : 'Audience', style: const TextStyle(color: _muted, fontSize: 11)),
-                    const SizedBox(width: 8),
-                    Icon(Icons.circle, size: 6, color: _accent),
-                    const SizedBox(width: 4),
-                    const Text('Open', style: TextStyle(color: _muted, fontSize: 11)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWalletAndGifts() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-      decoration: const BoxDecoration(
-        color: Color(0xFF171D19),
-        border: Border(top: BorderSide(color: Colors.white10)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              _BalanceChip(icon: Icons.monetization_on, color: const Color(0xFFFFC56D), value: _formatBalance(_coins)),
-              const SizedBox(width: 8),
-              _BalanceChip(icon: Icons.diamond, color: const Color(0xFF8FD9FF), value: _formatBalance(_diamonds)),
-              const Spacer(),
-              SizedBox(
-                height: 36,
-                child: FilledButton.tonalIcon(
-                  onPressed: _showTopUpSheet,
-                  icon: const Icon(Icons.add, size: 17),
-                  label: const Text('Top up', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF293523),
-                    foregroundColor: _accent,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 11),
-          Row(
-            children: [
-              Expanded(
-                child: _GiftButton(
-                  title: 'Coffee',
-                  detail: '5,000 coins',
-                  icon: Icons.coffee,
-                  color: const Color(0xFFC78958),
-                  onTap: () => _sendGift('Coffee', 5000),
-                ),
-              ),
-              const SizedBox(width: 9),
-              Expanded(
-                child: _GiftButton(
-                  title: 'Lion',
-                  detail: '25,000 coins',
-                  icon: Icons.workspace_premium,
-                  color: const Color(0xFFF0C45F),
-                  onTap: () => _sendGift('Lion', 25000),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+      ]),
     );
   }
 }
-
-enum _RoomAction { host, audience, leave }
-
-class _PaymentMethod {
-  const _PaymentMethod(this.name, this.category, this.icon, this.color);
-
-  final String name;
-  final String category;
-  final IconData icon;
-  final Color color;
+class RechargePage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const RechargePage({super.key, required this.onUpd});
+  @override
+  State<RechargePage> createState() => _RechargePageState();
 }
 
-class _BalanceChip extends StatelessWidget {
-  const _BalanceChip({required this.icon, required this.color, required this.value});
+class _RechargePageState extends State<RechargePage> {
+  String cur = "ETB";
+  int sel = 0;
+  final amtCtrl = TextEditingController(text: "150");
+  final txCtrl = TextEditingController();
 
-  final IconData icon;
-  final Color color;
-  final String value;
+  int get coins {
+    final v = double.tryParse(amtCtrl.text) ?? 0;
+    return cur == "ETB" ? ((v / 150.0) * 10000).round() : (v * 10000).round();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(color: const Color(0xFF252C27), borderRadius: BorderRadius.circular(11)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 6),
-          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-        ],
-      ),
+    final pm = AppData.payments[sel];
+    return Scaffold(
+      appBar: AppBar(title: const Text("Unlimited Coin Recharge"), backgroundColor: const Color(0xFF00B894), foregroundColor: Colors.white),
+      body: ListView(padding: const EdgeInsets.all(16), children: [
+        Text("Balance: ${AppData.coins} Coins (150 ETB = 10,000 | 1 USDT = 10,000)", style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(child: ChoiceChip(label: const Text("ETB (Ethiopia)"), selected: cur == "ETB", onSelected: (_) => setState(() { cur = "ETB"; sel = 0; amtCtrl.text = "150"; }))),
+          const SizedBox(width: 10),
+          Expanded(child: ChoiceChip(label: const Text("Binance USDT"), selected: cur == "USDT", onSelected: (_) => setState(() { cur = "USDT"; sel = 6; amtCtrl.text = "1"; }))),
+        ]),
+        const SizedBox(height: 12),
+        Wrap(spacing: 8, children: (cur == "ETB" ? ["150", "300", "600", "1500", "3000"] : ["1", "2", "5", "10", "50"]).map((p) => ActionChip(
+          label: Text("$p $cur"),
+          onPressed: () => setState(() => amtCtrl.text = p),
+        )).toList()),
+        const SizedBox(height: 12),
+        TextField(
+          controller: amtCtrl,
+          keyboardType: TextInputType.number,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(labelText: "Unlimited Custom Amount ($cur)", suffixText: "= $coins Coins", border: const OutlineInputBorder()),
+        ),
+        const SizedBox(height: 12),
+        ...List.generate(AppData.payments.length, (i) {
+          final item = AppData.payments[i];
+          if (item["cur"] != cur) return const SizedBox.shrink();
+          return Card(
+            child: RadioListTile(
+              value: i,
+              groupValue: sel,
+              onChanged: (v) => setState(() => sel = v!),
+              title: Text(item["name"]!, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(item["acc"]!),
+              secondary: IconButton(icon: const Icon(Icons.copy), onPressed: () {
+                Clipboard.setData(ClipboardData(text: item["acc"]!));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Copied ${item["acc"]}")));
+              }),
+            ),
+          );
+        }),
+        const SizedBox(height: 10),
+        TextField(controller: txCtrl, decoration: const InputDecoration(labelText: "Transaction ID / Sender Name", border: OutlineInputBorder())),
+        const SizedBox(height: 14),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00B894), foregroundColor: Colors.white, padding: const EdgeInsets.all(14)),
+          onPressed: () {
+            AppData.tickets.insert(0, {"id": "TCK-${1043 + AppData.tickets.length}", "user": "User #${AppData.uid}", "title": "${amtCtrl.text} $cur -> $coins Coins", "msg": "${pm["name"]}: ${txCtrl.text}", "status": "Pending", "coins": coins});
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Submitted to Support & Admin Panel!")));
+            Navigator.pop(context);
+          },
+          child: Text("Confirm Payment ($coins Coins)"),
+        ),
+      ]),
+    );
+  }
+}
+class SpinPage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const SpinPage({super.key, required this.onUpd});
+  @override
+  State<SpinPage> createState() => _SpinPageState();
+}
+
+class _SpinPageState extends State<SpinPage> {
+  String res = "Spin for 1,000 Coins!";
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Lucky Island Spin"), backgroundColor: const Color(0xFFFFB800), foregroundColor: Colors.white),
+      body: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        const Icon(Icons.casino, size: 90, color: Color(0xFFFFB800)),
+        Text("Coins: ${AppData.coins}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(res, style: const TextStyle(fontSize: 16, color: Color(0xFF00B894))),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () {
+            if (AppData.coins < 1000) return;
+            final prizes =;
+            final win = prizes[Random().nextInt(5)];
+            setState(() { AppData.coins = AppData.coins - 1000 + win; res = "Won $win Coins!"; });
+            widget.onUpd();
+          },
+          child: const Text("SPIN (1,000 Coins)"),
+        ),
+      ])),
     );
   }
 }
 
-class _GiftButton extends StatelessWidget {
-  const _GiftButton({required this.title, required this.detail, required this.icon, required this.color, required this.onTap});
+class SupportPage extends StatefulWidget {
+  const SupportPage({super.key});
+  @override
+  State<SupportPage> createState() => _SupportPageState();
+}
 
-  final String title;
-  final String detail;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
+class _SupportPageState extends State<SupportPage> {
+  final subCtrl = TextEditingController();
+  final msgCtrl = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFF242A25),
-      borderRadius: BorderRadius.circular(13),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(13),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 2),
-                    Text(detail, style: const TextStyle(fontSize: 10, color: Color(0xFFADB4AD))),
-                  ],
-                ),
-              ),
-              Icon(Icons.send_rounded, size: 14, color: color),
-            ],
-          ),
-        ),
-      ),
+    return Scaffold(
+      appBar: AppBar(title: const Text("Customer Support Center"), backgroundColor: const Color(0xFF00B894), foregroundColor: Colors.white),
+      body: ListView(padding: const EdgeInsets.all(16), children: [
+        TextField(controller: subCtrl, decoration: const InputDecoration(labelText: "Issue Subject", border: OutlineInputBorder())),
+        const SizedBox(height: 10),
+        TextField(controller: msgCtrl, decoration: const InputDecoration(labelText: "Details / Transaction ID", border: OutlineInputBorder())),
+        const SizedBox(height: 10),
+        ElevatedButton(onPressed: () {
+          if (subCtrl.text.isEmpty) return;
+          setState(() { AppData.tickets.insert(0, {"id": "TCK-${1043 + AppData.tickets.length}", "user": "User #${AppData.uid}", "title": subCtrl.text, "msg": msgCtrl.text, "status": "Pending", "coins": 0}); subCtrl.clear(); msgCtrl.clear(); });
+        }, child: const Text("Send to Admin Support")),
+        const Divider(),
+        ...AppData.tickets.map((t) => Card(child: ListTile(title: Text("${t["id"]}: ${t["title"]}"), subtitle: Text(t["msg"]), trailing: Text(t["status"])))),
+      ]),
     );
   }
 }
 
-class _PackageOption extends StatelessWidget {
-  const _PackageOption({required this.amount, required this.price, required this.selected, required this.onTap});
-
-  final int amount;
-  final String price;
-  final bool selected;
-  final VoidCallback onTap;
-
+class AdminPage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const AdminPage({super.key, required this.onUpd});
   @override
-  Widget build(BuildContext context) {
-    final label = amount == 10000 ? '10,000' : amount == 30000 ? '30,000' : '60,000';
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFF2A3824) : const Color(0xFF222823),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? const Color(0xFF8DBB54) : Colors.white10),
-        ),
-        child: Column(
-          children: [
-            const Icon(Icons.monetization_on, size: 17, color: Color(0xFFFFC56D)),
-            const SizedBox(height: 5),
-            Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: selected ? const Color(0xFFCBF99B) : Colors.white)),
-            const SizedBox(height: 3),
-            Text(price, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: selected ? const Color(0xFFCBF99B) : const Color(0xFFADB4AD))),
-          ],
-        ),
-      ),
-    );
-  }
+  State<AdminPage> createState() => _AdminPageState();
 }
 
-class _PaymentOption extends StatelessWidget {
-  const _PaymentOption({required this.method, required this.selected, required this.onTap});
-
-  final _PaymentMethod method;
-  final bool selected;
-  final VoidCallback onTap;
-
+class _AdminPageState extends State<AdminPage> {
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: (MediaQuery.sizeOf(context).width - 48) / 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          height: 52,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: selected ? const Color(0xFF2A3824) : const Color(0xFF222823),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: selected ? const Color(0xFF8DBB54) : Colors.white10),
-          ),
-          child: Row(
-            children: [
-              Icon(method.icon, size: 18, color: method.color),
-              const SizedBox(width: 8),
-              Expanded(child: Text(method.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-              if (selected) const Icon(Icons.check_circle, size: 15, color: Color(0xFFB7F36B)),
-            ],
-          ),
-        ),
+    return Scaffold(
+      appBar: AppBar(title: const Text("Super Admin Control Panel"), backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(14),
+        itemCount: AppData.tickets.length,
+        itemBuilder: (_, i) {
+          final t = AppData.tickets[i];
+          return Card(child: ListTile(
+            title: Text("${t["id"]} • ${t["user"]}"),
+            subtitle: Text("${t["title"]}\n${t["msg"]}"),
+            isThreeLine: true,
+            trailing: t["status"] == "Pending" ? ElevatedButton(
+              onPressed: () { setState(() { t["status"] = "Resolved"; AppData.coins += (t["coins"] as int); }); widget.onUpd(); },
+              child: const Text("Approve"),
+            ) : const Icon(Icons.check_circle, color: Colors.green),
+          ));
+        },
       ),
     );
   }
