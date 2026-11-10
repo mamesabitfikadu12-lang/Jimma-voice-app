@@ -503,21 +503,21 @@ class _VoiceRoomScreenState extends State<VoiceRoomScreen> {
             children: [
               Expanded(
                 child: _GiftButton(
-                  title: 'Buna',
+                  title: 'Coffee',
                   detail: '5,000 coins',
                   icon: Icons.coffee,
                   color: const Color(0xFFC78958),
-                  onTap: () => _sendGift('Buna', 5000),
+                  onTap: () => _sendGift('Coffee', 5000),
                 ),
               ),
               const SizedBox(width: 9),
               Expanded(
                 child: _GiftButton(
-                  title: 'Leenca',
+                  title: 'Lion',
                   detail: '25,000 coins',
                   icon: Icons.workspace_premium,
                   color: const Color(0xFFF0C45F),
-                  onTap: () => _sendGift('Leenca', 25000),
+                  onTap: () => _sendGift('Lion', 25000),
                 ),
               ),
             ],
