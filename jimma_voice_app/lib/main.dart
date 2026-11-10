@@ -46,7 +46,7 @@ class _MainNavState extends State<MainNav> {
   void upd() => setState(() {});
   @override
   Widget build(BuildContext context) {
-    final pages = [RoomTab(onUpd: upd), const MomentTab(), const MsgTab(), MeTab(onUpd: upd)];
+    final pages = [RoomTab(onUpd: upd), MomentTab(), MsgTab(), MeTab(onUpd: upd)];
     return Scaffold(
       body: pages[idx],
       bottomNavigationBar: BottomNavigationBar(
@@ -282,7 +282,7 @@ class _SpinPageState extends State<SpinPage> {
         ElevatedButton(
           onPressed: () {
             if (AppData.coins < 1000) return;
-            final prizes =;
+            final prizes = [0, 500, 1000, 2000, 5000];
             final win = prizes[Random().nextInt(5)];
             setState(() { AppData.coins = AppData.coins - 1000 + win; res = "Won $win Coins!"; });
             widget.onUpd();
@@ -351,6 +351,42 @@ class _AdminPageState extends State<AdminPage> {
           ));
         },
       ),
+    );
+  }
+}
+class MeTab extends StatefulWidget {
+  final VoidCallback onUpd;
+  const MeTab({super.key, required this.onUpd});
+  @override
+  State<MeTab> createState() => _MeTabState();
+}
+
+class _MeTabState extends State<MeTab> {
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: ListView(padding: const EdgeInsets.all(16), children: [
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF00B894), Color(0xFF00897B)]), borderRadius: BorderRadius.circular(20)),
+          child: Column(children: [
+            Text(AppData.name, style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.bold)),
+            Text("ID: ${AppData.uid} • VIP ${AppData.vip} • Invite Code: ${AppData.invite}", style: const TextStyle(color: Color(0xFFFFD700))),
+            const SizedBox(height: 10),
+            Text("Coins: ${AppData.coins}  |  Points: ${AppData.points}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ]),
+        ),
+        const SizedBox(height: 12),
+        Card(child: Column(children: [
+          ListTile(leading: const Icon(Icons.wallet, color: Colors.orange), title: const Text("Recharge Coins (ETB & USDT)"), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RechargePage(onUpd: () { setState(() {}); widget.onUpd(); })))),
+          ListTile(leading: const Icon(Icons.workspace_premium, color: Colors.amber), title: const Text("VIP Club (Upgrade VIP 1 - VIP 7)"), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => VipPage(onUpd: () { setState(() {}); widget.onUpd(); })))),
+          ListTile(leading: const Icon(Icons.group_add, color: Colors.teal), title: const Text("Invitation & Referral Rewards"), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => InvitePage(onUpd: () { setState(() {}); widget.onUpd(); })))),
+          ListTile(leading: const Icon(Icons.storefront, color: Colors.deepOrange), title: const Text("Official Coin Sellers"), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SellerPage()))),
+          ListTile(leading: const Icon(Icons.casino, color: Colors.purple), title: const Text("Lucky Island Spin Game"), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SpinPage(onUpd: () { setState(() {}); widget.onUpd(); })))),
+          ListTile(leading: const Icon(Icons.support_agent, color: Colors.blue), title: const Text("Customer Support Center"), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportPage()))),
+          ListTile(leading: const Icon(Icons.admin_panel_settings, color: Colors.red), title: const Text("Super Admin Control Panel"), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AdminPage(onUpd: () { setState(() {}); widget.onUpd(); })))),
+        ])),
+      ]),
     );
   }
 }
