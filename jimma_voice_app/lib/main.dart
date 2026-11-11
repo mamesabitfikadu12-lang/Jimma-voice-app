@@ -636,7 +636,7 @@ class BadgeWallPage extends StatelessWidget {
 
 class EventCenterPage extends StatelessWidget {
   final VoidCallback onUpd;
-  const EventCenterPage({super.key, required this.onUpd});
+  EventCenterPage({super.key, required this.onUpd});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
