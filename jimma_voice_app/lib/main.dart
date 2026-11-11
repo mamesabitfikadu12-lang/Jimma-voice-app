@@ -766,3 +766,172 @@ class _SuperAdminPanelPageState extends State<SuperAdminPanelPage> {
     ));
   }
 }
+class LiveRoomPage extends StatefulWidget {
+  final String id, title;
+  final bool host;
+  final VoidCallback onUpd;
+  const LiveRoomPage({super.key, required this.id, required this.title, required this.host, required this.onUpd});
+  @override
+  State<LiveRoomPage> createState() => _LiveRoomPageState();
+}
+
+class _LiveRoomPageState extends State<LiveRoomPage> {
+  String activeGift = "";
+  void sendGift(String n, int c) {
+    if (AppData.coins < c) return;
+    setState(() { AppData.coins -= c; AppData.points += c * 0.8; activeGift = "$n (-$c Coins)"; });
+    widget.onUpd();
+    Future.delayed(const Duration(seconds: 3), () { if (mounted) setState(() => activeGift = ""); });
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("${widget.title} (${AppData.coins})"), backgroundColor: const Color(0xFF052E24), foregroundColor: Colors.white),
+      body: Stack(children: [
+        Column(children: [
+          Container(color: const Color(0xFF083D30), padding: const EdgeInsets.all(6), child: Text("${AppData.name} entered on ${AppData.equippedEntry}", style: const TextStyle(color: Color(0xFFFFD700), fontSize: 12))),
+          Expanded(child: ZegoUIKitPrebuiltLiveAudioRoom(appID: 1984661954, appSign: "9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5", userID: AppData.uid, userName: AppData.name, roomID: widget.id, config: widget.host ? ZegoUIKitPrebuiltLiveAudioRoomConfig.host() : ZegoUIKitPrebuiltLiveAudioRoomConfig.audience())),
+          Container(color: const Color(0xFF052E24), padding: const EdgeInsets.all(10), child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+            ElevatedButton(onPressed: () => sendGift("Jimma Coffee", 500), child: const Text("Coffee 500")),
+            ElevatedButton(onPressed: () => sendGift("Golden Lion", 5000), child: const Text("Lion 5k")),
+            ElevatedButton(onPressed: () => sendGift("Shark Moto", 15000), child: const Text("Moto 15k")),
+          ])),
+        ]),
+        if (activeGift.isNotEmpty) Center(child: Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.amber.shade800, borderRadius: BorderRadius.circular(20)), child: Text("GIFT SENT!\n$activeGift", textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)))),
+      ]),
+    );
+  }
+}
+
+class GamesHubPage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const GamesHubPage({super.key, required this.onUpd});
+  @override
+  State<GamesHubPage> createState() => _GamesHubPageState();
+}
+
+class _GamesHubPageState extends State<GamesHubPage> {
+  String cat = "Hot";
+  final games = [
+    {"name": "Golden Lion Spin", "cat": "Slot", "hot": true, "icon": Icons.casino_rounded, "c1": 0xFFFFB800, "c2": 0xFFFF6F00},
+    {"name": "Jimma Ocean Hunt", "cat": "Fishing", "hot": true, "icon": Icons.scuba_diving_rounded, "c1": 0xFF00B4DB, "c2": 0xFF0083B0},
+    {"name": "Oromo Jungle Hunt", "cat": "Hot", "hot": true, "icon": Icons.forest_rounded, "c1": 0xFF11998E, "c2": 0xFF38EF7D},
+    {"name": "Royal Coin Rain", "cat": "Slot", "hot": true, "icon": Icons.monetization_on_rounded, "c1": 0xFFF7971E, "c2": 0xFFFFD200},
+    {"name": "Emerald Diamond III", "cat": "Slot", "hot": false, "icon": Icons.diamond_rounded, "c1": 0xFF008F6B, "c2": 0xFF00CEC9},
+    {"name": "Coffee & Fruit Spin", "cat": "Slot", "hot": true, "icon": Icons.local_cafe_rounded, "c1": 0xFFEB3349, "c2": 0xFFF45C43},
+    {"name": "Royal Ludo", "cat": "Multi Player", "hot": true, "icon": Icons.grid_view_rounded, "c1": 0xFF6A11CB, "c2": 0xFF2575FC},
+    {"name": "Teen Patti Cards", "cat": "Multi Player", "hot": true, "icon": Icons.style_rounded, "c1": 0xFFCB2D3E, "c2": 0xFFEF473A},
+    {"name": "Chicken Road Run", "cat": "Latest", "hot": true, "icon": Icons.directions_run_rounded, "c1": 0xFFFF9966, "c2": 0xFFFF5E62},
+    {"name": "CosmoX Space Jet", "cat": "Latest", "hot": true, "icon": Icons.rocket_launch_rounded, "c1": 0xFF141E30, "c2": 0xFF243B55},
+    {"name": "Dragon Power", "cat": "Slot", "hot": false, "icon": Icons.whatshot_rounded, "c1": 0xFFD31027, "c2": 0xFFEA384D},
+    {"name": "Super Ace", "cat": "Slot", "hot": true, "icon": Icons.workspace_premium_rounded, "c1": 0xFFDA22FF, "c2": 0xFF9733EE},
+    {"name": "Sweet Bonanza", "cat": "Latest", "hot": true, "icon": Icons.cake_rounded, "c1": 0xFFFF512F, "c2": 0xFFDD2476},
+    {"name": "World Goal Penalty", "cat": "Multi Player", "hot": false, "icon": Icons.sports_soccer_rounded, "c1": 0xFF1D976C, "c2": 0xFF93F9B9},
+    {"name": "DJ Live Rhythm", "cat": "Multi Player", "hot": false, "icon": Icons.headphones_rounded, "c1": 0xFF4776E6, "c2": 0xFF8E54E9},
+    {"name": "Fishing Star", "cat": "Fishing", "hot": true, "icon": Icons.sailing_rounded, "c1": 0xFF2193B0, "c2": 0xFF6DD5ED},
+    {"name": "Kraken Treasure III", "cat": "Fishing", "hot": false, "icon": Icons.anchor_rounded, "c1": 0xFF0F2027, "c2": 0xFF2C5364},
+    {"name": "Royal Roulette", "cat": "Slot", "hot": false, "icon": Icons.track_changes_rounded, "c1": 0xFF8E0E00, "c2": 0xFF1F1C18},
+    {"name": "The Monkey King", "cat": "Hot", "hot": true, "icon": Icons.emoji_nature_rounded, "c1": 0xFFF2994A, "c2": 0xFFF2C94C},
+    {"name": "Royal Battle", "cat": "Multi Player", "hot": false, "icon": Icons.shield_rounded, "c1": 0xFF3A7BD5, "c2": 0xFF3A6073},
+  ];
+  @override
+  Widget build(BuildContext context) {
+    final list = games.where((g) => cat == "Hot" ? g["hot"] == true : g["cat"] == cat).toList();
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A241E),
+      appBar: AppBar(title: Text("Lucky Island Games (${AppData.coins})"), backgroundColor: const Color(0xFF061A15), foregroundColor: Colors.white),
+      body: Column(children: [
+        SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.all(10), child: Row(children: ["Latest", "Hot", "Slot", "Fishing", "Multi Player"].map((c) => Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(label: Text(c), selected: cat == c, onSelected: (_) => setState(() => cat = c)))).toList())),
+        Expanded(child: GridView.builder(
+          padding: const EdgeInsets.all(12),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 1.1, crossAxisSpacing: 10, mainAxisSpacing: 10),
+          itemCount: list.length,
+          itemBuilder: (_, i) {
+            final g = list[i];
+            return InkWell(
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PlayAnimatedGamePage(gameName: g["name"] as String, c1: g["c1"] as int, c2: g["c2"] as int, icon: g["icon"] as IconData, onUpd: () { setState(() {}); widget.onUpd(); }))),
+              child: Container(decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(g["c1"] as int), Color(g["c2"] as int)]), borderRadius: BorderRadius.circular(18)), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Icon(g["icon"] as IconData, size: 48, color: Colors.white),
+                Text(g["name"] as String, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              ])),
+            );
+          },
+        )),
+      ]),
+    );
+  }
+}
+class RechargePage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const RechargePage({super.key, required this.onUpd});
+  @override
+  State<RechargePage> createState() => _RechargePageState();
+}
+
+class _RechargePageState extends State<RechargePage> {
+  String cur = "ETB";
+  bool bulkSeller = false;
+  int sel = 0;
+  final amtCtrl = TextEditingController(text: "180"), txCtrl = TextEditingController();
+
+  int get coins {
+    final v = double.tryParse(amtCtrl.text) ?? 0;
+    if (cur == "ETB") {
+      final rate = (bulkSeller || AppData.isCoinSeller) ? 150.0 : 180.0;
+      return ((v / rate) * 10000).round();
+    } else {
+      final base = (v * 10000).round();
+      return (bulkSeller || AppData.isCoinSeller) ? (base * 1.2).round() : base;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pm = AppData.payments[sel];
+    return Scaffold(
+      appBar: AppBar(title: const Text("Recharge Coins (Jimma Official)"), backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white),
+      body: ListView(padding: const EdgeInsets.all(16), children: [
+        Text("Coins: ${AppData.coins} • Regular: 180 ETB=10k | Seller: 150 ETB=10k", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+        const SizedBox(height: 10),
+        Row(children: [
+          Expanded(child: ChoiceChip(label: const Text("ETB (Ethiopia)"), selected: cur == "ETB", onSelected: (_) => setState(() { cur = "ETB"; sel = 0; amtCtrl.text = "180"; }))),
+          const SizedBox(width: 8),
+          Expanded(child: ChoiceChip(label: const Text("Binance USDT (Min \$5)"), selected: cur == "USDT", onSelected: (_) => setState(() { cur = "USDT"; sel = 6; amtCtrl.text = "5"; }))),
+        ]),
+        SwitchListTile(
+          title: const Text("Coin Seller / Bulk Discount Mode", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          subtitle: const Text("150 ETB = 10k Coins or +20% USDT Bonus"),
+          value: bulkSeller,
+          onChanged: (v) => setState(() => bulkSeller = v),
+        ),
+        Wrap(spacing: 8, children: (cur == "ETB" ? ["180", "360", "900", "1500", "3000"] : ["5", "10", "20", "50", "100"]).map((p) => ActionChip(label: Text("$p $cur"), onPressed: () => setState(() => amtCtrl.text = p))).toList()),
+        const SizedBox(height: 10),
+        TextField(controller: amtCtrl, keyboardType: TextInputType.number, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: "Custom Amount ($cur)", suffixText: "= $coins Coins", border: const OutlineInputBorder())),
+        const SizedBox(height: 10),
+        ...List.generate(AppData.payments.length, (i) {
+          final item = AppData.payments[i];
+          if (item["cur"] != cur) return const SizedBox.shrink();
+          return Card(child: RadioListTile(
+            value: i, groupValue: sel, onChanged: (v) => setState(() => sel = v!),
+            title: Text(item["name"]!, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text(item["acc"]!),
+            secondary: IconButton(icon: const Icon(Icons.copy), onPressed: () { Clipboard.setData(ClipboardData(text: item["acc"]!)); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Copied ${item["acc"]}"))); }),
+          ));
+        }),
+        TextField(controller: txCtrl, decoration: const InputDecoration(labelText: "Transaction ID / Receipt Note", border: OutlineInputBorder())),
+        const SizedBox(height: 12),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white, padding: const EdgeInsets.all(14)),
+          onPressed: () {
+            final val = double.tryParse(amtCtrl.text) ?? 0;
+            if (cur == "USDT" && val < 5) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Minimum USDT recharge is \$5 (50,000 Coins)!"))); return; }
+            AppData.tickets.insert(0, {"id": "TCK-${1043 + AppData.tickets.length}", "user": "User #${AppData.uid}", "title": "${amtCtrl.text} $cur -> $coins Coins", "msg": "${pm["name"]}: ${txCtrl.text}", "status": "Pending", "coins": coins});
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Receipt Sent to Admin Support!")));
+            Navigator.pop(context);
+          },
+          child: Text("Submit Deposit ($coins Coins)"),
+        ),
+      ]),
+    );
+  }
+}
