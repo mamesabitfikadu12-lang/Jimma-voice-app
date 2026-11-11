@@ -27,48 +27,34 @@ class JimmaVoiceChatFamilyApp extends StatelessWidget {
 }
 
 class AppData {
-  static int coins = 102500;
-  static double points = 116813.52;
+  static int coins = 5000;
+  static double points = 0.0;
   static double frozenPoints = 0.0;
-  static int vip = 3, wealthLv = 32, charmLv = 25, activeLv = 23;
-  static int followed = 83, following = 188, friends = 13, invited = 18;
-  static bool isCoinSeller = true;
-  static String uid = "3712956";
-  static String name = "MohammedsabitF";
-  static String bio = "Land of Coffee & Hospitality • Jimma Voice Chat Family";
-  static String familyName = "Abbaa Jifar Royal Family";
-  static String invite = "JIMMA884";
-  static String adminPin = "2026";
+  static int vip = 0, wealthLv = 1, charmLv = 1, wealthExp = 0, charmExp = 0;
+  static int followed = 0, following = 0, friends = 0, invited = 0;
+  static bool isCoinSeller = false;
+  static String uid = "1002501";
+  static String name = "New Member";
+  static String bio = "Welcome to Jimma Voice Chat Family!";
+  static String familyName = "Join a Family";
+  static String invite = "JIMMA2026";
+  static String adminPin = "2730";
   static String adminWhatsapp = "+251919108311";
   static String adminTelegram = "@JimmaVoiceAdmin";
-  static String equippedFrame = "Jimma Golden Coffee Crown";
-  static String equippedEntry = "Shark Moto";
-  static final List<String> ownedItems = ["Jimma Golden Coffee Crown", "Star of Fortune", "Shark Moto"];
-  static final List<String> badges = ["Jimma Founder", "Official Coin Seller", "Top VIP Host"];
+  static String language = "English";
+  static String equippedFrame = "Mint Starter Frame";
+  static String equippedEntry = "Standard Entry";
+  static final List<String> ownedItems = ["Mint Starter Frame"];
+  static final List<String> badges = ["Jimma Pioneer"];
+  static final List<String> claimedTasks = [];
+  static final List<String> verifiedTxIds = [];
 
-  static final List<Map<String, dynamic>> agencyRequests = [
-    {
-      "id": "AG-501",
-      "agencyName": "Jimma Royal Agency",
-      "ownerName": "Abebe Kebede",
-      "nationalId": "ET-992837461",
-      "idPhoto": "National_ID_Front_Back.jpg",
-      "whatsapp": "+251911223344",
-      "telegram": "@AbebeAgency",
-      "hosts": "12 Hosts",
-      "status": "Pending"
-    }
-  ];
-
+  static final List<Map<String, dynamic>> agencyRequests = [];
   static final List<Map<String, dynamic>> chatMessages = [
-    {"sender": "user", "text": "Please deposit my coin (5 USDT TRC20)", "img": "Receipt_Binance_5USDT.jpg", "time": "10:05"},
-    {"sender": "admin", "text": "Welcome to Jimma Voice Chat Family Support! Verifying your 5 USDT (50,000 Coins) deposit.", "img": "", "time": "10:06"},
+    {"sender": "admin", "text": "Welcome to Jimma Voice Chat Family Support! Instant Auto-Verify Deposit is active 24/7.", "img": "", "time": "Now"},
   ];
 
-  static final tickets = <Map<String, dynamic>>[
-    {"id": "TCK-1042", "user": "User #492011", "title": "900 ETB -> 50,000 Coins (Regular 180/10k)", "msg": "Paid via Telebirr +251919108311", "status": "Pending", "coins": 50000},
-    {"id": "TCK-1041", "user": "Seller #773120", "title": "5 USDT -> 60,000 Coins (Seller 20% Bonus)", "msg": "Paid to TRC20 TYdr3JdbDzhxjfsGeU3yazNAmTbkHBuNcE", "status": "Resolved", "coins": 60000},
-  ];
+  static final tickets = <Map<String, dynamic>>[];
 
   static final payments = [
     {"name": "Telebirr", "acc": "+251919108311", "cur": "ETB"},
@@ -121,14 +107,17 @@ class RoomTab extends StatefulWidget {
 
 class _RoomTabState extends State<RoomTab> {
   String tab = "Party", country = "All";
+  final countries = ["All", "Ethiopia", "Kenya", "UAE", "Saudi Arabia", "USA", "UK", "Germany", "South Africa", "Nigeria", "India", "Global"];
+
   @override
   Widget build(BuildContext context) {
     final rooms = [
       {"id": "602841", "title": "Jimma Coffee & Cultural Lounge", "tag": "Official", "c": "Ethiopia", "u": 248},
       {"id": "889102", "title": "Abbaa Jifar Royal Palace VIP", "tag": "Family", "c": "Ethiopia", "u": 194},
-      {"id": "334910", "title": "Official Coin Seller & Agency", "tag": "Seller", "c": "International", "u": 142},
-      {"id": "551209", "title": "Lucky Island 20 Games Arena", "tag": "Games", "c": "Middle East", "u": 176},
-      {"id": "774120", "title": "Oromo & Global Music Party", "tag": "Music", "c": "USA & Europe", "u": 115},
+      {"id": "334910", "title": "Official Coin Seller & Agency", "tag": "Seller", "c": "Global", "u": 142},
+      {"id": "551209", "title": "Nairobi & East Africa Voice Hub", "tag": "Music", "c": "Kenya", "u": 118},
+      {"id": "441920", "title": "Dubai & Gulf Friends Lounge", "tag": "Chat", "c": "UAE", "u": 165},
+      {"id": "774120", "title": "USA & Europe Diaspora Party", "tag": "Music", "c": "USA", "u": 115},
     ].where((r) => country == "All" || r["c"] == country).toList();
 
     return SafeArea(
@@ -168,7 +157,7 @@ class _RoomTabState extends State<RoomTab> {
                   child: const Row(children: [
                     Icon(Icons.sports_esports_rounded, color: Colors.white, size: 30),
                     SizedBox(width: 10),
-                    Expanded(child: Text("LUCKY ISLAND • 20 Animated Games! Win Big!", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13))),
+                    Expanded(child: Text("JIMMA ROYAL GAMES • Play & Win Coins!", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13))),
                     Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 16),
                   ]),
                 ),
@@ -178,9 +167,9 @@ class _RoomTabState extends State<RoomTab> {
           const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: Row(children: ["All", "Ethiopia", "International", "Middle East", "USA & Europe"].map((c) => Padding(
+            child: Row(children: countries.map((c) => Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(label: Text(c), selected: country == c, onSelected: (_) => setState(() => country = c)),
+              child: ChoiceChip(label: Text(c), selected: country == c, selectedColor: const Color(0xFF008F6B).withOpacity(0.2), onSelected: (_) => setState(() => country = c)),
             )).toList()),
           ),
           const SizedBox(height: 10),
@@ -199,41 +188,153 @@ class _RoomTabState extends State<RoomTab> {
     );
   }
 }
-class PlayAnimatedGamePage extends StatefulWidget {
-  final String gameName;
-  final int c1, c2;
-  final IconData icon;
+
+class LiveRoomPage extends StatefulWidget {
+  final String id, title;
+  final bool host;
   final VoidCallback onUpd;
-  const PlayAnimatedGamePage({super.key, required this.gameName, required this.c1, required this.c2, required this.icon, required this.onUpd});
+  const LiveRoomPage({super.key, required this.id, required this.title, required this.host, required this.onUpd});
   @override
-  State<PlayAnimatedGamePage> createState() => _PlayAnimatedGamePageState();
+  State<LiveRoomPage> createState() => _LiveRoomPageState();
 }
 
-class _PlayAnimatedGamePageState extends State<PlayAnimatedGamePage> with SingleTickerProviderStateMixin {
-  late AnimationController _spinCtrl;
+class _LiveRoomPageState extends State<LiveRoomPage> {
+  String activeGift = "";
+  void sendGift(String n, int c) {
+    if (AppData.coins < c) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Low Coins! Please Recharge."))); return; }
+    setState(() { AppData.coins -= c; AppData.points += c * 0.75; AppData.wealthExp += c; activeGift = "$n (-$c Coins)"; });
+    widget.onUpd();
+    Future.delayed(const Duration(seconds: 3), () { if (mounted) setState(() => activeGift = ""); });
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("${widget.title} (${AppData.coins})"), backgroundColor: const Color(0xFF052E24), foregroundColor: Colors.white),
+      body: Stack(children: [
+        Column(children: [
+          Container(color: const Color(0xFF083D30), padding: const EdgeInsets.all(6), child: Text("${AppData.name} entered [${AppData.equippedFrame}]", style: const TextStyle(color: Color(0xFFFFD700), fontSize: 12))),
+          Expanded(child: ZegoUIKitPrebuiltLiveAudioRoom(appID: 1984661954, appSign: "9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5", userID: AppData.uid, userName: AppData.name, roomID: widget.id, config: widget.host ? ZegoUIKitPrebuiltLiveAudioRoomConfig.host() : ZegoUIKitPrebuiltLiveAudioRoomConfig.audience())),
+          Container(color: const Color(0xFF052E24), padding: const EdgeInsets.all(10), child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+            ElevatedButton(onPressed: () => sendGift("Jebena Coffee", 500), child: const Text("Jebena 500")),
+            ElevatedButton(onPressed: () => sendGift("Golden Lion", 5000), child: const Text("Lion 5k")),
+            ElevatedButton(onPressed: () => sendGift("Castle Feast", 15000), child: const Text("Castle 15k")),
+          ])),
+        ]),
+        if (activeGift.isNotEmpty) Center(child: Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.amber.shade800, borderRadius: BorderRadius.circular(20)), child: Text("GIFT SENT!\n$activeGift", textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)))),
+      ]),
+    );
+  }
+}
+class GamesHubPage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const GamesHubPage({super.key, required this.onUpd});
+  @override
+  State<GamesHubPage> createState() => _GamesHubPageState();
+}
+
+class _GamesHubPageState extends State<GamesHubPage> {
+  String cat = "Hot";
+  final games = [
+    {"name": "Jebena Coffee Slot", "cat": "Slot", "hot": true, "icon": Icons.local_cafe_rounded, "c1": 0xFF008F6B, "c2": 0xFFFFB800},
+    {"name": "Golden Lion Spin", "cat": "Slot", "hot": true, "icon": Icons.pets_rounded, "c1": 0xFFFFB800, "c2": 0xFFFF6F00},
+    {"name": "Abbaa Jifar Crown", "cat": "Hot", "hot": true, "icon": Icons.workspace_premium_rounded, "c1": 0xFF6A11CB, "c2": 0xFF2575FC},
+    {"name": "Jimma Ocean Hunt", "cat": "Fishing", "hot": true, "icon": Icons.scuba_diving_rounded, "c1": 0xFF00B4DB, "c2": 0xFF0083B0},
+    {"name": "Oromo Jungle Hunt", "cat": "Hot", "hot": true, "icon": Icons.forest_rounded, "c1": 0xFF11998E, "c2": 0xFF38EF7D},
+    {"name": "Royal Coin Rain", "cat": "Slot", "hot": true, "icon": Icons.monetization_on_rounded, "c1": 0xFFF7971E, "c2": 0xFFFFD200},
+    {"name": "Royal Ludo", "cat": "Multi Player", "hot": true, "icon": Icons.grid_view_rounded, "c1": 0xFFCB2D3E, "c2": 0xFFEF473A},
+    {"name": "Teen Patti Cards", "cat": "Multi Player", "hot": false, "icon": Icons.style_rounded, "c1": 0xFF8E0E00, "c2": 0xFF1F1C18},
+    {"name": "Chicken Road Run", "cat": "Latest", "hot": true, "icon": Icons.directions_run_rounded, "c1": 0xFFFF9966, "c2": 0xFFFF5E62},
+    {"name": "CosmoX Space Jet", "cat": "Latest", "hot": true, "icon": Icons.rocket_launch_rounded, "c1": 0xFF141E30, "c2": 0xFF243B55},
+    {"name": "Emerald Diamond III", "cat": "Slot", "hot": false, "icon": Icons.diamond_rounded, "c1": 0xFF008F6B, "c2": 0xFF00CEC9},
+    {"name": "World Goal Penalty", "cat": "Multi Player", "hot": false, "icon": Icons.sports_soccer_rounded, "c1": 0xFF1D976C, "c2": 0xFF93F9B9},
+  ];
+  @override
+  Widget build(BuildContext context) {
+    final list = games.where((g) => cat == "Hot" ? g["hot"] == true : g["cat"] == cat).toList();
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A241E),
+      appBar: AppBar(title: Text("Jimma Royal Games (${AppData.coins})"), backgroundColor: const Color(0xFF061A15), foregroundColor: Colors.white),
+      body: Column(children: [
+        SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.all(10), child: Row(children: ["Latest", "Hot", "Slot", "Fishing", "Multi Player"].map((c) => Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(label: Text(c), selected: cat == c, onSelected: (_) => setState(() => cat = c)))).toList())),
+        Expanded(child: GridView.builder(
+          padding: const EdgeInsets.all(12),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 1.1, crossAxisSpacing: 10, mainAxisSpacing: 10),
+          itemCount: list.length,
+          itemBuilder: (_, i) {
+            final g = list[i];
+            return InkWell(
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PlaySlotGamePage(gameName: g["name"] as String, c1: g["c1"] as int, c2: g["c2"] as int, onUpd: () { setState(() {}); widget.onUpd(); }))),
+              child: Container(decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(g["c1"] as int), Color(g["c2"] as int)]), borderRadius: BorderRadius.circular(18)), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Icon(g["icon"] as IconData, size: 48, color: Colors.white),
+                const SizedBox(height: 6),
+                Text(g["name"] as String, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                const Text("TAP TO PLAY", style: TextStyle(color: Color(0xFFFFD700), fontSize: 10, fontWeight: FontWeight.bold)),
+              ])),
+            );
+          },
+        )),
+      ]),
+    );
+  }
+}
+
+class PlaySlotGamePage extends StatefulWidget {
+  final String gameName;
+  final int c1, c2;
+  final VoidCallback onUpd;
+  const PlaySlotGamePage({super.key, required this.gameName, required this.c1, required this.c2, required this.onUpd});
+  @override
+  State<PlaySlotGamePage> createState() => _PlaySlotGamePageState();
+}
+
+class _PlaySlotGamePageState extends State<PlaySlotGamePage> {
+  final symbols = ["☕ Jebena", "🦁 Lion", "👑 Crown", "🥁 Drum", "💎 Gem"];
+  List<String> reels = ["☕ Jebena", "🦁 Lion", "👑 Crown"];
   bool spinning = false;
   int bet = 1000;
-  String msg = "Tap SPIN to win up to 100,000 Coins!";
+  String status = "Match 2 or 3 Ethiopian Symbols to Win!";
 
-  @override
-  void initState() { super.initState(); _spinCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200)); }
-  @override
-  void dispose() { _spinCtrl.dispose(); super.dispose(); }
-
-  void play() {
-    if (spinning || AppData.coins < bet) return;
-    setState(() { spinning = true; AppData.coins -= bet; msg = "Spinning..."; });
+  void spin() {
+    if (spinning || AppData.coins < bet) {
+      if (AppData.coins < bet) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Low Coins! Please Recharge.")));
+      return;
+    }
+    setState(() { spinning = true; AppData.coins -= bet; status = "Spinning Reels..."; });
     widget.onUpd();
-    _spinCtrl.forward(from: 0).then((_) {
-      final mults = List<int>.generate(6, (i) => i == 0 ? 0 : i * 2);
-      final win = bet * mults[Random().nextInt(6)];
+
+    int ticks = 0;
+    Timer.periodic(const Duration(milliseconds: 110), (t) {
+      ticks++;
       setState(() {
-        spinning = false;
-        AppData.coins += win;
-        AppData.points += win * 0.25;
-        msg = win > 0 ? "JACKPOT! Won $win Coins (+${(win * 0.25).round()} Points)!" : "Try Again! Good Luck!";
+        reels = List.generate(3, (_) => symbols[Random().nextInt(symbols.length)]);
       });
-      widget.onUpd();
+      if (ticks >= 14) {
+        t.cancel();
+        final rnd = Random().nextInt(100);
+        int win = 0;
+        if (rnd < 8) {
+          final s = symbols[Random().nextInt(symbols.length)];
+          reels = [s, s, s];
+          win = bet * 5;
+        } else if (rnd < 35) {
+          final s1 = symbols[Random().nextInt(symbols.length)];
+          String s2 = symbols[Random().nextInt(symbols.length)];
+          while (s2 == s1) { s2 = symbols[Random().nextInt(symbols.length)]; }
+          reels = [s1, s1, s2];
+          win = (bet * 1.5).round();
+        } else {
+          final shuffled = List<String>.from(symbols)..shuffle();
+          reels = [shuffled[0], shuffled[1], shuffled[2]];
+          win = 0;
+        }
+        setState(() {
+          spinning = false;
+          AppData.coins += win;
+          AppData.points += win * 0.2;
+          status = win > 0 ? "WINNER! +$win Coins (+${(win * 0.2).round()} Points)!" : "House Wins! Try Again!";
+        });
+        widget.onUpd();
+      }
     });
   }
 
@@ -243,31 +344,36 @@ class _PlayAnimatedGamePageState extends State<PlayAnimatedGamePage> with Single
       backgroundColor: const Color(0xFF071D18),
       appBar: AppBar(title: Text(widget.gameName), backgroundColor: Color(widget.c1), foregroundColor: Colors.white),
       body: Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text("Coins: ${AppData.coins} | Points: ${AppData.points.toStringAsFixed(0)}", style: const TextStyle(color: Color(0xFFFFD700), fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          RotationTransition(
-            turns: CurvedAnimation(parent: _spinCtrl, curve: Curves.easeOutBack),
-            child: Container(
-              width: 170, height: 170,
-              decoration: BoxDecoration(shape: BoxShape.circle, gradient: SweepGradient(colors: [Color(widget.c1), const Color(0xFFFFD700), Color(widget.c2), const Color(0xFF00B894), Color(widget.c1)]), border: Border.all(color: Colors.white, width: 4)),
-              child: Center(child: Icon(widget.icon, size: 70, color: Colors.white)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Text("Coins: ${AppData.coins}  |  Points: ${AppData.points.toStringAsFixed(0)}", style: const TextStyle(color: Color(0xFFFFD700), fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: const Color(0xFF0D332A), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFFFD700), width: 3)),
+              child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: reels.map((r) => Container(
+                width: 86, height: 96,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+                child: Text(r, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF062C24))),
+              )).toList()),
             ),
-          ),
-          const SizedBox(height: 20),
-          Text(msg, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: List<int>.generate(4, (i) => (i + 1) * 1000).map((b) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: ChoiceChip(label: Text("$b"), selected: bet == b, onSelected: (_) => setState(() => bet = b)),
-          )).toList()),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFB800), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14)),
-            onPressed: play,
-            child: Text(spinning ? "SPINNING..." : "SPIN ($bet Coins)", style: const TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ]),
+            const SizedBox(height: 20),
+            Text(status, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: List<int>.generate(4, (i) => (i + 1) * 1000).map((b) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              child: ChoiceChip(label: Text("$b"), selected: bet == b, onSelected: (_) => setState(() => bet = b)),
+            )).toList()),
+            const SizedBox(height: 18),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFB800), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 42, vertical: 14)),
+              onPressed: spin,
+              child: Text(spinning ? "SPINNING..." : "PLAY ($bet Coins)", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ]),
+        ),
       ),
     );
   }
@@ -338,12 +444,31 @@ class MomentTab extends StatelessWidget {
   const MomentTab({super.key});
   @override
   Widget build(BuildContext context) {
+    final topics = [
+      {"t": "World Cup 2026", "d": "Live match chat, goals & football predictions!", "i": Icons.sports_soccer, "c": Colors.green},
+      {"t": "Jimma Coffee Culture", "d": "Share stories from the Land of Coffee & Hospitality.", "i": Icons.local_cafe, "c": Colors.brown},
+      {"t": "Make New Friends", "d": "Meet cool people across Ethiopia & the world by voice.", "i": Icons.people, "c": Colors.teal},
+      {"t": "Newbie Seeking Help", "d": "New here? Get tips from experienced family hosts.", "i": Icons.help_outline, "c": Colors.orange},
+      {"t": "Show Yourself & Hobby", "d": "Show off your charm, music & daily talents.", "i": Icons.mic_none, "c": Colors.purple},
+    ];
     return Scaffold(
-      appBar: AppBar(title: const Text("Jimma Moments"), backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white),
-      body: ListView(padding: const EdgeInsets.all(14), children: const [
-        Card(child: ListTile(leading: Icon(Icons.local_cafe, color: Color(0xFF008F6B)), title: Text("Jimma Official • VIP 7"), subtitle: Text("Welcome to Jimma Voice Chat Family! Share your Invite Link & earn +2,000 Coins/friend."))),
-        Card(child: ListTile(leading: Icon(Icons.star, color: Colors.amber), title: Text("Abbaa Jifar Royal • VIP 5"), subtitle: Text("Join Jimma Coffee & Cultural Lounge (Room 602841) tonight!"))),
-      ]),
+      appBar: AppBar(title: const Text("Moments & Topics"), backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(14),
+        itemCount: topics.length,
+        itemBuilder: (_, idx) {
+          final tp = topics[idx];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ListTile(
+              leading: CircleAvatar(backgroundColor: (tp["c"] as Color).withOpacity(0.15), child: Icon(tp["i"] as IconData, color: tp["c"] as Color)),
+              title: Text(tp["t"] as String, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(tp["d"] as String, style: const TextStyle(fontSize: 12)),
+              trailing: ElevatedButton(onPressed: () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Joined ${tp["t"]} Topic!"))), child: const Text("Enter")),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -377,16 +502,17 @@ class _MeTabState extends State<MeTab> {
     final gridItems = [
       {"t": "Recharge", "i": Icons.account_balance_wallet_rounded, "c": Colors.orange, "p": RechargePage(onUpd: refresh)},
       {"t": "Points", "i": Icons.diamond_rounded, "c": Colors.blue, "p": PointsWalletPage(onUpd: refresh)},
+      {"t": "Task Center", "i": Icons.task_alt_rounded, "c": Colors.green, "p": TaskCenterPage(onUpd: refresh)},
+      {"t": "Level", "i": Icons.trending_up_rounded, "c": Colors.teal, "p": const LevelPrivilegesPage()},
       {"t": "Store", "i": Icons.store_mall_directory_rounded, "c": Colors.purple, "p": StorePage(onUpd: refresh)},
-      {"t": "Backpack", "i": Icons.backpack_rounded, "c": Colors.teal, "p": BackpackPage(onUpd: refresh)},
-      {"t": "Invitation", "i": Icons.share_rounded, "c": Colors.green, "p": InvitePage(onUpd: refresh)},
+      {"t": "Backpack", "i": Icons.backpack_rounded, "c": Colors.brown, "p": BackpackPage(onUpd: refresh)},
+      {"t": "Invitation", "i": Icons.share_rounded, "c": Colors.indigo, "p": InvitePage(onUpd: refresh)},
       {"t": "Lucky Island", "i": Icons.sports_esports_rounded, "c": Colors.deepOrange, "p": GamesHubPage(onUpd: refresh)},
       {"t": "Host Center", "i": Icons.mic_external_on_rounded, "c": Colors.pink, "p": const HostCenterPage()},
-      {"t": "Agency", "i": Icons.business_center_rounded, "c": Colors.indigo, "p": const AgencyCenterPage()},
-      {"t": "Coin Seller", "i": Icons.verified_user_rounded, "c": Colors.amber.shade800, "p": RechargePage(onUpd: refresh)},
+      {"t": "Agency", "i": Icons.business_center_rounded, "c": Colors.blueGrey, "p": const AgencyCenterPage()},
       {"t": "VIP Club", "i": Icons.workspace_premium_rounded, "c": Colors.amber, "p": VipPage(onUpd: refresh)},
-      {"t": "Badge Wall", "i": Icons.military_tech_rounded, "c": Colors.redAccent, "p": const BadgeWallPage()},
       {"t": "Support", "i": Icons.support_agent_rounded, "c": const Color(0xFF008F6B), "p": const LiveSupportChatPage()},
+      {"t": "Setting", "i": Icons.settings_rounded, "c": Colors.grey.shade700, "p": SettingPage(onUpd: refresh)},
     ];
 
     return SafeArea(
@@ -396,7 +522,7 @@ class _MeTabState extends State<MeTab> {
           decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF006B4F), Color(0xFF00A87E)]), borderRadius: BorderRadius.circular(20)),
           child: Column(children: [
             Row(children: [
-              CircleAvatar(radius: 30, backgroundColor: const Color(0xFFFFD700), child: Text(AppData.name[0], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF006B4F)))),
+              CircleAvatar(radius: 30, backgroundColor: const Color(0xFFFFD700), child: Text(AppData.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF006B4F)))),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(AppData.name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
@@ -409,7 +535,7 @@ class _MeTabState extends State<MeTab> {
               Text("${AppData.followed}\nFollowed", textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 12)),
               Text("${AppData.following}\nFollowing", textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 12)),
               Text("${AppData.friends}\nFriends", textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 12)),
-              Text("Lv.${AppData.wealthLv}\nWealth", textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFFFFD700), fontSize: 12, fontWeight: FontWeight.bold)),
+              InkWell(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LevelPrivilegesPage())), child: Text("Lv.${AppData.wealthLv}\nWealth", textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFFFFD700), fontSize: 12, fontWeight: FontWeight.bold))),
             ]),
             const Divider(color: Colors.white24, height: 20),
             Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
@@ -446,7 +572,7 @@ class _MeTabState extends State<MeTab> {
           child: ListTile(
             leading: const Icon(Icons.admin_panel_settings_rounded, color: Colors.redAccent),
             title: const Text("Super Admin Control Panel", style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: const Text("PIN Protected (Deposits, Withdrawals, Agencies)"),
+            subtitle: const Text("Restricted Owner Access"),
             trailing: const Icon(Icons.lock_rounded, color: Colors.redAccent),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AdminPinGatePage(onUpd: refresh))),
           ),
@@ -455,82 +581,6 @@ class _MeTabState extends State<MeTab> {
     );
   }
 }
-class StorePage extends StatefulWidget {
-  final VoidCallback onUpd;
-  const StorePage({super.key, required this.onUpd});
-  @override
-  State<StorePage> createState() => _StorePageState();
-}
-
-class _StorePageState extends State<StorePage> {
-  final items = [
-    {"name": "Jimma Golden Coffee Crown", "type": "Frame", "cost": 15000},
-    {"name": "Shark Moto", "type": "Entry", "cost": 30000},
-    {"name": "Ice-Fire Soul", "type": "Entry", "cost": 50000},
-    {"name": "Star of Fortune", "type": "Frame", "cost": 20000},
-  ];
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Jimma Luxury Store (${AppData.coins})"), backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(14),
-        itemCount: items.length,
-        itemBuilder: (_, i) {
-          final it = items[i];
-          final owned = AppData.ownedItems.contains(it["name"]);
-          return Card(
-            child: ListTile(
-              leading: Icon(it["type"] == "Entry" ? Icons.two_wheeler : Icons.workspace_premium, color: const Color(0xFFFFB800)),
-              title: Text("${it["name"]} (${it["type"]})", style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text("${it["cost"]} Coins"),
-              trailing: ElevatedButton(
-                onPressed: owned ? null : () {
-                  final c = it["cost"] as int;
-                  if (AppData.coins >= c) { setState(() { AppData.coins -= c; AppData.ownedItems.add(it["name"] as String); }); widget.onUpd(); }
-                },
-                child: Text(owned ? "Owned" : "Buy"),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class BackpackPage extends StatefulWidget {
-  final VoidCallback onUpd;
-  const BackpackPage({super.key, required this.onUpd});
-  @override
-  State<BackpackPage> createState() => _BackpackPageState();
-}
-
-class _BackpackPageState extends State<BackpackPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("My Backpack"), backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white),
-      body: ListView(
-        padding: const EdgeInsets.all(14),
-        children: AppData.ownedItems.map((name) => Card(
-          child: ListTile(
-            title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text((AppData.equippedFrame == name || AppData.equippedEntry == name) ? "Currently Equipped" : "In Backpack"),
-            trailing: ElevatedButton(
-              onPressed: () {
-                setState(() { if (name.contains("Moto") || name.contains("Soul")) { AppData.equippedEntry = name; } else { AppData.equippedFrame = name; } });
-                widget.onUpd();
-              },
-              child: const Text("Equip"),
-            ),
-          ),
-        )).toList(),
-      ),
-    );
-  }
-}
-
 class InvitePage extends StatefulWidget {
   final VoidCallback onUpd;
   const InvitePage({super.key, required this.onUpd});
@@ -544,35 +594,16 @@ class _InvitePageState extends State<InvitePage> {
     final link = "https://jimmavoice.app{AppData.invite}";
     return Scaffold(
       appBar: AppBar(title: const Text("Invite Friends & Earn"), backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(children: [
-                Text("Personal Invite Code: ${AppData.invite}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF008F6B))),
-                const SizedBox(height: 6),
-                Text(link, style: const TextStyle(color: Colors.blue, fontSize: 12)),
-                const SizedBox(height: 8),
-                Text("Total Invited: ${AppData.invited} Friends (+2,000 Coins/Friend)"),
-              ]),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white, padding: const EdgeInsets.all(14)),
-            icon: const Icon(Icons.share),
-            label: const Text("Copy Personal Invite Link & Share"),
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: "Join Jimma Voice Chat Family! Use my link: $link"));
-              setState(() { AppData.invited += 1; AppData.coins += 2000; });
-              widget.onUpd();
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Personal Invite Link Copied! (+2,000 Bonus)")));
-            },
-          ),
-        ]),
-      ),
+      body: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
+        Card(child: ListTile(title: Text("Invite Code: ${AppData.invite}", style: const TextStyle(fontWeight: FontWeight.bold)), subtitle: Text("Link: $link\nInvited: ${AppData.invited} (+2,000 Coins/Friend)"))),
+        const SizedBox(height: 12),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white, padding: const EdgeInsets.all(14)),
+          icon: const Icon(Icons.share),
+          label: const Text("Copy Personal Invite Link & Share"),
+          onPressed: () { Clipboard.setData(ClipboardData(text: "Join Jimma Voice Chat Family! $link")); setState(() { AppData.invited += 1; AppData.coins += 2000; }); widget.onUpd(); },
+        ),
+      ])),
     );
   }
 }
@@ -589,22 +620,14 @@ class _VipPageState extends State<VipPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Royal VIP Club"), backgroundColor: const Color(0xFFFFB800), foregroundColor: Colors.white),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(14),
-        itemCount: 7,
-        itemBuilder: (_, i) {
-          final lv = i + 1;
-          final cost = lv * 10000;
-          return Card(child: ListTile(
-            title: Text("VIP $lv Package", style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text("$cost Coins • Golden Crown + Entry Effect"),
-            trailing: ElevatedButton(
-              onPressed: AppData.vip >= lv ? null : () { if (AppData.coins >= cost) { setState(() { AppData.coins -= cost; AppData.vip = lv; }); widget.onUpd(); } },
-              child: Text(AppData.vip >= lv ? "Active" : "Upgrade"),
-            ),
-          ));
-        },
-      ),
+      body: ListView.builder(padding: const EdgeInsets.all(14), itemCount: 7, itemBuilder: (_, i) {
+        final lv = i + 1, cost = lv * 10000;
+        return Card(child: ListTile(
+          title: Text("VIP $lv Package", style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text("$cost Coins • Golden Crown + Entry Effect"),
+          trailing: ElevatedButton(onPressed: AppData.vip >= lv ? null : () { if (AppData.coins >= cost) { setState(() { AppData.coins -= cost; AppData.vip = lv; }); widget.onUpd(); } }, child: Text(AppData.vip >= lv ? "Active" : "Upgrade")),
+        ));
+      }),
     );
   }
 }
@@ -616,27 +639,16 @@ class HostCenterPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text("Host Center"), backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white),
       body: ListView(padding: const EdgeInsets.all(16), children: [
-        Card(child: ListTile(title: const Text("Current Agency"), subtitle: Text("${AppData.familyName} (Code: ${AppData.invite})"))),
-        Card(child: ListTile(title: const Text("Gift & Hourly Points"), subtitle: Text("${AppData.points.toStringAsFixed(2)} Points Ready to Cash Out"))),
+        const Card(child: ListTile(title: Text("Hourly Income Rate"), subtitle: Text("3,000 Points/Hour (Upgradeable to 5,000/h)"))),
+        Card(child: ListTile(title: const Text("Available Gift & Host Points"), subtitle: Text("${AppData.points.toStringAsFixed(2)} Points"))),
       ]),
-    );
-  }
-}
-
-class BadgeWallPage extends StatelessWidget {
-  const BadgeWallPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Badge Wall"), backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white),
-      body: ListView(padding: const EdgeInsets.all(14), children: AppData.badges.map((b) => Card(child: ListTile(leading: const Icon(Icons.military_tech, color: Color(0xFFFFB800)), title: Text(b)))).toList()),
     );
   }
 }
 
 class EventCenterPage extends StatelessWidget {
   final VoidCallback onUpd;
-  EventCenterPage({super.key, required this.onUpd});
+  const EventCenterPage({super.key, required this.onUpd});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -673,7 +685,7 @@ class _AgencyCenterPageState extends State<AgencyCenterPage> {
           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white),
           onPressed: () {
             if (agCtrl.text.isEmpty || nidCtrl.text.isEmpty) return;
-            AppData.agencyRequests.insert(0, {"id": "AG-502", "agencyName": agCtrl.text, "ownerName": owCtrl.text, "nationalId": nidCtrl.text, "idPhoto": "National_ID.jpg", "whatsapp": waCtrl.text, "telegram": tgCtrl.text, "status": "Pending"});
+            AppData.agencyRequests.insert(0, {"id": "AG-${501 + AppData.agencyRequests.length}", "agencyName": agCtrl.text, "ownerName": owCtrl.text, "nationalId": nidCtrl.text, "whatsapp": waCtrl.text, "telegram": tgCtrl.text, "status": "Pending"});
             Clipboard.setData(ClipboardData(text: "Agency Apply: ${agCtrl.text} | ID: ${nidCtrl.text} | WA: ${waCtrl.text}"));
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Sent to Admin Panel & Copied for WhatsApp/TG!")));
             Navigator.pop(context);
@@ -728,13 +740,17 @@ class _AdminPinGatePageState extends State<AdminPinGatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Admin Security Check"), backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+      appBar: AppBar(title: const Text("Owner Security Gate"), backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
       body: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         const Icon(Icons.lock_person, size: 64, color: Colors.redAccent),
-        TextField(controller: pinCtrl, obscureText: true, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: "Enter Admin PIN (2026)")),
+        TextField(controller: pinCtrl, obscureText: true, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: "Enter Secret Admin PIN")),
         const SizedBox(height: 12),
         ElevatedButton(onPressed: () {
-          if (pinCtrl.text == AppData.adminPin) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SuperAdminPanelPage(onUpd: widget.onUpd)));
+          if (pinCtrl.text == AppData.adminPin) {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SuperAdminPanelPage(onUpd: widget.onUpd)));
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Access Denied: Invalid PIN")));
+          }
         }, child: const Text("Unlock Admin Panel")),
       ])),
     );
@@ -764,174 +780,5 @@ class _SuperAdminPanelPageState extends State<SuperAdminPanelPage> {
         }),
       ]),
     ));
-  }
-}
-class LiveRoomPage extends StatefulWidget {
-  final String id, title;
-  final bool host;
-  final VoidCallback onUpd;
-  const LiveRoomPage({super.key, required this.id, required this.title, required this.host, required this.onUpd});
-  @override
-  State<LiveRoomPage> createState() => _LiveRoomPageState();
-}
-
-class _LiveRoomPageState extends State<LiveRoomPage> {
-  String activeGift = "";
-  void sendGift(String n, int c) {
-    if (AppData.coins < c) return;
-    setState(() { AppData.coins -= c; AppData.points += c * 0.8; activeGift = "$n (-$c Coins)"; });
-    widget.onUpd();
-    Future.delayed(const Duration(seconds: 3), () { if (mounted) setState(() => activeGift = ""); });
-  }
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("${widget.title} (${AppData.coins})"), backgroundColor: const Color(0xFF052E24), foregroundColor: Colors.white),
-      body: Stack(children: [
-        Column(children: [
-          Container(color: const Color(0xFF083D30), padding: const EdgeInsets.all(6), child: Text("${AppData.name} entered on ${AppData.equippedEntry}", style: const TextStyle(color: Color(0xFFFFD700), fontSize: 12))),
-          Expanded(child: ZegoUIKitPrebuiltLiveAudioRoom(appID: 1984661954, appSign: "9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5", userID: AppData.uid, userName: AppData.name, roomID: widget.id, config: widget.host ? ZegoUIKitPrebuiltLiveAudioRoomConfig.host() : ZegoUIKitPrebuiltLiveAudioRoomConfig.audience())),
-          Container(color: const Color(0xFF052E24), padding: const EdgeInsets.all(10), child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-            ElevatedButton(onPressed: () => sendGift("Jimma Coffee", 500), child: const Text("Coffee 500")),
-            ElevatedButton(onPressed: () => sendGift("Golden Lion", 5000), child: const Text("Lion 5k")),
-            ElevatedButton(onPressed: () => sendGift("Shark Moto", 15000), child: const Text("Moto 15k")),
-          ])),
-        ]),
-        if (activeGift.isNotEmpty) Center(child: Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.amber.shade800, borderRadius: BorderRadius.circular(20)), child: Text("GIFT SENT!\n$activeGift", textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)))),
-      ]),
-    );
-  }
-}
-
-class GamesHubPage extends StatefulWidget {
-  final VoidCallback onUpd;
-  const GamesHubPage({super.key, required this.onUpd});
-  @override
-  State<GamesHubPage> createState() => _GamesHubPageState();
-}
-
-class _GamesHubPageState extends State<GamesHubPage> {
-  String cat = "Hot";
-  final games = [
-    {"name": "Golden Lion Spin", "cat": "Slot", "hot": true, "icon": Icons.casino_rounded, "c1": 0xFFFFB800, "c2": 0xFFFF6F00},
-    {"name": "Jimma Ocean Hunt", "cat": "Fishing", "hot": true, "icon": Icons.scuba_diving_rounded, "c1": 0xFF00B4DB, "c2": 0xFF0083B0},
-    {"name": "Oromo Jungle Hunt", "cat": "Hot", "hot": true, "icon": Icons.forest_rounded, "c1": 0xFF11998E, "c2": 0xFF38EF7D},
-    {"name": "Royal Coin Rain", "cat": "Slot", "hot": true, "icon": Icons.monetization_on_rounded, "c1": 0xFFF7971E, "c2": 0xFFFFD200},
-    {"name": "Emerald Diamond III", "cat": "Slot", "hot": false, "icon": Icons.diamond_rounded, "c1": 0xFF008F6B, "c2": 0xFF00CEC9},
-    {"name": "Coffee & Fruit Spin", "cat": "Slot", "hot": true, "icon": Icons.local_cafe_rounded, "c1": 0xFFEB3349, "c2": 0xFFF45C43},
-    {"name": "Royal Ludo", "cat": "Multi Player", "hot": true, "icon": Icons.grid_view_rounded, "c1": 0xFF6A11CB, "c2": 0xFF2575FC},
-    {"name": "Teen Patti Cards", "cat": "Multi Player", "hot": true, "icon": Icons.style_rounded, "c1": 0xFFCB2D3E, "c2": 0xFFEF473A},
-    {"name": "Chicken Road Run", "cat": "Latest", "hot": true, "icon": Icons.directions_run_rounded, "c1": 0xFFFF9966, "c2": 0xFFFF5E62},
-    {"name": "CosmoX Space Jet", "cat": "Latest", "hot": true, "icon": Icons.rocket_launch_rounded, "c1": 0xFF141E30, "c2": 0xFF243B55},
-    {"name": "Dragon Power", "cat": "Slot", "hot": false, "icon": Icons.whatshot_rounded, "c1": 0xFFD31027, "c2": 0xFFEA384D},
-    {"name": "Super Ace", "cat": "Slot", "hot": true, "icon": Icons.workspace_premium_rounded, "c1": 0xFFDA22FF, "c2": 0xFF9733EE},
-    {"name": "Sweet Bonanza", "cat": "Latest", "hot": true, "icon": Icons.cake_rounded, "c1": 0xFFFF512F, "c2": 0xFFDD2476},
-    {"name": "World Goal Penalty", "cat": "Multi Player", "hot": false, "icon": Icons.sports_soccer_rounded, "c1": 0xFF1D976C, "c2": 0xFF93F9B9},
-    {"name": "DJ Live Rhythm", "cat": "Multi Player", "hot": false, "icon": Icons.headphones_rounded, "c1": 0xFF4776E6, "c2": 0xFF8E54E9},
-    {"name": "Fishing Star", "cat": "Fishing", "hot": true, "icon": Icons.sailing_rounded, "c1": 0xFF2193B0, "c2": 0xFF6DD5ED},
-    {"name": "Kraken Treasure III", "cat": "Fishing", "hot": false, "icon": Icons.anchor_rounded, "c1": 0xFF0F2027, "c2": 0xFF2C5364},
-    {"name": "Royal Roulette", "cat": "Slot", "hot": false, "icon": Icons.track_changes_rounded, "c1": 0xFF8E0E00, "c2": 0xFF1F1C18},
-    {"name": "The Monkey King", "cat": "Hot", "hot": true, "icon": Icons.emoji_nature_rounded, "c1": 0xFFF2994A, "c2": 0xFFF2C94C},
-    {"name": "Royal Battle", "cat": "Multi Player", "hot": false, "icon": Icons.shield_rounded, "c1": 0xFF3A7BD5, "c2": 0xFF3A6073},
-  ];
-  @override
-  Widget build(BuildContext context) {
-    final list = games.where((g) => cat == "Hot" ? g["hot"] == true : g["cat"] == cat).toList();
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A241E),
-      appBar: AppBar(title: Text("Lucky Island Games (${AppData.coins})"), backgroundColor: const Color(0xFF061A15), foregroundColor: Colors.white),
-      body: Column(children: [
-        SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.all(10), child: Row(children: ["Latest", "Hot", "Slot", "Fishing", "Multi Player"].map((c) => Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(label: Text(c), selected: cat == c, onSelected: (_) => setState(() => cat = c)))).toList())),
-        Expanded(child: GridView.builder(
-          padding: const EdgeInsets.all(12),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 1.1, crossAxisSpacing: 10, mainAxisSpacing: 10),
-          itemCount: list.length,
-          itemBuilder: (_, i) {
-            final g = list[i];
-            return InkWell(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PlayAnimatedGamePage(gameName: g["name"] as String, c1: g["c1"] as int, c2: g["c2"] as int, icon: g["icon"] as IconData, onUpd: () { setState(() {}); widget.onUpd(); }))),
-              child: Container(decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(g["c1"] as int), Color(g["c2"] as int)]), borderRadius: BorderRadius.circular(18)), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(g["icon"] as IconData, size: 48, color: Colors.white),
-                Text(g["name"] as String, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-              ])),
-            );
-          },
-        )),
-      ]),
-    );
-  }
-}
-class RechargePage extends StatefulWidget {
-  final VoidCallback onUpd;
-  const RechargePage({super.key, required this.onUpd});
-  @override
-  State<RechargePage> createState() => _RechargePageState();
-}
-
-class _RechargePageState extends State<RechargePage> {
-  String cur = "ETB";
-  bool bulkSeller = false;
-  int sel = 0;
-  final amtCtrl = TextEditingController(text: "180"), txCtrl = TextEditingController();
-
-  int get coins {
-    final v = double.tryParse(amtCtrl.text) ?? 0;
-    if (cur == "ETB") {
-      final rate = (bulkSeller || AppData.isCoinSeller) ? 150.0 : 180.0;
-      return ((v / rate) * 10000).round();
-    } else {
-      final base = (v * 10000).round();
-      return (bulkSeller || AppData.isCoinSeller) ? (base * 1.2).round() : base;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final pm = AppData.payments[sel];
-    return Scaffold(
-      appBar: AppBar(title: const Text("Recharge Coins (Jimma Official)"), backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
-        Text("Coins: ${AppData.coins} • Regular: 180 ETB=10k | Seller: 150 ETB=10k", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: ChoiceChip(label: const Text("ETB (Ethiopia)"), selected: cur == "ETB", onSelected: (_) => setState(() { cur = "ETB"; sel = 0; amtCtrl.text = "180"; }))),
-          const SizedBox(width: 8),
-          Expanded(child: ChoiceChip(label: const Text("Binance USDT (Min \$5)"), selected: cur == "USDT", onSelected: (_) => setState(() { cur = "USDT"; sel = 6; amtCtrl.text = "5"; }))),
-        ]),
-        SwitchListTile(
-          title: const Text("Coin Seller / Bulk Discount Mode", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-          subtitle: const Text("150 ETB = 10k Coins or +20% USDT Bonus"),
-          value: bulkSeller,
-          onChanged: (v) => setState(() => bulkSeller = v),
-        ),
-        Wrap(spacing: 8, children: (cur == "ETB" ? ["180", "360", "900", "1500", "3000"] : ["5", "10", "20", "50", "100"]).map((p) => ActionChip(label: Text("$p $cur"), onPressed: () => setState(() => amtCtrl.text = p))).toList()),
-        const SizedBox(height: 10),
-        TextField(controller: amtCtrl, keyboardType: TextInputType.number, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: "Custom Amount ($cur)", suffixText: "= $coins Coins", border: const OutlineInputBorder())),
-        const SizedBox(height: 10),
-        ...List.generate(AppData.payments.length, (i) {
-          final item = AppData.payments[i];
-          if (item["cur"] != cur) return const SizedBox.shrink();
-          return Card(child: RadioListTile(
-            value: i, groupValue: sel, onChanged: (v) => setState(() => sel = v!),
-            title: Text(item["name"]!, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(item["acc"]!),
-            secondary: IconButton(icon: const Icon(Icons.copy), onPressed: () { Clipboard.setData(ClipboardData(text: item["acc"]!)); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Copied ${item["acc"]}"))); }),
-          ));
-        }),
-        TextField(controller: txCtrl, decoration: const InputDecoration(labelText: "Transaction ID / Receipt Note", border: OutlineInputBorder())),
-        const SizedBox(height: 12),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF008F6B), foregroundColor: Colors.white, padding: const EdgeInsets.all(14)),
-          onPressed: () {
-            final val = double.tryParse(amtCtrl.text) ?? 0;
-            if (cur == "USDT" && val < 5) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Minimum USDT recharge is \$5 (50,000 Coins)!"))); return; }
-            AppData.tickets.insert(0, {"id": "TCK-${1043 + AppData.tickets.length}", "user": "User #${AppData.uid}", "title": "${amtCtrl.text} $cur -> $coins Coins", "msg": "${pm["name"]}: ${txCtrl.text}", "status": "Pending", "coins": coins});
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Receipt Sent to Admin Support!")));
-            Navigator.pop(context);
-          },
-          child: Text("Submit Deposit ($coins Coins)"),
-        ),
-      ]),
-    );
   }
 }
