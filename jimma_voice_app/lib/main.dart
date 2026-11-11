@@ -567,7 +567,7 @@ class _SpinPageState extends State<SpinPage> {
         ElevatedButton(
           onPressed: () {
             if (AppData.coins < 1000) return;
-            final prizes =;
+            final prizes = List<int>.generate(5, (i) => i * 2500);
             final win = prizes[Random().nextInt(5)];
             setState(() { AppData.coins = AppData.coins - 1000 + win; res = "Won $win Coins!"; });
             widget.onUpd();
