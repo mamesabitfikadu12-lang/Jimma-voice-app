@@ -966,3 +966,32 @@ class StorePage extends StatelessWidget {
     );
   }
 }
+
+class LevelPrivilegesPage extends StatelessWidget {
+  const LevelPrivilegesPage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final levels = [
+      ['Lv.1 – Lv.5 (Bronze)', 'Room Chat Badge & Daily Check-in Bonus'],
+      ['Lv.6 – Lv.10 (Silver)', 'Custom Profile Frame & Room Red Packet'],
+      ['Lv.11 – Lv.15 (Gold)', 'More Room Admins (Up to 5 Admins)'],
+      ['Lv.16 – Lv.20 (Platinum)', 'Stealth Entry & Special Ride Entrance'],
+      ['Lv.21 – Lv.25 (Diamond)', 'More Crown Slots & Priority Support'],
+      ['Lv.26 – Lv.30 (Jimma King)', 'Exclusive Royal Title & Global Broadcast'],
+    ];
+    return Scaffold(
+      appBar: AppBar(title: const Text('Wealth & Charm Privileges (Lv.1–30)')),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: levels.length,
+        itemBuilder: (c, i) => Card(
+          child: ListTile(
+            leading: const Icon(Icons.workspace_premium, color: Colors.amber),
+            title: Text(levels[i], style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text(levels[i]),
+          ),
+        ),
+      ),
+    );
+  }
+}
