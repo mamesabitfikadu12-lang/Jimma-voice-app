@@ -782,3 +782,104 @@ class _SuperAdminPanelPageState extends State<SuperAdminPanelPage> {
     ));
   }
 }
+
+class BackpackPage extends StatelessWidget {
+  final VoidCallback onUpd;
+  const BackpackPage({super.key, required this.onUpd});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('My Backpack')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: const [
+          Card(child: ListTile(leading: Icon(Icons.directions_car, color: Colors.amber), title: Text('Jimma Golden Car Entry'), subtitle: Text('Active • 7 Days Remaining'))),
+          Card(child: ListTile(leading: Icon(Icons.verified, color: Colors.cyan), title: Text('VIP Royal Frame'), subtitle: Text('Active • Equipped'))),
+        ],
+      ),
+    );
+  }
+}
+
+class SettingPage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const SettingPage({super.key, required this.onUpd});
+  @override
+  State<SettingPage> createState() => _SettingPageState();
+}
+
+class _SettingPageState extends State<SettingPage> {
+  final _nameCtrl = TextEditingController();
+  String _lang = 'English';
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Settings')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Edit Display Name', border: OutlineInputBorder())),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            value: _lang,
+            decoration: const InputDecoration(labelText: 'Language', border: OutlineInputBorder()),
+            items: ['English', 'Afaan Oromoo', 'Amharic'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            onChanged: (v) => setState(() => _lang = v ?? 'English'),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(onPressed: () { widget.onUpd(); Navigator.pop(context); }, child: const Text('Save Changes')),
+        ],
+      ),
+    );
+  }
+}
+
+class RechargePage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const RechargePage({super.key, required this.onUpd});
+  @override
+  State<RechargePage> createState() => _RechargePageState();
+}
+
+class _RechargePageState extends State<RechargePage> {
+  final _txCtrl = TextEditingController();
+  String _method = 'Telebirr';
+  int _coins = 10000;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Recharge & Auto-Verify')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Card(color: Color(0xFF1E293B), child: ListTile(title: Text('Rates: Regular 180 ETB = 10k | Seller 150 ETB = 10k | USDT Min \$5 = 50k'))),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            value: _method,
+            items: ['Telebirr', 'CBEBirr', 'Siinqee Plus', 'CBE', 'Awash', 'Dashen', 'Binance USDT'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            onChanged: (v) => setState(() => _method = v ?? 'Telebirr'),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<int>(
+            value: _coins,
+            items: [10000, 50000, 100000, 500000].map((c) => DropdownMenuItem(value: c, child: Text('$c Coins'))).toList(),
+            onChanged: (v) => setState(() => _coins = v ?? 10000),
+          ),
+          const SizedBox(height: 12),
+          TextField(controller: _txCtrl, decoration: const InputDecoration(labelText: 'Payment Transaction ID / Hash', border: OutlineInputBorder())),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              if (_txCtrl.text.trim().length >= 5) {
+                widget.onUpd();
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Verified! +$_coins Coins added via $_method')));
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Auto-Verify & Claim Coins'),
+          ),
+        ],
+      ),
+    );
+  }
+}
