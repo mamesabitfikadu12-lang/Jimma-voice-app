@@ -88,3 +88,7 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+dependency_overrides:
+  file_picker: ^8.1.4
+  android_file_picker: ^2.1.5
