@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Jimma Voice APK
 on: [push]
 jobs:
   build:
@@ -13,13 +13,20 @@ jobs:
         with:
           channel: 'stable'
       - run: |
+          cp jimma_voice_app/lib/main.dart /tmp/main.dart
+          cp jimma_voice_app/pubspec.yaml /tmp/pubspec.yaml
+          rm -rf jimma_voice_app
+          flutter create --org com.jimmavoice --platforms=android jimma_voice_app
+          cp /tmp/main.dart jimma_voice_app/lib/main.dart
+          cp /tmp/pubspec.yaml jimma_voice_app/pubspec.yaml
           cd jimma_voice_app
-          flutter pub upgrade --major-versions
-          chmod 444 android/build.gradle.kts
-          for f in ~/.pub-cache/hosted/pub.dev/android_file_picker-*/android/build.gradle.kts; do
-            printf 'plugins {\n  id("com.android.library")\n  id("org.jetbrains.kotlin.android")\n}\nandroid {\n  namespace = "com.mr.flutter.plugin.filepicker"\n  compileSdk = 35\n  defaultConfig { minSdk = 23 }\n  compileOptions {\n    sourceCompatibility = JavaVersion.VERSION_17\n    targetCompatibility = JavaVersion.VERSION_17\n  }\n  \n}\n' > "$f"
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/g; s/compileSdk = flutter.compileSdkVersion/compileSdk = 35/g; s/targetSdk = flutter.targetSdkVersion/targetSdk = 35/g' android/app/build.gradle.kts
+          sed -i 's/android:label="[^"]*"/android:label="Jimma Voice Chat Family"/g' android/app/src/main/AndroidManifest.xml
+          flutter pub get
+          for f in ~/.pub-cache/hosted/pub.dev/android_file_picker-*/android/build.gradle*; do
+            [ -f "$f" ] && printf 'plugins {\n  id("com.android.library")\n  id("org.jetbrains.kotlin.android")\n}\nandroid {\n  namespace = "com.mr.flutter.plugin.filepicker"\n  compileSdk = 35\n  defaultConfig { minSdk = 23 }\n  compileOptions {\n    sourceCompatibility = JavaVersion.VERSION_17\n    targetCompatibility = JavaVersion.VERSION_17\n  }\n}\n' > "$f"
           done
-          chmod 444 android/build.gradle.kts && flutter build apk --release --target-platform android-arm64 --android-skip-build-dependency-validation
+          flutter build apk --release --target-platform android-arm64
       - uses: actions/upload-artifact@v4
         with:
           name: jimma-voice-apk
