@@ -1,10 +1,8 @@
+import 'dart:math';
+import 'package:flutter/material.dart';
 import 'rooms_games.dart';
 import 'games_moments.dart';
 import 'me_pages.dart';
-import 'dart:async';
-import 'dart:math';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,28 +17,29 @@ class AppState {
   static int wealthLv = 1;
   static int charmLv = 1;
   static int vipLevel = 0;
-  static String language = 'English';
   static bool msgBanner = true;
   static bool msgSound = true;
   static bool msgVibrate = true;
-  static String agencyStatus = 'None'; // None, Pending, Approved
+  static String agencyStatus = 'None';
   static String pendingAgencyName = '';
   static String pendingNationalId = '';
   static List<Map<String, String>> pointHistory = [];
-  static List<Map<String, String>> moments = [
-    {
-      'user': 'Jimma Voice Official',
-      'tag': '#JimmaCoffeeCulture',
-      'text': 'Welcome to Jimma Voice Chat Family! Celebrate Oromo & Ethiopian heritage with friends worldwide.',
-      'likes': '128'
-    },
-    {
-      'user': 'Oromia Cultural Hub',
-      'tag': '#WorldCup2026',
-      'text': 'Join our live voice rooms for music, coffee ceremonies, and global tournaments!',
-      'likes': '94'
-    },
+  static List<Map<String, String>> notifications = [
+    {'title': 'Welcome to Jimma Voice Chat Family', 'body': 'Celebrate Oromo & Ethiopian culture with global voice rooms!', 'time': 'Now'}
   ];
+  static List<Map<String, String>> chatMessages = [
+    {'sender': 'Jimma Voice Support', 'type': 'text', 'content': 'Hello! Send text, voice note, or bank payment receipt photo here.', 'time': '11:30 PM'}
+  ];
+  static List<Map<String, String>> moments = [
+    {'user': 'Jimma Voice Official', 'tag': '#JimmaCoffeeCulture', 'text': 'Welcome to Jimma Voice Chat Family!', 'likes': '128'},
+  ];
+
+  static void addNotif(BuildContext? ctx, String title, String body) {
+    notifications.insert(0, {'title': title, 'body': body, 'time': 'Just now'});
+    if (ctx != null && msgBanner) {
+      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(backgroundColor: Colors.teal.shade800, content: Text('🔔 $title: $body')));
+    }
+  }
 }
 
 class JimmaVoiceApp extends StatelessWidget {
@@ -50,16 +49,7 @@ class JimmaVoiceApp extends StatelessWidget {
     return MaterialApp(
       title: 'Jimma Voice Chat Family',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0B0F19),
-        primaryColor: const Color(0xFFFFB703),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF111827),
-          elevation: 0,
-          centerTitle: true,
-        ),
-        cardColor: const Color(0xFF161E31),
-      ),
+      theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: const Color(0xFF0B0F19), primaryColor: const Color(0xFFFFB703), cardColor: const Color(0xFF161E31)),
       home: const MainNavScreen(),
     );
   }
@@ -74,16 +64,9 @@ class MainNavScreen extends StatefulWidget {
 class _MainNavScreenState extends State<MainNavScreen> {
   int _idx = 0;
   void _refresh() => setState(() {});
-
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      RoomsTab(onUpd: _refresh),
-      GamesTab(onUpd: _refresh),
-      MomentsTab(onUpd: _refresh),
-      MessagesTab(onUpd: _refresh),
-      MeTab(onUpd: _refresh),
-    ];
+    final pages = [RoomsTab(onUpd: _refresh), GamesTab(onUpd: _refresh), MomentsTab(onUpd: _refresh), MessagesTab(onUpd: _refresh), MeTab(onUpd: _refresh)];
     return Scaffold(
       body: pages[_idx],
       bottomNavigationBar: BottomNavigationBar(
@@ -104,4 +87,3 @@ class _MainNavScreenState extends State<MainNavScreen> {
     );
   }
 }
-

@@ -67,27 +67,80 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
           SwitchListTile(title: const Text('Coin Seller Rate (150 ETB = 10k)'), subtitle: const Text('Regular: 180 ETB = 10k | USDT Min \$5 = 50k'), value: _seller, onChanged: (v) => setState(() => _seller = v)),
           DropdownButtonFormField<String>(value: _bank, items: ['Telebirr', 'CBEBirr', 'Siinqee Plus', 'CBE', 'Awash', 'Dashen', 'Binance USDT'].map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(), onChanged: (v) => setState(() => _bank = v ?? 'Telebirr')),
           TextField(controller: _tx, decoration: const InputDecoration(labelText: 'Receipt / Transaction ID')),
-          ElevatedButton(onPressed: () { if (_tx.text.length >= 5) { AppState.coins += (_bank == 'Binance USDT' ? 50000 : 10000); widget.onUpd(); setState(() => _tx.clear()); } }, child: Text('Auto-Verify ($etb ETB / 10k)')),
+          ElevatedButton(onPressed: () {
+            if (_tx.text.length >= 5) {
+              final add = _bank == 'Binance USDT' ? 50000 : 10000;
+              AppState.coins += add;
+              AppState.addNotif(context, 'Coins Recharged (+$add Coins)', 'Paid via $_bank • Ref: ${_tx.text.trim()}');
+              widget.onUpd();
+              setState(() => _tx.clear());
+            }
+          }, child: Text('Auto-Verify ($etb ETB / 10k)')),
         ]),
         ListView(padding: const EdgeInsets.all(14), children: [
           TextField(controller: _to, decoration: const InputDecoration(labelText: 'Recipient User ID')),
           TextField(controller: _amt, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Amount (x 1,000 Coins)')),
-          ElevatedButton(onPressed: () { final k = (int.tryParse(_amt.text) ?? 0) * 1000; if (k > 0 && AppState.coins >= k) { AppState.coins -= k; widget.onUpd(); setState(() {}); } }, child: const Text('Transfer Coins')),
+          ElevatedButton(onPressed: () {
+            final k = (int.tryParse(_amt.text) ?? 0) * 1000;
+            if (k > 0 && AppState.coins >= k && _to.text.isNotEmpty) {
+              AppState.coins -= k;
+              AppState.addNotif(context, 'Coins Transferred (-$k Coins)', 'Sent to User ID: ${_to.text.trim()}');
+              widget.onUpd();
+              setState(() {});
+            }
+          }, child: const Text('Transfer Coins')),
         ]),
-        Center(child: ElevatedButton(onPressed: () { if (AppState.points >= 1000) { AppState.coins += (AppState.points * 0.98).round(); AppState.points = 0; widget.onUpd(); setState(() {}); } }, child: const Text('Exchange Points to Coins (98%)'))),
+        Center(child: ElevatedButton(onPressed: () {
+          if (AppState.points >= 1000) {
+            final c = (AppState.points * 0.98).round();
+            AppState.coins += c;
+            AppState.addNotif(context, 'Points Exchanged (+$c Coins)', 'Converted ${AppState.points.toStringAsFixed(0)} Agent Points to Coins');
+            AppState.points = 0;
+            widget.onUpd();
+            setState(() {});
+          }
+        }, child: const Text('Exchange Agent Points to Coins (98%)'))),
       ]),
     ));
   }
 }
-class StorePage extends StatelessWidget {
+
+class AgencyCenterPage extends StatefulWidget {
   final VoidCallback onUpd;
-  const StorePage({super.key, required this.onUpd});
+  const AgencyCenterPage({super.key, required this.onUpd});
+  @override
+  State<AgencyCenterPage> createState() => _AgencyCenterPageState();
+}
+class _AgencyCenterPageState extends State<AgencyCenterPage> {
+  final _ag = TextEditingController(), _id = TextEditingController(), _agentId = TextEditingController(), _ptsCtrl = TextEditingController(text: '1000');
   @override
   Widget build(BuildContext context) {
-    final items = ['Abba Jifar Palace Theme (4,200)', 'Jimma Royal Stool Frame (15,000)', 'Oromo Royal Horse Ride (30,000)', 'Jebena Gold ChatBubble (10,000)', 'Ethiopian Lion Room Card (7,000)'];
-    return Scaffold(appBar: AppBar(title: const Text('Oromia & Ethiopia Luxury Store')), body: ListView(padding: const EdgeInsets.all(14), children: items.map((e) => Card(child: ListTile(title: Text(e), trailing: const Text('Equip')))).toList()));
+    return Scaffold(appBar: AppBar(title: const Text('Agency Center & Points')), body: ListView(padding: const EdgeInsets.all(14), children: [
+      Card(child: ListTile(title: Text('Status: ${AppState.agencyStatus} • My Points: ${AppState.points.toStringAsFixed(0)}'), subtitle: const Text('Commission: 12% ➔ 16% • Official Jimma Voice Support'))),
+      const Text('Send Host Points to Agent (Hala Style)', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+      TextField(controller: _agentId, decoration: const InputDecoration(labelText: 'Agent ID')),
+      TextField(controller: _ptsCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Points Amount to Send')),
+      ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: () {
+        final p = double.tryParse(_ptsCtrl.text) ?? 0;
+        if (p > 0 && AppState.points >= p && _agentId.text.isNotEmpty) {
+          AppState.points -= p;
+          AppState.pointHistory.insert(0, {'title': 'Sent to Agent ${_agentId.text}', 'amt': '-${p.toStringAsFixed(0)} Pts'});
+          AppState.addNotif(context, 'Points Sent to Agent', 'Transferred ${p.toStringAsFixed(0)} Pts to Agent ID: ${_agentId.text}');
+          widget.onUpd();
+          setState(() {});
+        }
+      }, child: const Text('Send Points to Agent')),
+      const Divider(),
+      TextField(controller: _ag, decoration: const InputDecoration(labelText: 'New Agency Name')),
+      TextField(controller: _id, decoration: const InputDecoration(labelText: 'Ethiopian National ID (FAN/FIN)')),
+      ElevatedButton(onPressed: () { if (_ag.text.isNotEmpty && _id.text.isNotEmpty) { AppState.agencyStatus = 'Pending'; AppState.pendingAgencyName = _ag.text; AppState.pendingNationalId = _id.text; setState(() {}); } }, child: const Text('Register Agency')),
+      const Divider(),
+      const Text('Detail of Points (All • Cash out • Transfer)', style: TextStyle(color: Colors.amber)),
+      ...AppState.pointHistory.map((h) => ListTile(title: Text(h['title']!), trailing: Text(h['amt']!))),
+    ]));
   }
 }
+
 class VipClubPage extends StatelessWidget {
   final VoidCallback onUpd;
   const VipClubPage({super.key, required this.onUpd});
@@ -100,22 +153,13 @@ class VipClubPage extends StatelessWidget {
     ]));
   }
 }
-class AgencyCenterPage extends StatefulWidget {
+
+class StorePage extends StatelessWidget {
   final VoidCallback onUpd;
-  const AgencyCenterPage({super.key, required this.onUpd});
-  @override
-  State<AgencyCenterPage> createState() => _AgencyCenterPageState();
-}
-class _AgencyCenterPageState extends State<AgencyCenterPage> {
-  final _ag = TextEditingController(), _id = TextEditingController();
+  const StorePage({super.key, required this.onUpd});
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: const Text('Agency Center & Points')), body: ListView(padding: const EdgeInsets.all(14), children: [
-      Card(child: ListTile(title: Text('Status: ${AppState.agencyStatus}'), subtitle: const Text('Commission: 12% ➔ 16% • Jimma Voice Official'))),
-      TextField(controller: _ag, decoration: const InputDecoration(labelText: 'Agency Name')),
-      TextField(controller: _id, decoration: const InputDecoration(labelText: 'Ethiopian National ID (FAN/FIN)')),
-      ElevatedButton(onPressed: () { if (_ag.text.isNotEmpty && _id.text.isNotEmpty) { AppState.agencyStatus = 'Pending'; AppState.pendingAgencyName = _ag.text; AppState.pendingNationalId = _id.text; setState(() {}); } }, child: const Text('Register Agency')),
-      const Text('Detail of Points (All • Cash out • Transfer): 0 Points', style: TextStyle(color: Colors.amber)),
-    ]));
+    final items = ['Abba Jifar Palace Theme (4,200)', 'Jimma Royal Stool Frame (15,000)', 'Oromo Royal Horse Ride (30,000)', 'Jebena Gold ChatBubble (10,000)', 'Ethiopian Lion Room Card (7,000)'];
+    return Scaffold(appBar: AppBar(title: const Text('Oromia & Ethiopia Luxury Store')), body: ListView(padding: const EdgeInsets.all(14), children: items.map((e) => Card(child: ListTile(title: Text(e), trailing: const Text('Equip')))).toList()));
   }
 }

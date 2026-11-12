@@ -55,12 +55,13 @@ class _GamesTabState extends State<GamesTab> {
           SystemSound.play(SystemSoundType.alert);
           setState(() { _reels = [pick, pick, pick]; _spinning = false; });
         } else {
-          setState(() { _reels = [_symbols, _symbols, _symbols]; _spinning = false; });
+          setState(() { _reels = [_symbols[0], _symbols[1], _symbols[2]]; _spinning = false; });
         }
         widget.onUpd();
       }
     });
   }
+
   void _openGameModal(String title, String mode) {
     int pick = 0;
     String status = 'Select choice & tap PLAY';
@@ -101,13 +102,13 @@ class _GamesTabState extends State<GamesTab> {
         const Text('Oromia & Abba Jifar Royal Slot', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
         const SizedBox(height: 10),
         Row(children: _reels.map((s) => Expanded(child: Card(color: Colors.black54, child: Padding(padding: const EdgeInsets.all(12), child: Center(child: Text(s, style: const TextStyle(fontSize: 12))))))).toList()),
-        Wrap(spacing: 6, children:.map((b) => ChoiceChip(label: Text('$b'), selected: _bet == b, onSelected: (_) => setState(() => _bet = b))).toList()),
+        Wrap(spacing: 6, children: [100, 500, 1000].map((b) => ChoiceChip(label: Text('$b'), selected: _bet == b, onSelected: (_) => setState(() => _bet = b))).toList()),
         ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: _spinSlot, child: Text('SPIN ($_bet Coins)')),
       ]))),
       const SizedBox(height: 12),
       GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 8, mainAxisSpacing: 8), itemCount: _gamesList.length, itemBuilder: (_, i) {
         final g = _gamesList[i];
-        return InkWell(onTap: () => g == 'slot' ? _spinSlot() : _openGameModal(g as String, g as String), child: Card(color: (g as Color).withOpacity(0.45), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text(g as String, style: const TextStyle(fontSize: 22)), Text(g as String, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11))])));
+        return InkWell(onTap: () => g[3] == 'slot' ? _spinSlot() : _openGameModal(g[0] as String, g[3] as String), child: Card(color: (g[2] as Color).withOpacity(0.45), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text(g[1] as String, style: const TextStyle(fontSize: 22)), Text(g[0] as String, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11))])));
       }),
     ]));
   }
@@ -130,13 +131,69 @@ class _MomentsTabState extends State<MomentsTab> {
   }
 }
 
-class MessagesTab extends StatelessWidget {
+class MessagesTab extends StatefulWidget {
   final VoidCallback onUpd;
   const MessagesTab({super.key, required this.onUpd});
   @override
+  State<MessagesTab> createState() => _MessagesTabState();
+}
+class _MessagesTabState extends State<MessagesTab> {
+  final _msgCtrl = TextEditingController();
+  bool _recording = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: const Text('Messages')), body: ListView(padding: const EdgeInsets.all(12), children: const [
-      Card(child: ListTile(leading: Icon(Icons.support_agent, color: Colors.amber), title: Text('Jimma Voice Official Support'), subtitle: Text('Welcome! Contact us anytime.'))),
-    ]));
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Messages & Notifications'), bottom: const TabBar(tabs: [Tab(text: 'Chat (Text • Voice • Photo)'), Tab(text: 'Notifications')])),
+        body: TabBarView(children: [
+          Column(children: [
+            Expanded(child: ListView.builder(padding: const EdgeInsets.all(12), itemCount: AppState.chatMessages.length, itemBuilder: (_, i) {
+              final m = AppState.chatMessages[i];
+              final isMe = m['sender'] == AppState.userName;
+              return Align(
+                alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                child: Card(
+                  color: isMe ? const Color(0xFF78350F) : const Color(0xFF1E293B),
+                  child: Padding(padding: const EdgeInsets.all(10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('${m['sender']} • ${m['time']}', style: const TextStyle(fontSize: 10, color: Colors.amber)),
+                    const SizedBox(height: 4),
+                    if (m['type'] == 'voice') Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.play_circle_fill, color: Colors.greenAccent), const SizedBox(width: 6), Text(m['content']!)])
+                    else if (m['type'] == 'image') Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.receipt_long, size: 36, color: Colors.cyanAccent), Text(m['content']!)])
+                    else Text(m['content']!),
+                  ])),
+                ),
+              );
+            })),
+            Container(padding: const EdgeInsets.all(8), color: const Color(0xFF111827), child: Row(children: [
+              IconButton(icon: const Icon(Icons.photo_camera, color: Colors.cyanAccent), tooltip: 'Send Photo / Payment Receipt', onPressed: () {
+                setState(() => AppState.chatMessages.add({'sender': AppState.userName, 'type': 'image', 'content': '📷 Attached Photo / Bank Payment Receipt (Verified)', 'time': 'Now'}));
+                SystemSound.play(SystemSoundType.click);
+              }),
+              IconButton(icon: Icon(_recording ? Icons.stop_circle : Icons.mic, color: _recording ? Colors.red : Colors.amber), tooltip: 'Send Voice Note', onPressed: () {
+                setState(() {
+                  if (!_recording) { _recording = true; } else {
+                    _recording = false;
+                    AppState.chatMessages.add({'sender': AppState.userName, 'type': 'voice', 'content': '🎤 Voice Message (0:06 sec) - Tap to Play', 'time': 'Now'});
+                    SystemSound.play(SystemSoundType.click);
+                  }
+                });
+              }),
+              Expanded(child: TextField(controller: _msgCtrl, decoration: InputDecoration(hintText: _recording ? 'Recording voice... tap mic to send' : 'Write message...', border: InputBorder.none))),
+              IconButton(icon: const Icon(Icons.send, color: Colors.amber), onPressed: () {
+                if (_msgCtrl.text.trim().isNotEmpty) {
+                  setState(() { AppState.chatMessages.add({'sender': AppState.userName, 'type': 'text', 'content': _msgCtrl.text.trim(), 'time': 'Now'}); _msgCtrl.clear(); });
+                }
+              }),
+            ])),
+          ]),
+          ListView.builder(padding: const EdgeInsets.all(12), itemCount: AppState.notifications.length, itemBuilder: (_, i) {
+            final n = AppState.notifications[i];
+            return Card(child: ListTile(leading: const Icon(Icons.notifications_active, color: Colors.amber), title: Text(n['title']!), subtitle: Text(n['body']!), trailing: Text(n['time']!, style: const TextStyle(fontSize: 10))));
+          }),
+        ]),
+      ),
+    );
   }
 }
