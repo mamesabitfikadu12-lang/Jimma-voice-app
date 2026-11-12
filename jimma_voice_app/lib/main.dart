@@ -503,7 +503,7 @@ class _MeTabState extends State<MeTab> {
       {"t": "Recharge", "i": Icons.account_balance_wallet_rounded, "c": Colors.orange, "p": RechargePage(onUpd: refresh)},
       {"t": "Points", "i": Icons.diamond_rounded, "c": Colors.blue, "p": PointsWalletPage(onUpd: refresh)},
       {"t": "Task Center", "i": Icons.task_alt_rounded, "c": Colors.green, "p": TaskCenterPage(onUpd: refresh)},
-      {"t": "Level", "i": Icons.trending_up_rounded, "c": Colors.teal, "p": const LevelPrivilegesPage()},
+      {"t": "Level", "i": Icons.trending_up_rounded, "c": Colors.teal, "p": LevelPrivilegesPage()},
       {"t": "Store", "i": Icons.store_mall_directory_rounded, "c": Colors.purple, "p": StorePage(onUpd: refresh)},
       {"t": "Backpack", "i": Icons.backpack_rounded, "c": Colors.brown, "p": BackpackPage(onUpd: refresh)},
       {"t": "Invitation", "i": Icons.share_rounded, "c": Colors.indigo, "p": InvitePage(onUpd: refresh)},
@@ -535,7 +535,7 @@ class _MeTabState extends State<MeTab> {
               Text("${AppData.followed}\nFollowed", textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 12)),
               Text("${AppData.following}\nFollowing", textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 12)),
               Text("${AppData.friends}\nFriends", textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 12)),
-              InkWell(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LevelPrivilegesPage())), child: Text("Lv.${AppData.wealthLv}\nWealth", textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFFFFD700), fontSize: 12, fontWeight: FontWeight.bold))),
+              InkWell(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LevelPrivilegesPage())), child: Text("Lv.${AppData.wealthLv}\nWealth", textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFFFFD700), fontSize: 12, fontWeight: FontWeight.bold))),
             ]),
             const Divider(color: Colors.white24, height: 20),
             Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
@@ -879,6 +879,89 @@ class _RechargePageState extends State<RechargePage> {
             child: const Text('Auto-Verify & Claim Coins'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class TaskCenterPage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const TaskCenterPage({super.key, required this.onUpd});
+  @override
+  State<TaskCenterPage> createState() => _TaskCenterPageState();
+}
+
+class _TaskCenterPageState extends State<TaskCenterPage> {
+  final Set<String> _claimed = {};
+  Widget _taskTile(String title, String sub, String reward) {
+    final done = _claimed.contains(title);
+    return Card(
+      child: ListTile(
+        title: Text(title),
+        subtitle: Text(sub),
+        trailing: ElevatedButton(
+          onPressed: done ? null : () {
+            setState(() => _claimed.add(title));
+            widget.onUpd();
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Claimed $reward!')));
+          },
+          child: Text(done ? 'Done' : reward),
+        ),
+      ),
+    );
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Task Center (User & Host)')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Text('Daily User Tasks', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber)),
+          _taskTile('Stay in Voice Room (5 Mins)', 'Join any active Jimma voice room', '+500 Coins'),
+          _taskTile('Follow 5 Active Hosts', 'Follow hosts in the room tab', '+300 Coins'),
+          _taskTile('Send Jebena Coffee Gift', 'Support a host with Jebena gift', '+800 Coins'),
+          const SizedBox(height: 16),
+          const Text('Host & Agency Tasks (Hourly Income)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.cyan)),
+          _taskTile('Host on Mic for 2 Hours', 'Active voice room hosting', '+3,000 Pts/hr'),
+          _taskTile('Party Crown Room Goal', 'Reach 10 listeners in your room', '+5,000 Pts'),
+          _taskTile('1M / 2M Monthly Points Target', 'Agency salary bonus milestone', '+50,000 Pts'),
+        ],
+      ),
+    );
+  }
+}
+
+class StorePage extends StatelessWidget {
+  final VoidCallback onUpd;
+  const StorePage({super.key, required this.onUpd});
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      ['Jimma Golden Bugatti Entry', '15,000 Coins • 7 Days'],
+      ['Ethiopian Royal Lion Frame', '8,000 Coins • 15 Days'],
+      ['Jebena Gold Chat Bubble', '5,000 Coins • 30 Days'],
+      ['VIP Stealth Entry Pass', '25,000 Coins • 30 Days'],
+    ];
+    return Scaffold(
+      appBar: AppBar(title: const Text('VIP Store & Rides')),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: items.length,
+        itemBuilder: (c, i) => Card(
+          child: ListTile(
+            leading: const Icon(Icons.store_mall_directory, color: Colors.amber),
+            title: Text(items[i][0]),
+            subtitle: Text(items[i][1]),
+            trailing: ElevatedButton(
+              onPressed: () {
+                onUpd();
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Purchased ${items[i][0]}!')));
+              },
+              child: const Text('Buy'),
+            ),
+          ),
+        ),
       ),
     );
   }
