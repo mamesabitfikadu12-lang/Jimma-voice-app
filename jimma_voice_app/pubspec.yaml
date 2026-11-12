@@ -1,0 +1,15 @@
+name: jimma_voice_app
+description: Jimma Voice Chat Family Official App
+publish_to: "none"
+version: 3.0.0+3
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  zego_uikit_prebuilt_live_audio_room: ^3.17.0
+dependency_overrides:
+  file_picker: ^8.1.4
+flutter:
+  uses-material-design: true
