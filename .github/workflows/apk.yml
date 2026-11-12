@@ -13,11 +13,11 @@ jobs:
         with:
           channel: 'stable'
       - run: |
-          cp jimma_voice_app/lib/main.dart /tmp/main.dart
+          mkdir -p /tmp/lib_bak && cp jimma_voice_app/lib/*.dart /tmp/lib_bak/
           cp jimma_voice_app/pubspec.yaml /tmp/pubspec.yaml
           rm -rf jimma_voice_app
           flutter create --org com.jimmavoice --platforms=android jimma_voice_app
-          cp /tmp/main.dart jimma_voice_app/lib/main.dart
+          cp /tmp/lib_bak/*.dart jimma_voice_app/lib/
           cp /tmp/pubspec.yaml jimma_voice_app/pubspec.yaml
           cd jimma_voice_app
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/g; s/compileSdk = flutter.compileSdkVersion/compileSdk = 36/g; s/targetSdk = flutter.targetSdkVersion/targetSdk = 35/g' android/app/build.gradle.kts
