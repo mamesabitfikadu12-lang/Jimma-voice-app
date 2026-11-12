@@ -22,7 +22,7 @@ jobs:
           cd jimma_voice_app
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/g; s/compileSdk = flutter.compileSdkVersion/compileSdk = 36/g; s/targetSdk = flutter.targetSdkVersion/targetSdk = 35/g' android/app/build.gradle.kts
           sed -i 's/android:label="[^"]*"/android:label="Jimma Voice Chat Family"/g' android/app/src/main/AndroidManifest.xml
-          flutter pub get
+          printf "\nsubprojects { afterEvaluate { project -> if (project.plugins.hasPlugin(\"com.android.library\")) { project.extensions.configure<com.android.build.gradle.LibraryExtension> { compileSdk = 36 } } } }\n" >> android/build.gradle.kts && flutter pub get
           for f in ~/.pub-cache/hosted/pub.dev/android_file_picker-*/android/build.gradle*; do
             [ -f "$f" ] && printf 'plugins {\n  id("com.android.library")\n  id("org.jetbrains.kotlin.android")\n}\nandroid {\n  namespace = "com.mr.flutter.plugin.filepicker"\n  compileSdk = 36\n  defaultConfig { minSdk = 23 }\n  compileOptions {\n    sourceCompatibility = JavaVersion.VERSION_17\n    targetCompatibility = JavaVersion.VERSION_17\n  }\n}\n' > "$f"
           done
