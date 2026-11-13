@@ -20,7 +20,8 @@ jobs:
         run: |
           cp /tmp/lib_bak/*.dart jimma_voice_app/lib/
           cd jimma_voice_app
-          flutter pub add http socket_io_client
+          flutter pub add http socket_io_client image_picker zego_uikit_prebuilt_live_audio_room
+
           flutter build web --release --base-href "/Jimma-voice-app/"
           flutter build apk --release
       - name: Upload APK
