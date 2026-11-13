@@ -1,4 +1,4 @@
-name: Build Jimma Voice PWA & APK
+name: Build Ethio-Voice Play Store & APK
 on: [push]
 permissions:
   contents: write
@@ -12,24 +12,39 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-      - name: Backup Custom Code
-        run: mkdir -p /tmp/lib_bak && cp jimma_voice_app/lib/*.dart /tmp/lib_bak/
-      - name: Fresh Clean Project
-        run: rm -rf jimma_voice_app && flutter create jimma_voice_app --project-name jimma_voice_app
-      - name: Restore Custom Code & Build PWA + APK
+      - name: Backup Custom Code & Icon
+        run: |
+          mkdir -p /tmp/lib_bak
+          cp jimma_voice_app/lib/*.dart /tmp/lib_bak/
+          cp jimma_voice_app/app_icon.png /tmp/app_icon.png || true
+      - name: Fresh Clean Project with Play Store Package ID
+        run: |
+          rm -rf jimma_voice_app
+          flutter create jimma_voice_app --project-name jimma_voice_app --org com.mamehub.ethiovoices
+      - name: Configure App Name, Icon & Build
         run: |
           cp /tmp/lib_bak/*.dart jimma_voice_app/lib/
+          mkdir -p jimma_voice_app/assets
+          cp /tmp/app_icon.png jimma_voice_app/assets/app_icon.png || true
+          cp /tmp/app_icon.png jimma_voice_app/app_icon.png || true
           cd jimma_voice_app
+          sed -i 's/android:label="jimma_voice_app"/android:label="ኢትዮ-ድምጽ"/g' android/app/src/main/AndroidManifest.xml
           flutter pub add http socket_io_client image_picker zego_uikit_prebuilt_live_audio_room
-
-          flutter build web --release --base-href "/Jimma-voice-app/"
+          flutter pub add --dev flutter_launcher_icons
+          printf "flutter_launcher_icons:\n  android: true\n  ios: true\n  image_path: 'assets/app_icon.png'\n" >> pubspec.yaml
+          dart run flutter_launcher_icons || true
+          flutter build web --release --base-href "/Jimma-voice-app/" || true
           flutter build apk --release
-      - name: Upload APK
+          flutter build appbundle --release
+      - name: Upload APK & Play Store AAB
         uses: actions/upload-artifact@v4
         with:
-          name: jimma-voice-apk
-          path: jimma_voice_app/build/app/outputs/flutter-apk/app-release.apk
+          name: ethio-voice-playstore-release
+          path: |
+            jimma_voice_app/build/app/outputs/flutter-apk/app-release.apk
+            jimma_voice_app/build/app/outputs/bundle/release/app-release.aab
       - name: Deploy PWA to GitHub Pages
+        if: hashFiles('jimma_voice_app/build/web/index.html') != ''
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
