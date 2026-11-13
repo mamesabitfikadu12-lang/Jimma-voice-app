@@ -197,4 +197,73 @@ class _RoomsTabState extends State<RoomsTab> {
                             JimmaApiService.sendGift(roomId, AppState.userId, r['host'] ?? 'host', 100, 'Jebena Coffee');
                             widget.onUpd();
                             setRoomS(() => roomMsgs.add('🎁 ${AppState.userName} sent ☕ Jebena Gift (100 Coins)!'));
-                          } else {
+                          } else {                            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('0 Coins! Chat & Mic are Free.')));
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = _country == 'All' ? _rooms : _rooms.where((r) => r['country'] == _country).toList();
+    return Scaffold(
+      appBar: AppBar(title: const Text('Jimma Voice Chat Party')),
+      body: Column(
+        children: [
+          SizedBox(
+            height: 46,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              itemCount: _countries.length,
+              itemBuilder: (_, i) {
+                final c = _countries[i];
+                final sel = c == _country;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    label: Text(c),
+                    selected: sel,
+                    selectedColor: const Color(0xFFFFB703),
+                    labelStyle: TextStyle(color: sel ? Colors.black : Colors.white, fontWeight: FontWeight.bold),
+                    onSelected: (_) => setState(() => _country = c),
+                  ),
+                );
+              },
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: filtered.length,
+              itemBuilder: (_, i) {
+                final r = filtered[i];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  child: ListTile(
+                    leading: const CircleAvatar(backgroundColor: Color(0xFFFFB703), child: Icon(Icons.graphic_eq, color: Colors.black)),
+                    title: Text(r['title']!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('${r['host']} • ${r['country']} • ${r['tag']}'),
+                    trailing: const Chip(label: Text('🎙️ Live'), backgroundColor: Color(0xFF065F46)),
+                    onTap: () => _openLiveVoiceRoom(r),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
