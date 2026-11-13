@@ -15,7 +15,7 @@ class RoomsTab extends StatefulWidget {
 class _RoomsTabState extends State<RoomsTab> {
   // ZEGOCLOUD Live Voice Keys (AppID: 1984661954)
   static const int zegoAppID = 1984661954;
-  static const String zegoAppSign = 'YOUR_ZEGO_APP_SIGN_HERE';
+  static const String zegoAppSign = '9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5'
 
   String _country = 'All';
   final _countries = ['All', 'Ethiopia', 'Kenya', 'UAE', 'Saudi Arabia', 'USA', 'UK', 'Germany', 'South Africa', 'Nigeria'];
@@ -31,7 +31,7 @@ class _RoomsTabState extends State<RoomsTab> {
   // Mini-Game Kutaa Haasaa Keessaa (Bet 100 - 10,000 Coins, Galii Appii 65%)
   void _openRoomMiniGame(BuildContext context, StateSetter setRoomS, List<String> roomMsgs) {
     int bet = 100;
-    final bets =;
+    final bets = [100, 500, 1000, 5000, 10000];
     final symbols = ['☕ Jebena', '🏰 Palace', '🐎 Horse', '👑 Crown', '💎 Gem'];
     List<String> reels = ['☕ Jebena', '🏰 Palace', '🐎 Horse'];
     String status = 'Select bet (100 - 10,000) & SPIN!';
