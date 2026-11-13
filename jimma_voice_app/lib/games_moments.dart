@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'main.dart';
+import 'api_service.dart';
 
 class GamesTab extends StatefulWidget {
   final VoidCallback onUpd;
@@ -32,15 +33,38 @@ class _GamesTabState extends State<GamesTab> {
     ['Domino Master', '🁣🁢🔥', const Color(0xFF334155), 'penalty'],
   ];
 
-  void _spinSlot() {
+  Future<void> _spinSlot() async {
     if (_spinning) return;
     if (AppState.coins < _bet) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not enough Coins! Recharge first.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Not enough Coins! Recharge first.')),
+      );
       return;
     }
-    setState(() { _spinning = true; AppState.coins -= _bet; });
-    widget.onUpd();
+
+    setState(() => _spinning = true);
     SystemSound.play(SystemSoundType.click);
+
+    try {
+      final res = await JimmaApiService.playSlotGame(AppState.userId, _bet);
+      if (res['newBalance'] != null) {
+        setState(() {
+          AppState.coins = res['newBalance'];
+          final List items = res['result'] ?? ['☕ Jebena', '🏰 Palace', '🐎 Oromo Horse'];
+          _reels = items.map((e) => e.toString()).toList();
+          _spinning = false;
+        });
+        widget.onUpd();
+        if ((res['winAmount'] ?? 0) > 0) {
+          HapticFeedback.heavyImpact();
+          SystemSound.play(SystemSoundType.alert);
+        }
+        return;
+      }
+    } catch (_) {}
+
+    setState(() { AppState.coins -= _bet; });
+    widget.onUpd();
     int ticks = 0;
     Timer.periodic(const Duration(milliseconds: 85), (t) {
       ticks++;
@@ -161,39 +185,3 @@ class _MessagesTabState extends State<MessagesTab> {
                     const SizedBox(height: 4),
                     if (m['type'] == 'voice') Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.play_circle_fill, color: Colors.greenAccent), const SizedBox(width: 6), Text(m['content']!)])
                     else if (m['type'] == 'image') Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.receipt_long, size: 36, color: Colors.cyanAccent), Text(m['content']!)])
-                    else Text(m['content']!),
-                  ])),
-                ),
-              );
-            })),
-            Container(padding: const EdgeInsets.all(8), color: const Color(0xFF111827), child: Row(children: [
-              IconButton(icon: const Icon(Icons.photo_camera, color: Colors.cyanAccent), tooltip: 'Send Photo / Payment Receipt', onPressed: () {
-                setState(() => AppState.chatMessages.add({'sender': AppState.userName, 'type': 'image', 'content': '📷 Attached Photo / Bank Payment Receipt (Verified)', 'time': 'Now'}));
-                SystemSound.play(SystemSoundType.click);
-              }),
-              IconButton(icon: Icon(_recording ? Icons.stop_circle : Icons.mic, color: _recording ? Colors.red : Colors.amber), tooltip: 'Send Voice Note', onPressed: () {
-                setState(() {
-                  if (!_recording) { _recording = true; } else {
-                    _recording = false;
-                    AppState.chatMessages.add({'sender': AppState.userName, 'type': 'voice', 'content': '🎤 Voice Message (0:06 sec) - Tap to Play', 'time': 'Now'});
-                    SystemSound.play(SystemSoundType.click);
-                  }
-                });
-              }),
-              Expanded(child: TextField(controller: _msgCtrl, decoration: InputDecoration(hintText: _recording ? 'Recording voice... tap mic to send' : 'Write message...', border: InputBorder.none))),
-              IconButton(icon: const Icon(Icons.send, color: Colors.amber), onPressed: () {
-                if (_msgCtrl.text.trim().isNotEmpty) {
-                  setState(() { AppState.chatMessages.add({'sender': AppState.userName, 'type': 'text', 'content': _msgCtrl.text.trim(), 'time': 'Now'}); _msgCtrl.clear(); });
-                }
-              }),
-            ])),
-          ]),
-          ListView.builder(padding: const EdgeInsets.all(12), itemCount: AppState.notifications.length, itemBuilder: (_, i) {
-            final n = AppState.notifications[i];
-            return Card(child: ListTile(leading: const Icon(Icons.notifications_active, color: Colors.amber), title: Text(n['title']!), subtitle: Text(n['body']!), trailing: Text(n['time']!, style: const TextStyle(fontSize: 10))));
-          }),
-        ]),
-      ),
-    );
-  }
-}
