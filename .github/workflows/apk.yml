@@ -15,11 +15,12 @@ jobs:
       - name: Backup Custom Code
         run: mkdir -p /tmp/lib_bak && cp jimma_voice_app/lib/*.dart /tmp/lib_bak/
       - name: Fresh Clean Project
-        run: rm -rf jimma_voice_app && flutter create jimma_voice_app --project-name jimma_voice_app --org com.jimma.voice
+        run: rm -rf jimma_voice_app && flutter create jimma_voice_app --project-name jimma_voice_app
       - name: Restore Custom Code & Build PWA + APK
         run: |
           cp /tmp/lib_bak/*.dart jimma_voice_app/lib/
           cd jimma_voice_app
+          flutter pub add http socket_io_client
           flutter build web --release --base-href "/Jimma-voice-app/"
           flutter build apk --release
       - name: Upload APK
