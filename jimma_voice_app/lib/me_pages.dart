@@ -80,31 +80,20 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
     }
     setState(() => _verifying = true);
     final add = _bank == 'USDT (TRC20)' ? 50000 : 10000;
-
     try {
-      final res = await JimmaApiService.verifyShegerPay(
-        userId: AppState.userId,
-        referenceId: ref,
-        provider: _bank.toLowerCase(),
-        coinsToAdd: add,
-      );
+      final res = await JimmaApiService.verifyShegerPay(userId: AppState.userId, referenceId: ref, provider: _bank.toLowerCase(), coinsToAdd: add);
       if (res['success'] == true) {
-        setState(() {
-          AppState.coins = res['newBalance'] ?? (AppState.coins + add);
-          _tx.clear();
-          _verifying = false;
-        });
+        setState(() { AppState.coins = res['newBalance'] ?? (AppState.coins + add); _tx.clear(); _verifying = false; });
         AppState.addNotif(context, 'ShegerPay Verified (+$add Coins)', 'Paid via $_bank • Ref: $ref');
         widget.onUpd();
         return;
       } else {
         setState(() => _verifying = false);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['error'] ?? 'Verification pending or invalid ref')));
-        return;
       }
     } catch (_) {
       setState(() => _verifying = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Server connecting... Please try again in 10 seconds.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Server connecting... Try again in 10s.')));
     }
   }
 
@@ -112,55 +101,27 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
   Widget build(BuildContext context) {
     final etb = _seller ? 150 : 180;
     final accNumber = _accounts[_bank] ?? '';
-
     return DefaultTabController(length: 3, child: Scaffold(
       appBar: AppBar(title: const Text('Coin Seller & Wallet'), bottom: const TabBar(tabs: [Tab(text: 'Recharge'), Tab(text: 'Transfer'), Tab(text: 'Exchange')])),
       body: TabBarView(children: [
         ListView(padding: const EdgeInsets.all(14), children: [
-          SwitchListTile(
-            title: const Text('Coin Seller Rate (150 ETB = 10k)'),
-            subtitle: const Text('Regular: 180 ETB = 10k | USDT Min \$5 = 50k'),
-            value: _seller,
-            onChanged: (v) => setState(() => _seller = v),
-          ),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: _bank,
-            decoration: const InputDecoration(labelText: 'Select Payment Method', border: OutlineInputBorder()),
-            items: _accounts.keys.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(),
-            onChanged: (v) => setState(() => _bank = v ?? 'Telebirr'),
-          ),
-          const SizedBox(height: 12),
-          Card(
-            color: const Color(0xFF1E293B),
-            child: ListTile(
-              title: Text('$_bank Account / Address', style: const TextStyle(fontSize: 12, color: Colors.amber)),
-              subtitle: SelectableText(accNumber, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
-              trailing: IconButton(
-                icon: const Icon(Icons.copy, color: Colors.amber),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: accNumber));
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Copied $_bank: $accNumber')));
-                },
-              ),
-            ),
-          ),
+          SwitchListTile(title: const Text('Coin Seller Rate (150 ETB = 10k)'), subtitle: const Text('Regular: 180 ETB = 10k | USDT Min \$5 = 50k'), value: _seller, onChanged: (v) => setState(() => _seller = v)),
+          DropdownButtonFormField<String>(value: _bank, decoration: const InputDecoration(labelText: 'Select Payment Method'), items: _accounts.keys.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(), onChanged: (v) => setState(() => _bank = v ?? 'Telebirr')),
           const SizedBox(height: 10),
-          TextField(
-            controller: _tx,
-            decoration: const InputDecoration(
-              labelText: 'Transaction ID / Receipt Reference',
-              hintText: 'e.g. BBE89X21... or TRC20 TxHash',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 14),
+          Card(color: const Color(0xFF1E293B), child: ListTile(
+            title: Text('$_bank Account / Address', style: const TextStyle(fontSize: 12, color: Colors.amber)),
+            subtitle: SelectableText(accNumber, style: const TextStyle(fontWeight: FontWeight.bold)),
+            trailing: IconButton(icon: const Icon(Icons.copy, color: Colors.amber), onPressed: () {
+              Clipboard.setData(ClipboardData(text: accNumber));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Copied: $accNumber')));
+            }),
+          )),
+          TextField(controller: _tx, decoration: const InputDecoration(labelText: 'Transaction ID / Receipt Reference')),
+          const SizedBox(height: 12),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 14)),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
             onPressed: _verifying ? null : _handleVerify,
-            child: _verifying
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                : Text(_bank == 'USDT (TRC20)' ? 'Verify via ShegerPay (\$5 / 50k Coins)' : 'Verify via ShegerPay ($etb ETB / 10k Coins)'),
+            child: Text(_verifying ? 'Verifying...' : (_bank == 'USDT (TRC20)' ? 'Verify via ShegerPay (\$5 / 50k Coins)' : 'Verify via ShegerPay ($etb ETB / 10k Coins)')),
           ),
         ]),
         ListView(padding: const EdgeInsets.all(14), children: [
@@ -180,7 +141,7 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
           if (AppState.points >= 1000) {
             final c = (AppState.points * 0.98).round();
             AppState.coins += c;
-            AppState.addNotif(context, 'Points Exchanged (+$c Coins)', 'Converted ${AppState.points.toStringAsFixed(0)} Agent Points to Coins');
+            AppState.addNotif(context, 'Points Exchanged (+$c Coins)', 'Converted Agent Points');
             AppState.points = 0;
             widget.onUpd();
             setState(() {});
@@ -195,3 +156,15 @@ class AgencyCenterPage extends StatefulWidget {
   final VoidCallback onUpd;
   const AgencyCenterPage({super.key, required this.onUpd});
   @override
+  State<AgencyCenterPage> createState() => _AgencyCenterPageState();
+}
+
+class _AgencyCenterPageState extends State<AgencyCenterPage> {
+  final _ag = TextEditingController(), _id = TextEditingController(), _agentId = TextEditingController(), _ptsCtrl = TextEditingController(text: '1000');
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(appBar: AppBar(title: const Text('Agency Center & Points')), body: ListView(padding: const EdgeInsets.all(14), children: [
+      Card(child: ListTile(title: Text('Status: ${AppState.agencyStatus} • My Points: ${AppState.points.toStringAsFixed(0)}'), subtitle: const Text('Commission: 12% ➔ 16%'))),
+      TextField(controller: _agentId, decoration: const InputDecoration(labelText: 'Agent ID')),
+      TextField(controller: _ptsCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Points Amount')),
+      ElevatedButton(onPressed: () {
