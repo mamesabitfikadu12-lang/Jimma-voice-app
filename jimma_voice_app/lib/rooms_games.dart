@@ -15,7 +15,8 @@ class RoomsTab extends StatefulWidget {
 class _RoomsTabState extends State<RoomsTab> {
   // ZEGOCLOUD Live Voice Keys (AppID: 1984661954)
   static const int zegoAppID = 1984661954;
-  static const String zegoAppSign = '9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5'
+  static const String zegoAppSign = '9622d13c976d8545df95eb0baceb5c540087650f952ddb4b633b35d3199ea2f5';
+
 
   String _country = 'All';
   final _countries = ['All', 'Ethiopia', 'Kenya', 'UAE', 'Saudi Arabia', 'USA', 'UK', 'Germany', 'South Africa', 'Nigeria'];
