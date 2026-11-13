@@ -170,4 +170,82 @@ class _RoomsTabState extends State<RoomsTab> {
                     child: Row(
                       children: List<Widget>.of({
                         IconButton(icon: Icon(micOn ? Icons.mic : Icons.mic_off, color: micOn ? Colors.greenAccent : Colors.redAccent), onPressed: () { setRoomS(() => micOn = !micOn); ZegoExpressEngine.instance.muteMicrophone(!micOn); }),
-                        Expanded(child: TextField(controller: chatCtrl, decoration: const InputDecoration(hintText: 'Say Hello (Free)...', isDense: true, border: InputBorder.none))),
+                        Expanded(child: TextField(controller: chatCtrl, decoration: const InputDecoration(hintText: 'Say Hello (Free)...', isDense: true, border: InputBorder.none))),                        IconButton(icon: const Icon(Icons.send, color: Colors.amber), onPressed: () { if (chatCtrl.text.trim().isNotEmpty) { setRoomS(() { roomMsgs.add('💬 ${AppState.userName}: ${chatCtrl.text.trim()}'); chatCtrl.clear(); }); } }),
+                        IconButton(icon: const Icon(Icons.sports_esports, color: Colors.purpleAccent), onPressed: () => _openRoomMiniGame(ctx, setRoomS, roomMsgs)),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
+                          icon: const Icon(Icons.card_giftcard, size: 16),
+                          label: const Text('Gift (100)'),
+                          onPressed: () {
+                            if (AppState.coins >= 100) {
+                              AppState.coins -= 100;
+                              SystemSound.play(SystemSoundType.click);
+                              JimmaApiService.sendGift(roomId, AppState.userId, r['host'] ?? 'host', 100, 'Jebena Coffee');
+                              widget.onUpd();
+                              setRoomS(() => roomMsgs.add('🎁 ${AppState.userName} sent ☕ Jebena Gift (100 Coins)!'));
+                            } else {
+                              ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('0 Coins! Chat & Mic are Free.')));
+                            }
+                          },
+                        ),
+                      }),
+                    ),
+                  ),
+                }),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = _country == 'All' ? _rooms : _rooms.where((r) => r['country'] == _country).toList();
+    return Scaffold(
+      appBar: AppBar(title: const Text('ኢትዮ-ድምጽ • Ethio-Voice')),
+      body: Column(
+        children: List<Widget>.of({
+          SizedBox(
+            height: 46,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              itemCount: _countries.length,
+              itemBuilder: (_, i) {
+                final c = _countries.elementAt(i);
+                final sel = c == _country;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(label: Text(c), selected: sel, selectedColor: const Color(0xFFFFB703), labelStyle: TextStyle(color: sel ? Colors.black : Colors.white, fontWeight: FontWeight.bold), onSelected: (_) => setState(() => _country = c)),
+                );
+              },
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: filtered.length,
+              itemBuilder: (_, i) {
+                final r = filtered.elementAt(i);
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  child: ListTile(
+                    leading: const CircleAvatar(backgroundColor: Color(0xFFFFB703), child: Icon(Icons.graphic_eq, color: Colors.black)),
+                    title: Text(r['title']!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('${r['host']} • ${r['country']} • ${r['tag']}'),
+                    trailing: const Chip(label: Text('🎙️ Live'), backgroundColor: Color(0xFF065F46)),
+                    onTap: () => _openLiveVoiceRoom(r),
+                  ),
+                );
+              },
+            ),
+          ),
+        }),
+      ),
+    );
+  }
+}
+
