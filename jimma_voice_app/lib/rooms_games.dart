@@ -22,36 +22,187 @@ class _RoomsTabState extends State<RoomsTab> {
   ];
 
   void _openLiveRoom(Map<String, String> r) {
-    showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: const Color(0xFF0F172A), builder: (_) => StatefulBuilder(
-      builder: (ctx, setS) => SizedBox(height: MediaQuery.of(context).size.height * 0.85, child: Column(children: [
-        AppBar(title: Text(r['title']!), automaticallyImplyLeading: false, actions: [IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx))]),
-        const Padding(padding: EdgeInsets.all(8), child: Text('👑 Abba Jifar Royal Palace Theme • 8 Mic Seats Open', style: TextStyle(color: Colors.amber))),
-        Expanded(child: GridView.builder(padding: const EdgeInsets.all(16), gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, mainAxisSpacing: 12, crossAxisSpacing: 12), itemCount: 8, itemBuilder: (_, i) => Container(
-          decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.amber.withOpacity(0.4))),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(i == 0 ? Icons.record_voice_over : Icons.mic_none, color: i == 0 ? Colors.amber : Colors.white54), Text(i == 0 ? 'Host' : 'Seat ${i + 1}', style: const TextStyle(fontSize: 11))]),
-        ))),
-        Padding(padding: const EdgeInsets.all(12), child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
-          icon: const Icon(Icons.card_giftcard),
-          label: const Text('Send Jebena Gift (100 Coins)'),
-          onPressed: () { if (AppState.coins >= 100) { AppState.coins -= 100; AppState.wealthLv = (AppState.wealthLv + 1).clamp(1, 30); SystemSound.play(SystemSoundType.click); widget.onUpd(); setS(() {}); } },
-        )),
-      ])),
-    ));
+    int mySeat = -1;
+    bool isMuted = false;
+    final chatCtrl = TextEditingController();
+    final roomMsgs = <String>['👑 ${r['host']} opened the room', '☕ Welcome to Jimma Voice Chat Family!'];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0F172A),
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setS) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.88,
+            child: Column(
+              children: [
+                AppBar(
+                  title: Text(r['title']!, style: const TextStyle(fontSize: 16)),
+                  automaticallyImplyLeading: false,
+                  actions: [
+                    if (mySeat != -1)
+                      IconButton(
+                        icon: Icon(isMuted ? Icons.mic_off : Icons.mic, color: isMuted ? Colors.red : Colors.greenAccent),
+                        onPressed: () { SystemSound.play(SystemSoundType.click); setS(() => isMuted = !isMuted); },
+                      ),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                  ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Text('👑 Tap Seat 2–8 to Join Mic (Free) • Abba Jifar Royal Theme', style: TextStyle(color: Colors.amber, fontSize: 12)),
+                ),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, mainAxisSpacing: 10, crossAxisSpacing: 10),
+                  itemCount: 8,
+                  itemBuilder: (_, i) {
+                    final occupied = i == 0 || i == mySeat;
+                    final label = i == 0 ? 'Host' : (i == mySeat ? AppState.userName : 'Seat ${i + 1}');
+                    return InkWell(
+                      onTap: i == 0 ? null : () {
+                        SystemSound.play(SystemSoundType.click);
+                        setS(() {
+                          if (mySeat == i) {
+                            mySeat = -1;
+                            roomMsgs.add('🚪 ${AppState.userName} left Seat ${i + 1}');
+                          } else {
+                            mySeat = i;
+                            isMuted = false;
+                            roomMsgs.add('🎤 ${AppState.userName} joined Seat ${i + 1} (Free)');
+                          }
+                        });
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: occupied ? const Color(0xFF78350F) : const Color(0xFF1E293B),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: occupied ? Colors.amber : Colors.white24),
+                        ),
+                        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          Icon(i == 0 ? Icons.record_voice_over : (i == mySeat ? (isMuted ? Icons.mic_off : Icons.mic) : Icons.mic_none), color: occupied ? Colors.amber : Colors.white54),
+                          const SizedBox(height: 4),
+                          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                        ]),
+                      ),
+                    );
+                  },
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    itemCount: roomMsgs.length,
+                    itemBuilder: (_, idx) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(color: Colors.black38, borderRadius: BorderRadius.circular(10)),
+                        child: Text(roomMsgs[idx], style: const TextStyle(fontSize: 12, color: Colors.white)),
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  color: const Color(0xFF1E293B),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: chatCtrl,
+                          decoration: const InputDecoration(hintText: 'Say something (Free)...', isDense: true, border: OutlineInputBorder()),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.send, color: Colors.amber),
+                        onPressed: () {
+                          if (chatCtrl.text.trim().isNotEmpty) {
+                            setS(() { roomMsgs.add('${AppState.userName}: ${chatCtrl.text.trim()}'); chatCtrl.clear(); });
+                          }
+                        },
+                      ),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
+                        icon: const Icon(Icons.card_giftcard, size: 18),
+                        label: const Text('Gift (100)'),
+                        onPressed: () {
+                          if (AppState.coins >= 100) {
+                            AppState.coins -= 100;
+                            AppState.wealthLv = (AppState.wealthLv + 1).clamp(1, 30);
+                            SystemSound.play(SystemSoundType.click);
+                            widget.onUpd();
+                            setS(() => roomMsgs.add('🎁 ${AppState.userName} sent ☕ Jebena Gift (100 Coins)!'));
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('0 Coins! Chat & Mic Seats are FREE; Recharge in Me tab for Gifts.')));
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final filtered = _country == 'All' ? _rooms : _rooms.where((r) => r['country'] == _country).toList();
-    return Scaffold(appBar: AppBar(title: const Text('Jimma Voice Chat Family')), body: Column(children: [
-      SizedBox(height: 46, child: ListView.builder(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), itemCount: _countries.length, itemBuilder: (_, i) {
-        final c = _countries[i]; final sel = c == _country;
-        return Padding(padding: const EdgeInsets.only(right: 6), child: ChoiceChip(label: Text(c), selected: sel, selectedColor: const Color(0xFFFFB703), labelStyle: TextStyle(color: sel ? Colors.black : Colors.white), onSelected: (_) => setState(() => _country = c)));
-      })),
-      Expanded(child: ListView.builder(padding: const EdgeInsets.all(12), itemCount: filtered.length, itemBuilder: (_, i) {
-        final r = filtered[i];
-        return Card(margin: const EdgeInsets.only(bottom: 10), child: ListTile(leading: const CircleAvatar(backgroundColor: Color(0xFFFFB703), child: Icon(Icons.graphic_eq, color: Colors.black)), title: Text(r['title']!), subtitle: Text('${r['host']} • ${r['country']}'), trailing: Chip(label: Text('🔥 ${r['users']}')), onTap: () => _openLiveRoom(r)));
-      })),
-    ]));
+    return Scaffold(
+      appBar: AppBar(title: const Text('Jimma Voice Chat Family')),
+      body: Column(
+        children: [
+          SizedBox(
+            height: 46,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              itemCount: _countries.length,
+              itemBuilder: (_, i) {
+                final c = _countries[i];
+                final sel = c == _country;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    label: Text(c),
+                    selected: sel,
+                    selectedColor: const Color(0xFFFFB703),
+                    labelStyle: TextStyle(color: sel ? Colors.black : Colors.white, fontWeight: FontWeight.bold),
+                    onSelected: (_) => setState(() => _country = c),
+                  ),
+                );
+              },
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: filtered.length,
+              itemBuilder: (_, i) {
+                final r = filtered[i];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  child: ListTile(
+                    leading: const CircleAvatar(backgroundColor: Color(0xFFFFB703), child: Icon(Icons.graphic_eq, color: Colors.black)),
+                    title: Text(r['title']!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('${r['host']} • ${r['country']} • ${r['tag']}'),
+                    trailing: Chip(label: Text('🔥 ${r['users']}'), backgroundColor: Colors.teal.shade800),
+                    onTap: () => _openLiveRoom(r),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
