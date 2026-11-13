@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'main.dart';
+import 'api_service.dart';
 
 class RoomsTab extends StatefulWidget {
   final VoidCallback onUpd;
@@ -26,6 +27,14 @@ class _RoomsTabState extends State<RoomsTab> {
     bool isMuted = false;
     final chatCtrl = TextEditingController();
     final roomMsgs = <String>['👑 ${r['host']} opened the room', '☕ Welcome to Jimma Voice Chat Family!'];
+    JimmaApiService.connectSocket(
+      r['title'] ?? 'room_1',
+      AppState.userId,
+      (roomData) {},
+      (giftData) {
+        roomMsgs.add('🎁 ${giftData['from']} sent ${giftData['giftName']}!');
+      },
+    );
 
     showModalBottomSheet(
       context: context,
@@ -72,6 +81,8 @@ class _RoomsTabState extends State<RoomsTab> {
                             roomMsgs.add('🚪 ${AppState.userName} left Seat ${i + 1}');
                           } else {
                             mySeat = i;
+                            JimmaApiService.takeMicSeat(r['title'] ?? 'room_1', i, AppState.userId);
+
                             isMuted = false;
                             roomMsgs.add('🎤 ${AppState.userName} joined Seat ${i + 1} (Free)');
                           }
