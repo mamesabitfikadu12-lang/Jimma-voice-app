@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class JimmaApiService {
-  static const String baseUrl = "https://onrender.com";
+  static const String baseUrl = "https://jimma-server.onrender.com";
   static IO.Socket? socket;
 
   static void connectSocket(String roomId, String userId, Function(dynamic) onRoomUpdate, Function(dynamic) onGiftReceived) {
