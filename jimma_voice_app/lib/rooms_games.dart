@@ -1,7 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:zego_uikit_prebuilt_live_audio_room/zego_uikit_prebuilt_live_audio_room.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:zego_express_engine/zego_express_engine.dart';
 import 'main.dart';
 import 'api_service.dart';
 
@@ -13,13 +14,11 @@ class RoomsTab extends StatefulWidget {
 }
 
 class _RoomsTabState extends State<RoomsTab> {
-  // ZEGOCLOUD Live Voice Keys (AppID: 1984661954)
   static const int zegoAppID = 1984661954;
   static const String zegoAppSign = '9622d13c976d8545df95eb0baceb5c540087650f952ddb4b633b35d3199ea2f5';
 
-
   String _country = 'All';
-  final _countries = ['All', 'Ethiopia', 'Kenya', 'UAE', 'Saudi Arabia', 'USA', 'UK', 'Germany', 'South Africa', 'Nigeria'];
+  final _countries = ['All', 'Ethiopia', 'Kenya', 'UAE', 'Saudi Arabia', 'USA', 'UK', 'Germany', 'Nigeria'];
   final _rooms = [
     {'id': 'room_jimma_1', 'title': 'Oromia & Jimma Coffee Lounge ☕', 'host': 'Abba Jifar Heritage', 'country': 'Ethiopia', 'tag': 'Live PK'},
     {'id': 'room_finfinnee_2', 'title': 'Finfinnee Night Party 🎶', 'host': 'Queen Selam', 'country': 'Ethiopia', 'tag': 'Music'},
@@ -29,10 +28,9 @@ class _RoomsTabState extends State<RoomsTab> {
     {'id': 'room_usa_6', 'title': 'London & USA Diaspora Hub 🇺🇸', 'host': 'Dawit T.', 'country': 'USA', 'tag': 'World Cup 2026'},
   ];
 
-  // Mini-Game Kutaa Haasaa Keessaa (Bet 100 - 10,000 Coins, Galii Appii 65%)
   void _openRoomMiniGame(BuildContext context, StateSetter setRoomS, List<String> roomMsgs) {
     int bet = 100;
-    final bets = [100, 500, 1000, 5000, 10000];
+    final bets =;
     final symbols = ['☕ Jebena', '🏰 Palace', '🐎 Horse', '👑 Crown', '💎 Gem'];
     List<String> reels = ['☕ Jebena', '🏰 Palace', '🐎 Horse'];
     String status = 'Select bet (100 - 10,000) & SPIN!';
@@ -67,25 +65,16 @@ class _RoomsTabState extends State<RoomsTab> {
                   SystemSound.play(SystemSoundType.click);
                   setG(() => AppState.coins -= bet);
                   widget.onUpd();
-
-                  // Galii Appichaa 65% eeguuf carraan mo'achuu 35%
                   if (Random().nextInt(100) < 35) {
                     final pick = symbols[Random().nextInt(symbols.length)];
                     final win = bet * 2;
                     HapticFeedback.heavyImpact();
                     SystemSound.play(SystemSoundType.alert);
-                    setG(() {
-                      AppState.coins += win;
-                      reels = [pick, pick, pick];
-                      status = '🎉 WINNER! Won +$win Coins!';
-                    });
+                    setG(() { AppState.coins += win; reels = [pick, pick, pick]; status = '🎉 WINNER! Won +$win Coins!'; });
                     setRoomS(() => roomMsgs.add('🎮 ${AppState.userName} won +$win Coins in Room Slot!'));
                     widget.onUpd();
                   } else {
-                    setG(() {
-                      reels = [symbols[0], symbols[1], symbols[2]];
-                      status = 'Try again! Next spin could win!';
-                    });
+                    setG(() { reels = [symbols[0], symbols[1], symbols[2]]; status = 'Try again! Next spin could win!'; });
                   }
                 },
                 child: Text('SPIN ($bet Coins)'),
@@ -97,174 +86,104 @@ class _RoomsTabState extends State<RoomsTab> {
     );
   }
 
-  // Kutaa Haasaa Sagalee Dhugaa (ZEGOCLOUD Real-Time Audio + Chat + Gifts + Game)
+  Future<void> _startZegoAudio(String roomId) async {
+    await Permission.microphone.request();
+    await ZegoExpressEngine.createEngineWithProfile(ZegoEngineProfile(zegoAppID, ZegoScenario.HighQualityChatroom, appSign: zegoAppSign));
+    await ZegoExpressEngine.instance.loginRoom(roomId, ZegoUser(AppState.userId, AppState.userName));
+    await ZegoExpressEngine.instance.startPublishingStream('${roomId}_${AppState.userId}');
+  }
+
+  Future<void> _stopZegoAudio(String roomId) async {
+    await ZegoExpressEngine.instance.stopPublishingStream();
+    await ZegoExpressEngine.instance.logoutRoom(roomId);
+  }
+
   void _openLiveVoiceRoom(Map<String, String> r) {
     final roomId = r['id'] ?? 'room_jimma_1';
     final chatCtrl = TextEditingController();
-    final roomMsgs = <String>['🎙️ ${r['host']} started Live Voice Room', '👋 Welcome to ${r['title']}!'];
+    final roomMsgs = <String>['🎙️ ${r['host']} started Live Voice Room', '🔊 HD Real-Time Voice Connected!'];
+    final seats = List<String?>.filled(8, null);
+    seats[0] = r['host'];
+    bool micOn = false;
 
-    JimmaApiService.connectSocket(
-      roomId,
-      AppState.userId,
-      (roomData) {},
-      (giftData) {
-        roomMsgs.add('🎁 ${giftData['from']} sent ${giftData['giftName']}!');
-      },
-    );
+    _startZegoAudio(roomId);
+    JimmaApiService.connectSocket(roomId, AppState.userId, (_) {}, (g) => roomMsgs.add('🎁 ${g['from']} sent ${g['giftName']}!'));
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => StatefulBuilder(
-          builder: (ctx, setRoomS) => Scaffold(
-            backgroundColor: const Color(0xFF090D16),
-            appBar: AppBar(
-              title: Text(r['title'] ?? 'Live Room', style: const TextStyle(fontSize: 15)),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.sports_esports, color: Colors.amber),
-                  tooltip: 'Play Live Mini-Game',
-                  onPressed: () => _openRoomMiniGame(ctx, setRoomS, roomMsgs),
-                ),
-              ],
-            ),
-            body: Column(
-              children: [
-                // 1. ZEGOCLOUD SAGALEE DHUGAA (8 Mic Seats)
-                Expanded(
-                  flex: 5,
-                  child: ZegoUIKitPrebuiltLiveAudioRoom(
-                    appID: zegoAppID,
-                    appSign: zegoAppSign,
-                    userID: AppState.userId,
-                    userName: AppState.userName,
-                    roomID: roomId,
-                    config: ZegoUIKitPrebuiltLiveAudioRoomConfig.audience()
-                      ..takeSeatIndexWhenJoining = -1
-                      ..layoutConfig.rowConfigs = [
-                        ZegoLiveAudioRoomLayoutRowConfig(count: 4, alignment: ZegoLiveAudioRoomLayoutAlignment.spaceAround),
-                        ZegoLiveAudioRoomLayoutRowConfig(count: 4, alignment: ZegoLiveAudioRoomLayoutAlignment.spaceAround),
-                      ],
-                  ),
-                ),
-                // 2. LIVE CHAT & GIFTS BAR
-                Container(
-                  height: 140,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  color: const Color(0xFF0F172A),
-                  child: ListView.builder(
-                    itemCount: roomMsgs.length,
-                    itemBuilder: (_, idx) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(roomMsgs[idx], style: const TextStyle(fontSize: 12, color: Colors.white)),
+        builder: (_) => PopScope(
+          onPopInvokedWithResult: (didPop, _) { if (didPop) _stopZegoAudio(roomId); },
+          child: StatefulBuilder(
+            builder: (ctx, setRoomS) => Scaffold(
+              backgroundColor: const Color(0xFF090D16),
+              appBar: AppBar(
+                title: Text(r['title'] ?? 'Live Room', style: const TextStyle(fontSize: 15)),
+                actions: [
+                  IconButton(icon: const Icon(Icons.sports_esports, color: Colors.amber), onPressed: () => _openRoomMiniGame(ctx, setRoomS, roomMsgs)),
+                ],
+              ),
+              body: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, mainAxisSpacing: 12, crossAxisSpacing: 10),
+                      itemCount: 8,
+                      itemBuilder: (_, idx) {
+                        final occ = seats[idx];
+                        return InkWell(
+                          onTap: () {
+                            setRoomS(() {
+                              if (occ == null) {
+                                seats[idx] = AppState.userName;
+                                micOn = true;
+                                ZegoExpressEngine.instance.muteMicrophone(false);
+                                roomMsgs.add('🎤 ${AppState.userName} joined Mic Seat ${idx + 1} (Speaking Live)');
+                              } else if (occ == AppState.userName) {
+                                seats[idx] = null;
+                                micOn = false;
+                                ZegoExpressEngine.instance.muteMicrophone(true);
+                              }
+                            });
+                          },
+                          child: Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 26,
+                                backgroundColor: occ != null ? const Color(0xFFFFB703) : const Color(0xFF1E293B),
+                                child: Icon(occ != null ? Icons.mic : Icons.add, color: occ != null ? Colors.black : Colors.white54),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(occ ?? 'Seat ${idx + 1}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10)),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  color: const Color(0xFF1E293B),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: chatCtrl,
-                          decoration: const InputDecoration(hintText: 'Say Hello (Free)...', isDense: true, border: InputBorder.none),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      color: const Color(0xFF0F172A),
+                      child: ListView.builder(
+                        itemCount: roomMsgs.length,
+                        itemBuilder: (_, idx) => Padding(padding: const EdgeInsets.only(bottom: 4), child: Text(roomMsgs[idx], style: const TextStyle(fontSize: 12))),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    color: const Color(0xFF1E293B),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(micOn ? Icons.mic : Icons.mic_off, color: micOn ? Colors.greenAccent : Colors.redAccent),
+                          onPressed: () {
+                            setRoomS(() => micOn = !micOn);
+                            ZegoExpressEngine.instance.muteMicrophone(!micOn);
+                          },
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.send, color: Colors.amber),
-                        onPressed: () {
-                          if (chatCtrl.text.trim().isNotEmpty) {
-                            setRoomS(() {
-                              roomMsgs.add('💬 ${AppState.userName}: ${chatCtrl.text.trim()}');
-                              chatCtrl.clear();
-                            });
-                          }
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.sports_esports, color: Colors.purpleAccent),
-                        onPressed: () => _openRoomMiniGame(ctx, setRoomS, roomMsgs),
-                      ),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
-                        icon: const Icon(Icons.card_giftcard, size: 16),
-                        label: const Text('Gift (100)'),
-                        onPressed: () {
-                          if (AppState.coins >= 100) {
-                            AppState.coins -= 100;
-                            AppState.wealthLv = (AppState.wealthLv + 1).clamp(1, 30);
-                            SystemSound.play(SystemSoundType.click);
-                            JimmaApiService.sendGift(roomId, AppState.userId, r['host'] ?? 'host', 100, 'Jebena Coffee');
-                            widget.onUpd();
-                            setRoomS(() => roomMsgs.add('🎁 ${AppState.userName} sent ☕ Jebena Gift (100 Coins)!'));
-                          } else {                            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('0 Coins! Chat & Mic are Free.')));
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final filtered = _country == 'All' ? _rooms : _rooms.where((r) => r['country'] == _country).toList();
-    return Scaffold(
-      appBar: AppBar(title: const Text('Jimma Voice Chat Party')),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 46,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              itemCount: _countries.length,
-              itemBuilder: (_, i) {
-                final c = _countries[i];
-                final sel = c == _country;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: ChoiceChip(
-                    label: Text(c),
-                    selected: sel,
-                    selectedColor: const Color(0xFFFFB703),
-                    labelStyle: TextStyle(color: sel ? Colors.black : Colors.white, fontWeight: FontWeight.bold),
-                    onSelected: (_) => setState(() => _country = c),
-                  ),
-                );
-              },
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: filtered.length,
-              itemBuilder: (_, i) {
-                final r = filtered[i];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  child: ListTile(
-                    leading: const CircleAvatar(backgroundColor: Color(0xFFFFB703), child: Icon(Icons.graphic_eq, color: Colors.black)),
-                    title: Text(r['title']!, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('${r['host']} • ${r['country']} • ${r['tag']}'),
-                    trailing: const Chip(label: Text('🎙️ Live'), backgroundColor: Color(0xFF065F46)),
-                    onTap: () => _openLiveVoiceRoom(r),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
+                        Expanded(
