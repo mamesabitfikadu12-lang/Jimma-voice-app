@@ -1,7 +1,8 @@
-import 'task_settings_admin.dart';
-import 'task_settings_admin.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'task_settings_admin.dart';
 import 'main.dart';
+import 'api_service.dart';
 
 class MeTab extends StatefulWidget {
   final VoidCallback onUpd;
@@ -48,34 +49,119 @@ class _MeTabState extends State<MeTab> {
     );
   }
 }
+
 class CoinSellerPage extends StatefulWidget {
   final VoidCallback onUpd;
   const CoinSellerPage({super.key, required this.onUpd});
   @override
   State<CoinSellerPage> createState() => _CoinSellerPageState();
 }
+
 class _CoinSellerPageState extends State<CoinSellerPage> {
   final _tx = TextEditingController(), _to = TextEditingController(), _amt = TextEditingController(text: '10');
-  String _bank = 'Telebirr'; bool _seller = false;
+  String _bank = 'Telebirr';
+  bool _seller = false;
+  bool _verifying = false;
+
+  final Map<String, String> _accounts = {
+    'Telebirr': '+251919108311',
+    'CBEBirr': '+251919108311',
+    'CBE': '1000273060937',
+    'Awash Bank': '014251157710000',
+    'Dashen Bank': '2952945930711',
+    'USDT (TRC20)': 'TYdr3JdbDzhxjfsGeU3yazNAmTbkHBuNcE',
+  };
+
+  Future<void> _handleVerify() async {
+    final ref = _tx.text.trim();
+    if (ref.length < 5) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter valid Transaction ID / Hash')));
+      return;
+    }
+    setState(() => _verifying = true);
+    final add = _bank == 'USDT (TRC20)' ? 50000 : 10000;
+
+    try {
+      final res = await JimmaApiService.verifyShegerPay(
+        userId: AppState.userId,
+        referenceId: ref,
+        provider: _bank.toLowerCase(),
+        coinsToAdd: add,
+      );
+      if (res['success'] == true) {
+        setState(() {
+          AppState.coins = res['newBalance'] ?? (AppState.coins + add);
+          _tx.clear();
+          _verifying = false;
+        });
+        AppState.addNotif(context, 'ShegerPay Verified (+$add Coins)', 'Paid via $_bank • Ref: $ref');
+        widget.onUpd();
+        return;
+      } else {
+        setState(() => _verifying = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['error'] ?? 'Verification pending or invalid ref')));
+        return;
+      }
+    } catch (_) {
+      setState(() => _verifying = false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Server connecting... Please try again in 10 seconds.')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final etb = _seller ? 150 : 180;
+    final accNumber = _accounts[_bank] ?? '';
+
     return DefaultTabController(length: 3, child: Scaffold(
       appBar: AppBar(title: const Text('Coin Seller & Wallet'), bottom: const TabBar(tabs: [Tab(text: 'Recharge'), Tab(text: 'Transfer'), Tab(text: 'Exchange')])),
       body: TabBarView(children: [
         ListView(padding: const EdgeInsets.all(14), children: [
-          SwitchListTile(title: const Text('Coin Seller Rate (150 ETB = 10k)'), subtitle: const Text('Regular: 180 ETB = 10k | USDT Min \$5 = 50k'), value: _seller, onChanged: (v) => setState(() => _seller = v)),
-          DropdownButtonFormField<String>(value: _bank, items: ['Telebirr', 'CBEBirr', 'Siinqee Plus', 'CBE', 'Awash', 'Dashen', 'Binance USDT'].map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(), onChanged: (v) => setState(() => _bank = v ?? 'Telebirr')),
-          TextField(controller: _tx, decoration: const InputDecoration(labelText: 'Receipt / Transaction ID')),
-          ElevatedButton(onPressed: () {
-            if (_tx.text.length >= 5) {
-              final add = _bank == 'Binance USDT' ? 50000 : 10000;
-              AppState.coins += add;
-              AppState.addNotif(context, 'Coins Recharged (+$add Coins)', 'Paid via $_bank • Ref: ${_tx.text.trim()}');
-              widget.onUpd();
-              setState(() => _tx.clear());
-            }
-          }, child: Text('Auto-Verify ($etb ETB / 10k)')),
+          SwitchListTile(
+            title: const Text('Coin Seller Rate (150 ETB = 10k)'),
+            subtitle: const Text('Regular: 180 ETB = 10k | USDT Min \$5 = 50k'),
+            value: _seller,
+            onChanged: (v) => setState(() => _seller = v),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _bank,
+            decoration: const InputDecoration(labelText: 'Select Payment Method', border: OutlineInputBorder()),
+            items: _accounts.keys.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(),
+            onChanged: (v) => setState(() => _bank = v ?? 'Telebirr'),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            color: const Color(0xFF1E293B),
+            child: ListTile(
+              title: Text('$_bank Account / Address', style: const TextStyle(fontSize: 12, color: Colors.amber)),
+              subtitle: SelectableText(accNumber, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+              trailing: IconButton(
+                icon: const Icon(Icons.copy, color: Colors.amber),
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: accNumber));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Copied $_bank: $accNumber')));
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _tx,
+            decoration: const InputDecoration(
+              labelText: 'Transaction ID / Receipt Reference',
+              hintText: 'e.g. BBE89X21... or TRC20 TxHash',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 14),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 14)),
+            onPressed: _verifying ? null : _handleVerify,
+            child: _verifying
+                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                : Text(_bank == 'USDT (TRC20)' ? 'Verify via ShegerPay (\$5 / 50k Coins)' : 'Verify via ShegerPay ($etb ETB / 10k Coins)'),
+          ),
         ]),
         ListView(padding: const EdgeInsets.all(14), children: [
           TextField(controller: _to, decoration: const InputDecoration(labelText: 'Recipient User ID')),
@@ -109,57 +195,3 @@ class AgencyCenterPage extends StatefulWidget {
   final VoidCallback onUpd;
   const AgencyCenterPage({super.key, required this.onUpd});
   @override
-  State<AgencyCenterPage> createState() => _AgencyCenterPageState();
-}
-class _AgencyCenterPageState extends State<AgencyCenterPage> {
-  final _ag = TextEditingController(), _id = TextEditingController(), _agentId = TextEditingController(), _ptsCtrl = TextEditingController(text: '1000');
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: const Text('Agency Center & Points')), body: ListView(padding: const EdgeInsets.all(14), children: [
-      Card(child: ListTile(title: Text('Status: ${AppState.agencyStatus} • My Points: ${AppState.points.toStringAsFixed(0)}'), subtitle: const Text('Commission: 12% ➔ 16% • Official Jimma Voice Support'))),
-      const Text('Send Host Points to Agent (Hala Style)', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-      TextField(controller: _agentId, decoration: const InputDecoration(labelText: 'Agent ID')),
-      TextField(controller: _ptsCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Points Amount to Send')),
-      ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: () {
-        final p = double.tryParse(_ptsCtrl.text) ?? 0;
-        if (p > 0 && AppState.points >= p && _agentId.text.isNotEmpty) {
-          AppState.points -= p;
-          AppState.pointHistory.insert(0, {'title': 'Sent to Agent ${_agentId.text}', 'amt': '-${p.toStringAsFixed(0)} Pts'});
-          AppState.addNotif(context, 'Points Sent to Agent', 'Transferred ${p.toStringAsFixed(0)} Pts to Agent ID: ${_agentId.text}');
-          widget.onUpd();
-          setState(() {});
-        }
-      }, child: const Text('Send Points to Agent')),
-      const Divider(),
-      TextField(controller: _ag, decoration: const InputDecoration(labelText: 'New Agency Name')),
-      TextField(controller: _id, decoration: const InputDecoration(labelText: 'Ethiopian National ID (FAN/FIN)')),
-      ElevatedButton(onPressed: () { if (_ag.text.isNotEmpty && _id.text.isNotEmpty) { AppState.agencyStatus = 'Pending'; AppState.pendingAgencyName = _ag.text; AppState.pendingNationalId = _id.text; setState(() {}); } }, child: const Text('Register Agency')),
-      const Divider(),
-      const Text('Detail of Points (All • Cash out • Transfer)', style: TextStyle(color: Colors.amber)),
-      ...AppState.pointHistory.map((h) => ListTile(title: Text(h['title']!), trailing: Text(h['amt']!))),
-    ]));
-  }
-}
-
-class VipClubPage extends StatelessWidget {
-  final VoidCallback onUpd;
-  const VipClubPage({super.key, required this.onUpd});
-  @override
-  Widget build(BuildContext context) {
-    final p = ['Daily Coins (2,000/day)', 'Room Bullet Screen', 'More Room Admins', 'VIP Badge', 'Entry Tag', 'Anti-Kick Out', 'Mystery Man', 'Global Entry Tag', 'Oromo ChatBubble', 'Profile Wings'];
-    return Scaffold(appBar: AppBar(title: const Text('VIP Club (VIP1–VIP19)')), body: ListView(padding: const EdgeInsets.all(14), children: [
-      ElevatedButton(onPressed: () { if (AppState.coins >= 51000) { AppState.coins -= 51000; AppState.vipLevel = 19; onUpd(); } }, child: const Text('Activate VIP 19 (51,000 Coins / 30 Days)')),
-      ...p.map((e) => ListTile(leading: const Icon(Icons.verified, color: Colors.amber), title: Text(e))),
-    ]));
-  }
-}
-
-class StorePage extends StatelessWidget {
-  final VoidCallback onUpd;
-  const StorePage({super.key, required this.onUpd});
-  @override
-  Widget build(BuildContext context) {
-    final items = ['Abba Jifar Palace Theme (4,200)', 'Jimma Royal Stool Frame (15,000)', 'Oromo Royal Horse Ride (30,000)', 'Jebena Gold ChatBubble (10,000)', 'Ethiopian Lion Room Card (7,000)'];
-    return Scaffold(appBar: AppBar(title: const Text('Oromia & Ethiopia Luxury Store')), body: ListView(padding: const EdgeInsets.all(14), children: items.map((e) => Card(child: ListTile(title: Text(e), trailing: const Text('Equip')))).toList()));
-  }
-}
