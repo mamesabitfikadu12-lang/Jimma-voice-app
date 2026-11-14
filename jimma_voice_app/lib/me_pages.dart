@@ -183,69 +183,56 @@ class _AgencyCenterPageState extends State<AgencyCenterPage> {
   }
 }
 
-class VipClubPage extends StatelessWidget {
+class VipClubPage extends StatefulWidget {
   final VoidCallback onUpd;
   const VipClubPage({super.key, required this.onUpd});
   @override
-  Widget build(BuildContext context) {
-    final p = ['Daily Coins (2,000/day)', 'Room Bullet Screen', 'VIP Badge', 'Entry Tag', 'Oromo ChatBubble', 'Profile Wings'];
-    return Scaffold(appBar: AppBar(title: const Text('VIP Club (VIP1–VIP19)')), body: ListView(padding: const EdgeInsets.all(14), children: [
-      ElevatedButton(onPressed: () { if (AppState.coins >= 51000) { AppState.coins -= 51000; AppState.vipLevel = 19; onUpd(); } }, child: const Text('Activate VIP 19 (51,000 Coins)')),
-      ...p.map((e) => ListTile(leading: const Icon(Icons.verified, color: Colors.amber), title: Text(e))),
-    ]));
-  }
+  State<VipClubPage> createState() => _VipClubPageState();
 }
 
-class StorePage extends StatefulWidget {
-  final VoidCallback onUpd;
-  const StorePage({super.key, required this.onUpd});
-  @override
-  State<StorePage> createState() => _StorePageState();
-}
-
-class _StorePageState extends State<StorePage> {
-  final _items = List<Map<String, dynamic>>.of({
-    {'name': '🏍️ Shark Moto Entry', 'price': 300000, 'tag': 'NEW'},
-    {'name': '🐉 Ice-Fire Soul Ride', 'price': 400000, 'tag': 'NEW'},
-    {'name': '🌟 Star of Fortune Frame', 'price': 30000, 'tag': 'NEW'},
-    {'name': '🍀 Lucky Bless Frame', 'price': 30000, 'tag': 'NEW'},
-    {'name': '🏰 Abba Jifar Palace Theme', 'price': 4200, 'tag': 'ROYAL'},
-    {'name': '☕ Jebena Gold ChatBubble', 'price': 10000, 'tag': 'VIP'},
+class _VipClubPageState extends State<VipClubPage> {
+  final _vips = List<Map<String, dynamic>>.of({
+    {'lv': 1, 'name': 'VIP 1 • Bronze Noble', 'price': 2000, 'perk': 'Bronze Badge + Entry Tag'},
+    {'lv': 3, 'name': 'VIP 3 • Silver Knight', 'price': 5000, 'perk': 'Silver Frame + Daily 300 Coins'},
+    {'lv': 5, 'name': 'VIP 5 • Golden Duke', 'price': 10000, 'perk': 'Gold ChatBubble + Bullet Screen'},
+    {'lv': 10, 'name': 'VIP 10 • Oromo Prince', 'price': 25000, 'perk': 'Royal Horse Entry + VIP Mic Ring'},
+    {'lv': 15, 'name': 'VIP 15 • Finfinnee Emperor', 'price': 38000, 'perk': 'Profile Wings + Anti-Kick Shield'},
+    {'lv': 19, 'name': 'VIP 19 • Supreme King', 'price': 51000, 'perk': 'All Luxury Rides, Frames & 2,000 Daily Coins'},
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Store • 🪙 ${AppState.coins}')),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(12),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 0.9),
-        itemCount: _items.length,
+      appBar: AppBar(title: Text('VIP Club • Current: VIP ${AppState.vipLevel}')),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(14),
+        itemCount: _vips.length,
         itemBuilder: (_, i) {
-          final it = _items.elementAt(i);
-          final price = it['price'] as int;
+          final v = _vips.elementAt(i);
+          final lv = v['lv'] as int;
+          final price = v['price'] as int;
+          final active = AppState.vipLevel >= lv;
           return Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
-                Align(alignment: Alignment.topLeft, child: Chip(label: Text(it['tag'] as String, style: const TextStyle(fontSize: 10)), backgroundColor: Colors.teal.shade800)),
-                Text(it['name'] as String, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text('🪙 $price', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 34)),
-                  onPressed: () {
-                    if (AppState.coins >= price) {
-                      setState(() => AppState.coins -= price);
-                      widget.onUpd();
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Equipped ${it['name']}!')));
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not enough Coins!')));
-                    }
-                  },
-                  child: const Text('Buy & Equip', style: TextStyle(fontSize: 12)),
-                ),
-              })),
+            color: active ? Colors.amber.withOpacity(0.18) : const Color(0xFF1E293B),
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ListTile(
+              leading: CircleAvatar(backgroundColor: Colors.amber, child: Text('V$lv', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
+              title: Text(v['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text('${v['perk']}\nPrice: 🪙 $price Coins', style: const TextStyle(fontSize: 12)),
+              isThreeLine: true,
+              trailing: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: active ? Colors.green : Colors.amber, foregroundColor: Colors.black),
+                onPressed: active ? null : () {
+                  if (AppState.coins >= price) {
+                    setState(() { AppState.coins -= price; AppState.vipLevel = lv; });
+                    widget.onUpd();
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Activated ${v['name']}!')));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not enough Coins! Recharge first.')));
+                  }
+                },
+                child: Text(active ? 'Active' : 'Buy'),
+              ),
             ),
           );
         },
