@@ -196,13 +196,60 @@ class VipClubPage extends StatelessWidget {
   }
 }
 
-class StorePage extends StatelessWidget {
+class StorePage extends StatefulWidget {
   final VoidCallback onUpd;
   const StorePage({super.key, required this.onUpd});
   @override
-  Widget build(BuildContext context) {
-    final items = ['Abba Jifar Palace Theme (4,200)', 'Jimma Royal Stool Frame (15,000)', 'Oromo Royal Horse Ride (30,000)', 'Jebena Gold ChatBubble (10,000)'];
-    return Scaffold(appBar: AppBar(title: const Text('Oromia Luxury Store')), body: ListView(padding: const EdgeInsets.all(14), children: items.map((e) => Card(child: ListTile(title: Text(e), trailing: const Text('Equip')))).toList()));
-  }
+  State<StorePage> createState() => _StorePageState();
 }
 
+class _StorePageState extends State<StorePage> {
+  final _items = List<Map<String, dynamic>>.of({
+    {'name': '🏍️ Shark Moto Entry', 'price': 300000, 'tag': 'NEW'},
+    {'name': '🐉 Ice-Fire Soul Ride', 'price': 400000, 'tag': 'NEW'},
+    {'name': '🌟 Star of Fortune Frame', 'price': 30000, 'tag': 'NEW'},
+    {'name': '🍀 Lucky Bless Frame', 'price': 30000, 'tag': 'NEW'},
+    {'name': '🏰 Abba Jifar Palace Theme', 'price': 4200, 'tag': 'ROYAL'},
+    {'name': '☕ Jebena Gold ChatBubble', 'price': 10000, 'tag': 'VIP'},
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Store • 🪙 ${AppState.coins}')),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(12),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 0.9),
+        itemCount: _items.length,
+        itemBuilder: (_, i) {
+          final it = _items.elementAt(i);
+          final price = it['price'] as int;
+          return Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
+                Align(alignment: Alignment.topLeft, child: Chip(label: Text(it['tag'] as String, style: const TextStyle(fontSize: 10)), backgroundColor: Colors.teal.shade800)),
+                Text(it['name'] as String, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text('🪙 $price', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 34)),
+                  onPressed: () {
+                    if (AppState.coins >= price) {
+                      setState(() => AppState.coins -= price);
+                      widget.onUpd();
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Equipped ${it['name']}!')));
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not enough Coins!')));
+                    }
+                  },
+                  child: const Text('Buy & Equip', style: TextStyle(fontSize: 12)),
+                ),
+              })),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
