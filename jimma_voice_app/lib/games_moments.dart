@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'main.dart';
 import 'api_service.dart';
 
@@ -13,139 +16,179 @@ class GamesTab extends StatefulWidget {
 }
 
 class _GamesTabState extends State<GamesTab> {
-  final _symbols = ['☕ Jebena', '🏰 Palace', '🐎 Oromo Horse', '🪑 Royal Stool', '🦁 Lion', '💎 Diamond'];
-  List<String> _reels = ['☕ Jebena', '🏰 Palace', '🐎 Oromo Horse'];
+  String _cat = 'Hot';
   int _bet = 100;
-  bool _spinning = false;
+  final _cats = List<String>.of({'Latest', 'Hot', 'Slot', 'Fishing', 'Multi Player'});
+  final _bets = List<int>.of({100, 500, 1000, 5000, 10000});
 
-  final _gamesList = [
-    ['Oromia & Abba Jifar Royal Slot', '☕🏰🐎', const Color(0xFFB45309), 'slot'],
-    ['Oromo Horse Derby', '🐎🏆🎖️', const Color(0xFFBE123C), 'horse'],
-    ['Finfinnee Lucky Wheel', '🎡🎯🌟', const Color(0xFF0F766E), 'wheel'],
-    ['Royal Battle Arena', '⚔️👑🛡️', const Color(0xFF7C3AED), 'battle'],
-    ['Fishing Tycoon Abay', '🐟🌊⚓', const Color(0xFF0284C7), 'fish'],
-    ['Golden Lion Dice', '🎲🦁💛', const Color(0xFFA16207), 'dice'],
-    ['World Cup 2026 Penalty', '⚽🥅🏆', const Color(0xFF047857), 'penalty'],
-    ['Jungle Hunt Bale', '🦁🌲🏹', const Color(0xFF15803D), 'battle'],
-    ['Jebena Coffee Fortune', '☕✨💰', const Color(0xFFD97706), 'wheel'],
-  ];
+  final _allGames = List<Map<String, dynamic>>.of({
+    {'name': 'Ocean Hunt', 'icon': '🐙🎰', 'cat': 'Hot', 'tag': 'HOT', 'col': 0xFF7C3AED},
+    {'name': 'Jungle Hunt', 'icon': '🦁🌴', 'cat': 'Hot', 'tag': 'HOT', 'col': 0xFFB45309},
+    {'name': 'Royal Battle', 'icon': '👑⚔️', 'cat': 'Multi Player', 'tag': 'HOT', 'col': 0xFFBE123C},
+    {'name': 'Garo Gems III', 'icon': '🏺💎', 'cat': 'Slot', 'tag': 'NEW', 'col': 0xFFD97706},
+    {'name': 'Fruit Party', 'icon': '🍓🍊', 'cat': 'Slot', 'tag': 'HOT', 'col': 0xFF0284C7},
+    {'name': 'Fishing Tycoon', 'icon': '🦈⚓', 'cat': 'Fishing', 'tag': 'HOT', 'col': 0xFF0F766E},
+    {'name': 'Money Coming', 'icon': '💵🎰', 'cat': 'Slot', 'tag': 'NEW', 'col': 0xFF15803D},
+    {'name': 'The Monkey King', 'icon': '🐵👑', 'cat': 'Hot', 'tag': 'HOT', 'col': 0xFFDC2626},
+    {'name': 'Blaze Of Fortune', 'icon': '🔥🏮', 'cat': 'Latest', 'tag': 'NEW', 'col': 0xFF9A3412},
+    {'name': 'Lucky Piggy', 'icon': '🐷💰', 'cat': 'Slot', 'tag': 'NEW', 'col': 0xFFA16207},
+    {'name': 'Fortune Rabbit', 'icon': '🐰🧧', 'cat': 'Latest', 'tag': 'NEW', 'col': 0xFFDB2777},
+    {'name': 'Gates Of Olympus', 'icon': '⚡🏛️', 'cat': 'Hot', 'tag': 'NEW', 'col': 0xFF1D4ED8},
+    {'name': 'Lucky 77 Pro', 'icon': '7️⃣🍒', 'cat': 'Slot', 'tag': 'PRO', 'col': 0xFF991B1B},
+    {'name': 'Fortune Tiger', 'icon': '🐯🪙', 'cat': 'Hot', 'tag': 'HOT', 'col': 0xFFB45309},
+    {'name': 'Roulette Royal', 'icon': '🎡🎯', 'cat': 'Multi Player', 'tag': 'HOT', 'col': 0xFF065F46},
+    {'name': 'Deep Sea', 'icon': '🐟🌊', 'cat': 'Fishing', 'tag': 'HOT', 'col': 0xFF0369A1},
+    {'name': 'Color Game', 'icon': '🎲🎨', 'cat': 'Multi Player', 'tag': 'HOT', 'col': 0xFF6D28D9},
+    {'name': 'World Goal 2026', 'icon': '⚽🥅', 'cat': 'Multi Player', 'tag': 'HOT', 'col': 0xFF047857},
+    {'name': 'Sweet Bonanza', 'icon': '🍭🍬', 'cat': 'Slot', 'tag': 'HOT', 'col': 0xFFBE185D},
+    {'name': 'Dragon Ball', 'icon': '🐉🔮', 'cat': 'Latest', 'tag': 'NEW', 'col': 0xFF15803D},
+    {'name': 'Super Ace', 'icon': '🃏👑', 'cat': 'Slot', 'tag': 'HOT', 'col': 0xFF4D7C0F},
+    {'name': 'Chicken Road', 'icon': '🐔🛣️', 'cat': 'Latest', 'tag': 'NEW', 'col': 0xFF374151},
+    {'name': 'Teen Patti', 'icon': '♠️♥️', 'cat': 'Multi Player', 'tag': 'HOT', 'col': 0xFF1E3A8A},
+    {'name': 'Ludo King Party', 'icon': '🎲🏆', 'cat': 'Multi Player', 'tag': 'HOT', 'col': 0xFF0F766E},
+  });
 
-  Future<void> _spinSlot() async {
-    if (_spinning) return;
-    if (AppState.coins < _bet) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not enough Coins! Recharge first.')));
-      return;
-    }
-    setState(() => _spinning = true);
-    SystemSound.play(SystemSoundType.click);
-    try {
-      final res = await JimmaApiService.playSlotGame(AppState.userId, _bet);
-      if (res['newBalance'] != null) {
-        setState(() {
-          AppState.coins = res['newBalance'];
-          final List items = res['result'] ?? ['☕ Jebena', '🏰 Palace', '🐎 Oromo Horse'];
-          _reels = items.map((e) => e.toString()).toList();
-          _spinning = false;
-        });
-        widget.onUpd();
-        return;
-      }
-    } catch (_) {}
-    setState(() => AppState.coins -= _bet);
-    widget.onUpd();
-    Timer(const Duration(milliseconds: 600), () {
-      if (Random().nextInt(100) < 35) {
-        final pick = _symbols[Random().nextInt(_symbols.length)];
-        AppState.coins += _bet * 2;
-        setState(() { _reels = [pick, pick, pick]; _spinning = false; });
-      } else {
-        setState(() { _reels = [_symbols[0], _symbols[1], _symbols[2]]; _spinning = false; });
-      }
-      widget.onUpd();
-    });
-  }
+  void _openGameDialog(Map<String, dynamic> g) {
+    final reels = List<String>.of({'💎', '👑', '🪙'});
+    String msg = 'Select Bet (100 - 10,000) & Tap SPIN!';
+    bool spinning = false;
 
-  void _openGameModal(String title, String mode) {
-    int pick = 0;
-    String status = 'Select choice & tap PLAY';
-    final opts = ['🎯 2x Gold', '🌟 3x Crown', '💎 5x Palace', '👑 10x King'];
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF0F172A),
       builder: (_) => StatefulBuilder(
-        builder: (ctx, setS) => Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
-              const SizedBox(height: 10),
-              Wrap(spacing: 8, children: List.generate(opts.length, (i) => ChoiceChip(label: Text(opts[i]), selected: pick == i, onSelected: (_) => setS(() => pick = i)))),
-              const SizedBox(height: 12),
-              Text(status, style: const TextStyle(color: Colors.amber)),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
-                onPressed: () {
-                  if (AppState.coins < _bet) { setS(() => status = 'Not enough Coins!'); return; }
-                  AppState.coins -= _bet;
-                  if (Random().nextInt(100) < 35) {
-                    AppState.coins += _bet * 2;
-                    setS(() => status = '🎉 WINNER! +${_bet * 2} Coins!');
-                  } else {
-                    setS(() => status = 'Try again!');
-                  }
-                  widget.onUpd();
-                },
-                child: Text('PLAY NOW ($_bet Coins)'),
-              ),
-            ],
+        builder: (ctx, setG) => SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: List<Widget>.of({
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
+                  Text('${g['icon']} ${g['name']}', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.amber)),
+                  Text('🪙 ${AppState.coins}', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                })),
+                const SizedBox(height: 12),
+                Row(children: reels.map((r) => Expanded(child: Card(color: Colors.black54, child: Padding(padding: const EdgeInsets.all(14), child: Center(child: Text(r, style: const TextStyle(fontSize: 26))))))).toList()),
+                const SizedBox(height: 8),
+                Wrap(spacing: 6, children: _bets.map((b) => ChoiceChip(label: Text('$b'), selected: _bet == b, onSelected: (_) => setG(() => _bet = b))).toList()),
+                const SizedBox(height: 8),
+                Text(msg, style: const TextStyle(color: Colors.tealAccent, fontSize: 13, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 46)),
+                  onPressed: spinning ? null : () async {
+                    if (AppState.coins < _bet) { setG(() => msg = 'Not enough Coins! Recharge first.'); return; }
+                    setG(() { spinning = true; AppState.coins -= _bet; msg = 'Spinning... 🎵'; });
+                    SystemSound.play(SystemSoundType.click);
+                    HapticFeedback.lightImpact();
+                    widget.onUpd();
+                    await Future.delayed(const Duration(milliseconds: 550));
+                    // 65% Galii Appichaa eeguuf carraan mo'achuu 35%
+                    if (Random().nextInt(100) < 35) {
+                      final sym = List<String>.of({'💎', '👑', '🪙', '🦁', '☕'}).elementAt(Random().nextInt(5));
+                      final win = _bet * 2;
+                      SystemSound.play(SystemSoundType.alert);
+                      HapticFeedback.heavyImpact();
+                      setG(() {
+                        AppState.coins += win;
+                        reels[0] = sym; reels[1] = sym; reels[2] = sym;
+                        spinning = false;
+                        msg = '🎉 BIG WIN! +$win Coins!';
+                      });
+                    } else {
+                      setG(() {
+                        reels[0] = '💎'; reels[1] = '🦁'; reels[2] = '🪙';
+                        spinning = false;
+                        msg = 'Try again! Next spin could hit Jackpot!';
+                      });
+                    }
+                    widget.onUpd();
+                  },
+                  child: Text('PLAY / SPIN ($_bet Coins)', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              }),
+            ),
           ),
         ),
       ),
     );
   }
 
+  void _convertCoinsToPoints() {
+    final ctrl = TextEditingController(text: '10000');
+    showDialog(context: context, builder: (_) => AlertDialog(
+      title: const Text('Convert Won Coins ➔ Points'),
+      content: TextField(controller: ctrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Coins Amount (10,000 Coins = 9,000 Pts)')),
+      actions: List<Widget>.of({
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        ElevatedButton(onPressed: () {
+          final c = int.tryParse(ctrl.text) ?? 0;
+          if (c >= 1000 && AppState.coins >= c) {
+            setState(() { AppState.coins -= c; AppState.points += (c * 0.90); });
+            widget.onUpd();
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Converted $c Coins to ${(c * 0.90).toStringAsFixed(0)} Points!')));
+          }
+        }, child: const Text('Convert')),
+      }),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final list = _cat == 'Hot' ? _allGames : _allGames.where((g) => g['cat'] == _cat).toList();
     return Scaffold(
-      appBar: AppBar(title: Text('Games • Coins: ${AppState.coins}')),
-      body: ListView(
-        padding: const EdgeInsets.all(14),
-        children: [
-          Card(
-            color: const Color(0xFF78350F),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                children: [
-                  const Text('Oromia & Abba Jifar Royal Slot', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
-                  const SizedBox(height: 10),
-                  Row(children: _reels.map((s) => Expanded(child: Card(color: Colors.black54, child: Padding(padding: const EdgeInsets.all(12), child: Center(child: Text(s, style: const TextStyle(fontSize: 12))))))).toList()),
-                  Wrap(spacing: 6, children: [100, 500, 1000].map((b) => ChoiceChip(label: Text('$b'), selected: _bet == b, onSelected: (_) => setState(() => _bet = b))).toList()),
-                  ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: _spinSlot, child: Text('SPIN ($_bet Coins)')),
-                ],
-              ),
+      appBar: AppBar(
+        title: Text('Games • 🪙 ${AppState.coins}'),
+        actions: List<Widget>.of({
+          TextButton.icon(onPressed: _convertCoinsToPoints, icon: const Icon(Icons.swap_horiz, color: Colors.tealAccent), label: const Text('Coins➔Pts', style: TextStyle(color: Colors.tealAccent, fontSize: 12))),
+        }),
+      ),
+      body: Column(
+        children: List<Widget>.of({
+          SizedBox(
+            height: 46,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              itemCount: _cats.length,
+              itemBuilder: (_, i) {
+                final c = _cats.elementAt(i);
+                final sel = c == _cat;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(label: Text(c), selected: sel, selectedColor: Colors.tealAccent.shade700, onSelected: (_) => setState(() => _cat = c)),
+                );
+              },
             ),
           ),
-          const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 8, mainAxisSpacing: 8),
-            itemCount: _gamesList.length,
-            itemBuilder: (_, i) {
-              final g = _gamesList[i];
-              return InkWell(
-                onTap: () => g[3] == 'slot' ? _spinSlot() : _openGameModal(g[0] as String, g[3] as String),
-                child: Card(
-                  color: (g[2] as Color).withOpacity(0.45),
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text(g[1] as String, style: const TextStyle(fontSize: 22)), Text(g[0] as String, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11))]),
-                ),
-              );
-            },
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(10),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 0.85),
+              itemCount: list.length,
+              itemBuilder: (_, i) {
+                final g = list.elementAt(i);
+                return InkWell(
+                  onTap: () => _openGameDialog(g),
+                  child: Container(
+                    decoration: BoxDecoration(color: Color(g['col'] as int).withOpacity(0.55), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.white24)),
+                    child: Stack(
+                      children: List<Widget>.of({                        Positioned(top: 4, right: 4, child: Container(padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2), decoration: BoxDecoration(color: g['tag'] == 'HOT' ? Colors.red : Colors.green, borderRadius: BorderRadius.circular(6)), child: Text(g['tag'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)))),
+                        Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: List<Widget>.of({
+                          Text(g['icon'] as String, style: const TextStyle(fontSize: 28)),
+                          const SizedBox(height: 6),
+                          Text(g['name'] as String, textAlign: TextAlign.center, maxLines: 2, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        }))),
+                      }),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
-        ],
+        }),
       ),
     );
   }
@@ -160,26 +203,56 @@ class MomentsTab extends StatefulWidget {
 
 class _MomentsTabState extends State<MomentsTab> {
   final _c = TextEditingController();
+  final _picker = ImagePicker();
+  String? _imgPath;
+
+  Future<void> _pickImg() async {
+    final XFile? f = await _picker.pickImage(source: ImageSource.gallery);
+    if (f != null) setState(() => _imgPath = f.path);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Moments')),
+      appBar: AppBar(title: const Text('Moments (Free Post & Photo)')),
       body: ListView(
         padding: const EdgeInsets.all(14),
-        children: [
-          Row(children: [
-            Expanded(child: TextField(controller: _c, decoration: const InputDecoration(hintText: 'Post moment...'))),
-            ElevatedButton(onPressed: () {
-              if (_c.text.isNotEmpty) {
-                setState(() {
-                  AppState.moments.insert(0, {'user': AppState.userName, 'tag': '#JimmaCoffee', 'text': _c.text, 'likes': '1'});
-                  _c.clear();
-                });
-              }
-            }, child: const Text('Post')),
-          ]),
-          ...AppState.moments.map((m) => Card(child: ListTile(title: Text('${m['user']} • ${m['tag']}'), subtitle: Text(m['text']!), trailing: Text('❤️ ${m['likes']}')))),
-        ],
+        children: List<Widget>.of({
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(children: List<Widget>.of({
+                Row(children: List<Widget>.of({
+                  IconButton(icon: const Icon(Icons.add_a_photo, color: Colors.amber), onPressed: _pickImg),
+                  Expanded(child: TextField(controller: _c, decoration: const InputDecoration(hintText: 'Share photo or text (Free)...', border: InputBorder.none))),
+                  ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: () {
+                    if (_c.text.trim().isNotEmpty || _imgPath != null) {
+                      setState(() {
+                        AppState.moments.insert(0, {'user': AppState.userName, 'tag': '#EthioVoice', 'text': _c.text.trim().isEmpty ? '📷 Shared a Photo' : _c.text.trim(), 'image': _imgPath ?? '', 'likes': '1'});
+                        _c.clear(); _imgPath = null;
+                      });
+                    }
+                  }, child: const Text('Post')),
+                })),
+                if (_imgPath != null) const Text('✅ Photo ready to post!', style: TextStyle(color: Colors.greenAccent, fontSize: 12)),
+              })),
+            ),
+          ),
+          ...AppState.moments.map((m) {
+            final p = m['image'] ?? '';
+            return Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({Text('${m['user']} • ${m['tag']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)), Text('❤️ ${m['likes']}')})),
+                  const SizedBox(height: 6),
+                  Text(m['text'] ?? ''),
+                  if (p.isNotEmpty && !kIsWeb) Padding(padding: const EdgeInsets.only(top: 8), child: Image.file(File(p), height: 180, width: double.infinity, fit: BoxFit.cover)),
+                })),
+              ),
+            );
+          }),
+        }),
       ),
     );
   }
@@ -194,41 +267,58 @@ class MessagesTab extends StatefulWidget {
 
 class _MessagesTabState extends State<MessagesTab> {
   final _msgCtrl = TextEditingController();
+  final _picker = ImagePicker();
+
+  Future<void> _sendPhoto() async {
+    final XFile? f = await _picker.pickImage(source: ImageSource.gallery);
+    if (f != null) {
+      setState(() => AppState.chatMessages.add({'sender': AppState.userName, 'type': 'image', 'content': '📷 Payment Receipt / Photo Sent', 'image': f.path, 'time': 'Now'}));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Messages')),
-      body: Column(
-        children: [
+      appBar: AppBar(title: const Text('Free Chat & ID Coin Trade')),
+      body: SafeArea(
+        top: false,
+        child: Column(children: List<Widget>.of({
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
               itemCount: AppState.chatMessages.length,
               itemBuilder: (_, i) {
-                final m = AppState.chatMessages[i];
-                return Card(child: ListTile(title: Text(m['sender'] ?? ''), subtitle: Text(m['content'] ?? ''), trailing: Text(m['time'] ?? '')));
+                final m = AppState.chatMessages.elementAt(i);
+                final p = m['image'] ?? '';
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
+                      Text('${m['sender']} • ${m['time']}', style: const TextStyle(fontSize: 11, color: Colors.amber)),
+                      const SizedBox(height: 4),
+                      Text(m['content'] ?? ''),
+                      if (p.isNotEmpty && !kIsWeb) Padding(padding: const EdgeInsets.only(top: 6), child: Image.file(File(p), height: 140, fit: BoxFit.cover)),
+                    })),
+                  ),
+                );
               },
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(8),
-            child: Row(children: [
-              Expanded(child: TextField(controller: _msgCtrl, decoration: const InputDecoration(hintText: 'Write message...'))),
-              IconButton(
-                icon: const Icon(Icons.send, color: Colors.amber),
-                onPressed: () {
-                  if (_msgCtrl.text.trim().isNotEmpty) {
-                    setState(() {
-                      AppState.chatMessages.add({'sender': AppState.userName, 'type': 'text', 'content': _msgCtrl.text.trim(), 'time': 'Now'});
-                      _msgCtrl.clear();
-                    });
-                  }
-                },
-              ),
-            ]),
+            child: Row(children: List<Widget>.of({
+              IconButton(icon: const Icon(Icons.photo, color: Colors.cyanAccent), onPressed: _sendPhoto),
+              Expanded(child: TextField(controller: _msgCtrl, decoration: const InputDecoration(hintText: 'Send User ID / Free Text...'))),
+              IconButton(icon: const Icon(Icons.send, color: Colors.amber), onPressed: () {
+                if (_msgCtrl.text.trim().isNotEmpty) {
+                  setState(() { AppState.chatMessages.add({'sender': AppState.userName, 'type': 'text', 'content': _msgCtrl.text.trim(), 'time': 'Now'}); _msgCtrl.clear(); });
+                }
+              }),
+            })),
           ),
-        ],
+        })),
       ),
     );
   }
 }
+
