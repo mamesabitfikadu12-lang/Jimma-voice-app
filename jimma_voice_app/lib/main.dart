@@ -11,7 +11,7 @@ void main() {
 
 class AppState {
   static String userName = 'New Member';
-  static String userId = 'ID: ${100000 + Random().nextInt(899999)}';
+  static String userId = '${1000000 + Random().nextInt(8999999)}';
   static int coins = 0;
   static double points = 0.0;
   static int wealthLv = 1;
@@ -23,16 +23,22 @@ class AppState {
   static String agencyStatus = 'None';
   static String pendingAgencyName = '';
   static String pendingNationalId = '';
-  static List<Map<String, String>> pointHistory = [];
-  static List<Map<String, String>> notifications = [
-    {'title': 'Welcome to Jimma Voice Chat Family', 'body': 'Celebrate Oromo & Ethiopian culture with global voice rooms!', 'time': 'Now'}
-  ];
-  static List<Map<String, String>> chatMessages = [
-    {'sender': 'Jimma Voice Support', 'type': 'text', 'content': 'Hello! Send text, voice note, or bank payment receipt photo here.', 'time': '11:30 PM'}
-  ];
-  static List<Map<String, String>> moments = [
-    {'user': 'Jimma Voice Official', 'tag': '#JimmaCoffeeCulture', 'text': 'Welcome to Jimma Voice Chat Family!', 'likes': '128'},
-  ];
+  static List<Map<String, String>> pointHistory = List<Map<String, String>>.empty(growable: true);
+  static List<Map<String, String>> notifications = List<Map<String, String>>.of({
+    {'title': 'Welcome to ኢትዮ-ድምጽ (Ethio-Voice)', 'body': 'Celebrate Oromo & Ethiopian culture with HD voice rooms & games!', 'time': 'Now'}
+  });
+  static List<Map<String, String>> chatMessages = List<Map<String, String>>.of({
+    {'sender': 'Ethio-Voice Support', 'type': 'text', 'content': 'Welcome! Chat is 100% Free. Share User IDs safely.', 'time': 'Now'}
+  });
+  static List<Map<String, String>> moments = List<Map<String, String>>.of({
+    {'user': 'Ethio-Voice Official', 'tag': '#EthioVoice', 'text': 'Welcome to ኢትዮ-ድምጽ! Post photos & connect globally.', 'likes': '1'}
+  });
+
+  static bool hasProfanity(String text) {
+    final t = text.toLowerCase();
+    final bad = List<String>.of({'fuck', 'bitch', 'shit', 'asshole', 'bastard', 'idiot', 'stupid', 'slut', 'whore', 'gowwaa', 'sare', 'doqna', 'bushaa', 'sharmuxaa', 'xuraawaa', 'ግም', 'ውሻ', 'ደደብ'});
+    return bad.any((w) => t.contains(w));
+  }
 
   static void addNotif(BuildContext? ctx, String title, String body) {
     notifications.insert(0, {'title': title, 'body': body, 'time': 'Just now'});
@@ -47,9 +53,9 @@ class JimmaVoiceApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Jimma Voice Chat Family',
+      title: 'ኢትዮ-ድምጽ • Ethio-Voice',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: const Color(0xFF0B0F19), primaryColor: const Color(0xFFFFB703), cardColor: const Color(0xFF161E31)),
+      theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: const Color(0xFF090D16), primaryColor: const Color(0xFFFFB703)),
       home: const MainNavScreen(),
     );
   }
@@ -64,11 +70,18 @@ class MainNavScreen extends StatefulWidget {
 class _MainNavScreenState extends State<MainNavScreen> {
   int _idx = 0;
   void _refresh() => setState(() {});
+
   @override
   Widget build(BuildContext context) {
-    final pages = [RoomsTab(onUpd: _refresh), GamesTab(onUpd: _refresh), MomentsTab(onUpd: _refresh), MessagesTab(onUpd: _refresh), MeTab(onUpd: _refresh)];
+    final pages = List<Widget>.of({
+      RoomsTab(onUpd: _refresh),
+      GamesTab(onUpd: _refresh),
+      MomentsTab(onUpd: _refresh),
+      MessagesTab(onUpd: _refresh),
+      MeTab(onUpd: _refresh),
+    });
     return Scaffold(
-      body: pages[_idx],
+      body: pages.elementAt(_idx),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _idx,
         onTap: (i) => setState(() => _idx = i),
@@ -76,13 +89,13 @@ class _MainNavScreenState extends State<MainNavScreen> {
         backgroundColor: const Color(0xFF111827),
         selectedItemColor: const Color(0xFFFFB703),
         unselectedItemColor: Colors.white54,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.mic_rounded), label: 'Room'),
-          BottomNavigationBarItem(icon: Icon(Icons.casino_rounded), label: 'Games'),
-          BottomNavigationBarItem(icon: Icon(Icons.explore_rounded), label: 'Moment'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_rounded), label: 'Message'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Me'),
-        ],
+        items: List<BottomNavigationBarItem>.of({
+          const BottomNavigationBarItem(icon: Icon(Icons.mic_rounded), label: 'Room'),
+          const BottomNavigationBarItem(icon: Icon(Icons.casino_rounded), label: 'Games'),
+          const BottomNavigationBarItem(icon: Icon(Icons.explore_rounded), label: 'Moment'),
+          const BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_rounded), label: 'Message'),
+          const BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Me'),
+        }),
       ),
     );
   }
