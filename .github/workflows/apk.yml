@@ -30,7 +30,7 @@ jobs:
           sed -i 's/android:label="jimma_voice_app"/android:label="ኢትዮ-ድምጽ"/g' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i \    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />' android/app/src/main/AndroidManifest.xml
           sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 37/g' android/app/build.gradle.kts
-          printf '\nsubprojects {\n    afterEvaluate {\n        if (project.hasProperty("android")) {\n            project.extensions.configure<com.android.build.gradle.BaseExtension>("android") {\n                compileSdkVersion(37)\n            }\n        }\n    }\n}\n' >> android/build.gradle.kts
+          printf '\nsubprojects {\n    val setSdk: (Project) -> Unit = { p ->\n        if (p.hasProperty("android")) {\n            p.extensions.configure<com.android.build.gradle.BaseExtension>("android") { compileSdkVersion(37) }\n        }\n    }\n    if (project.state.executed) setSdk(project) else project.afterEvaluate(setSdk)\n}\n' >> android/build.gradle.kts
           flutter pub add http socket_io_client image_picker zego_express_engine permission_handler
           flutter pub add --dev flutter_launcher_icons
           printf "flutter_launcher_icons:\n  android: true\n  ios: true\n  image_path: 'assets/app_icon.png'\n" >> pubspec.yaml
