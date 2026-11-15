@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sud_mgp_flutter/sud_mgp.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'main.dart';
 
 class SudConfig {
@@ -34,47 +34,41 @@ class SudGameOverlaySheet extends StatefulWidget {
 }
 
 class _SudGameOverlaySheetState extends State<SudGameOverlaySheet> {
-  SudFSMMGDecorator? _decorator;
-  SudFSTAPP? _appInstance;
+  late final WebViewController _webCtrl;
   bool _loading = true;
-  String _err = '';
 
   @override
   void initState() {
     super.initState();
-    _initSudGame();
-  }
-
-  Future<void> _initSudGame() async {
-    try {
-      final cfg = SudInitSDKParamModel()
-        ..appId = SudConfig.appId
-        ..appKey = SudConfig.appKey
-        ..isTestEnv = true;
-      await SudMGP.initSDK(cfg);
-
-      _decorator = SudFSMMGDecorator();
-      final loadModel = SudLoadMGParamModel()
-        ..userId = AppState.userId
-        ..roomId = widget.roomId
-        ..code = 'ethio_${AppState.userId}'
-        ..mgId = widget.mgId
-        ..language = 'en-US'
-        ..authorizationSecret = '';
-
-      _appInstance = await SudMGP.loadMG(loadModel, _decorator!);
-      if (mounted) setState(() => _loading = false);
-    } catch (e) {
-      if (mounted) setState(() { _loading = false; _err = e.toString(); });
-    }
-  }
-
-  @override
-  void dispose() {
-    if (_appInstance != null) {
-      SudMGP.destroyMG(_appInstance!);
-    }
-    super.dispose();
+    final url = 'https://sud.tech{SudConfig.appId}&mg_id=${widget.mgId}&room_id=${Uri.encodeComponent(widget.roomId)}&user_id=${AppState.userId}&code=ethio_${AppState.userId}&lang=en-US';
+    _webCtrl = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0xFF090D16))
+      ..addJavaScriptChannel('EthioCoinBridge', onMessageReceived: (JavaScriptMessage msg) {
+        final raw = msg.message.trim();
+        if (raw.startsWith('BET:')) {
+          final bet = int.tryParse(raw.substring(4)) ?? 0;
+          if (bet > 0 && AppState.coins >= bet) {
+            setState(() => AppState.coins -= bet);
+            widget.onUpd();
+          }
+        } else if (raw.startsWith('WIN:')) {
+          final win = int.tryParse(raw.substring(4)) ?? 0;
+          if (win > 0) {
+            setState(() {
+              AppState.coins += win;
+              AppState.lastBigWinner = '${AppState.userName} won +$win Coins in ${widget.gameName}!';
+            });
+            widget.onUpd();
+          }
+        }
+      })
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageFinished: (_) {
+          if (mounted) setState(() => _loading = false);
+        },
+      ))
+      ..loadRequest(Uri.parse(url));
   }
 
   @override
@@ -96,14 +90,12 @@ class _SudGameOverlaySheetState extends State<SudGameOverlaySheet> {
           ]),
         ),
         Expanded(
-          child: _loading
-              ? const Center(child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[CircularProgressIndicator(color: Colors.amber), SizedBox(height: 10), Text('Loading Official Sud.Tech Game...', style: TextStyle(color: Colors.white70))]))
-              : (_err.isNotEmpty
-                  ? Center(child: Padding(padding: const EdgeInsets.all(16), child: Text('Game Info: $_err', textAlign: TextAlign.center, style: const TextStyle(color: Colors.amber))))
-                  : const SizedBox.expand()),
+          child: Stack(children: <Widget>[
+            WebViewWidget(controller: _webCtrl),
+            if (_loading) const Center(child: CircularProgressIndicator(color: Colors.amber)),
+          ]),
         ),
       ]),
     );
   }
 }
-
