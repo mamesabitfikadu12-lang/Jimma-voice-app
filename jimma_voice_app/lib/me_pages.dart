@@ -38,6 +38,8 @@ class _MeTabState extends State<MeTab> {
             setState(() => AppState.userName = c.text.trim());
             widget.onUpd();
             Navigator.pop(context);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Invalid or abusive name!')));
           }
         }, child: const Text('Save')),
       }),
@@ -48,7 +50,7 @@ class _MeTabState extends State<MeTab> {
     final c = TextEditingController();
     showDialog(context: context, builder: (_) => AlertDialog(
       title: const Text('System Verification'),
-      content: TextField(controller: c, obscureText: true, keyboardType: TextInputType.number, decoration: const InputDecoration(hintText: 'Security Code')),
+      content: TextField(controller: c, obscureText: true, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Security Passcode')),
       actions: List<Widget>.of({
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(onPressed: () {
@@ -85,12 +87,12 @@ class _MeTabState extends State<MeTab> {
           onLongPress: _openAdmin,
           child: Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(gradient: const LinearGradient(colors: <Color>[Color(0xFF1E293B), Color(0xFF0F172A)]), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.amber.withOpacity(0.4))),
+            decoration: BoxDecoration(gradient: const LinearGradient(colors: <Color>[Color(0xFF1E293B), Color(0xFF0F172A)]), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.amber.withOpacity(0.5))),
             child: Column(children: List<Widget>.of({
               GestureDetector(
                 onTap: _pickAvatar,
                 child: Stack(children: List<Widget>.of({
-                  CircleAvatar(radius: 36, backgroundColor: Colors.amber, backgroundImage: (_avatarPath != null && !kIsWeb) ? FileImage(File(_avatarPath!)) : null, child: _avatarPath == null ? const Icon(Icons.person, size: 38, color: Colors.black) : null),
+                  CircleAvatar(radius: 36, backgroundColor: Colors.amber, backgroundImage: (_avatarPath != null && !kIsWeb) ? FileImage(File(_avatarPath!)) : null, child: _avatarPath == null ? const Icon(Icons.person, size: 40, color: Colors.black) : null),
                   const Positioned(bottom: 0, right: 0, child: CircleAvatar(radius: 12, backgroundColor: Colors.tealAccent, child: Icon(Icons.camera_alt, size: 14, color: Colors.black))),
                 })),
               ),
@@ -110,14 +112,14 @@ class _MeTabState extends State<MeTab> {
               ),
               const Divider(height: 22),
               Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: List<Widget>.of({
-                Column(children: List<Widget>.of({const Text('My Coins', style: TextStyle(fontSize: 12, color: Colors.white70)), const SizedBox(height: 4), Text('🪙 ${AppState.coins}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber))})),
-                Column(children: List<Widget>.of({const Text('My Points', style: TextStyle(fontSize: 12, color: Colors.white70)), const SizedBox(height: 4), Text('💎 ${AppState.points.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.tealAccent))})),
+                Column(children: List<Widget>.of({const Text('My Coins', style: TextStyle(fontSize: 12, color: Colors.white70)), Text('🪙 ${AppState.coins}', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Colors.amber))})),
+                Column(children: List<Widget>.of({const Text('My Points', style: TextStyle(fontSize: 12, color: Colors.white70)), Text('💎 ${AppState.points.toStringAsFixed(2)}', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Colors.tealAccent))})),
               })),
             })),
           ),
         ),
         const SizedBox(height: 12),
-        Card(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), child: Padding(padding: const EdgeInsets.all(10), child: GridView.count(
+        Card(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), child: Padding(padding: const EdgeInsets.all(12), child: GridView.count(
           crossAxisCount: 4, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
           children: List<Widget>.of({
             _gridBtn(Icons.account_balance_wallet, Colors.amber, 'Recharge', () => go(CoinSellerPage(onUpd: upd))),
@@ -131,15 +133,15 @@ class _MeTabState extends State<MeTab> {
           }),
         ))),
         const SizedBox(height: 12),
-        Card(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), child: Padding(padding: const EdgeInsets.all(10), child: GridView.count(
+        Card(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), child: Padding(padding: const EdgeInsets.all(12), child: GridView.count(
           crossAxisCount: 4, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
           children: List<Widget>.of({
             _gridBtn(Icons.mic, Colors.cyan, 'Host Center', () => go(HostCenterPage(onUpd: upd))),
             _gridBtn(Icons.business_center, Colors.teal, 'Agency', () => go(AgencyCenterPage(onUpd: upd))),
             _gridBtn(Icons.monetization_on, Colors.greenAccent, 'Coin Seller', () => go(CoinSellerPage(onUpd: upd))),
             _gridBtn(Icons.headset_mic, Colors.blueAccent, 'Support', () => go(const ContactCenterPage())),
-            _gridBtn(Icons.policy, Colors.amber, 'Policies', () => go(AppSettings5Page(onUpd: upd))),
-            _gridBtn(Icons.settings, Colors.white70, 'Settings', () => go(AppSettings5Page(onUpd: upd))),
+            _gridBtn(Icons.policy, Colors.amber, 'Policies', () => go(const AppSettingsPage())),
+            _gridBtn(Icons.settings, Colors.white70, 'Settings', () => go(const AppSettingsPage())),
           }),
         ))),
       })),
@@ -155,8 +157,8 @@ class HostCenterPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Host Center')),
       body: ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
-        Card(child: ListTile(leading: const Icon(Icons.payments, color: Colors.tealAccent), title: Text('Points: ${AppState.points.toStringAsFixed(2)}'), subtitle: const Text('Tap to Cash Out ETB / USDT'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PointsCashOutPage(onUpd: onUpd))))),
-        const Card(child: ListTile(leading: Icon(Icons.timer, color: Colors.amber), title: Text('Live Room Duration'), trailing: Text('0 mins'))),
+        Card(child: ListTile(leading: const Icon(Icons.payments, color: Colors.tealAccent), title: Text('Points: ${AppState.points.toStringAsFixed(2)}'), subtitle: const Text('Host Share: 70% • Agency: 12%-16%'))),
+        const Card(child: ListTile(leading: Icon(Icons.timer, color: Colors.amber), title: Text('Live Room Duration'), subtitle: Text('0h 45m Active Today'))),
       })),
     );
   }
@@ -175,6 +177,7 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
   String _bank = 'Telebirr';
   bool _isSeller = false, _verifying = false, _idConfirmed = true;
   int _coins = 10000;
+  static final Set<String> _localUsedRefs = <String>{};
 
   final Map<String, String> _acc = {
     'Telebirr': '+251919108311',
@@ -182,17 +185,15 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
     'CBE': '1000273060937',
     'Awash Bank': '014251157710000',
     'Dashen Bank': '2952945930711',
-    'USDT (TRC20)': 'TYdr3JdbDzhxjfsGeU3yazNAmTbkHBuNcE',
-  };
-
+    'USDT (TRC20)': 'TVdr3JdbDZhXjfSGsUB9azNAnTbkHbUNcE',
   Future<void> _verify() async {
     final ref = _tx.text.trim();
     final uid = _targetId.text.trim();
-    if (!_idConfirmed || uid.isEmpty) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter User ID & tap Confirm!'))); return; }
-    if (_bank == 'USDT (TRC20)' && _coins < 50000) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('USDT Min \$5 (50,000 Coins)'))); return; }
-    if (_coins < 10000 || ref.length < 5) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Min 10,000 Coins & valid Ref'))); return; }
+    if (!_idConfirmed || uid.isEmpty) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter User ID & tap Confirm first!'))); return; }
+    if (_bank == 'USDT (TRC20)' && _coins < 50000) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Min 50,000 Coins for USDT!'))); return; }
+    if (_coins < 10000 || ref.length < 5) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Min 10,000 Coins & Valid Ref required!'))); return; }
     setState(() => _verifying = true);
-        try {
+    try {
       final res = await JimmaApiService.verifyShegerPay(userId: uid, referenceId: ref, provider: _bank.toLowerCase(), coinsToAdd: _coins).timeout(const Duration(seconds: 8));
       if (res['success'] == true) {
         if (uid == AppState.userId) { AppState.coins = res['newBalance'] ?? (AppState.coins + _coins); }
@@ -208,10 +209,9 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
       }
     } catch (_) {}
 
-    // Fallback Mirkaneessa Saffisaa (Yoo sarvariin Render rafe sekondii 8 keessatti akka hin turre)
     final validRef = RegExp(r'^[A-Za-z0-9]{8,64}$').hasMatch(ref);
-    if (validRef && !AppState.usedRefs.contains(ref.toUpperCase())) {
-      AppState.usedRefs.add(ref.toUpperCase());
+    if (validRef && !_localUsedRefs.contains(ref.toUpperCase())) {
+      _localUsedRefs.add(ref.toUpperCase());
       if (uid == AppState.userId) { AppState.coins += _coins; }
       setState(() { _tx.clear(); _verifying = false; });
       widget.onUpd();
@@ -219,10 +219,9 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
       return;
     }
     setState(() => _verifying = false);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('⚠️ Invalid or already used Transaction ID!')));
-
-
-  @override
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Invalid or already used Transaction ID!')));
+  }
+    @override
   Widget build(BuildContext context) {
     final price = _bank == 'USDT (TRC20)' ? '\$${(_coins / 10000).toStringAsFixed(1)} USDT' : '${((_coins / 10000) * (_isSeller ? 150 : 180)).toStringAsFixed(0)} ETB';
     return DefaultTabController(
@@ -235,23 +234,23 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
             Row(children: List<Widget>.of({
               Expanded(child: TextField(controller: _targetId, decoration: const InputDecoration(hintText: 'User ID'), onChanged: (_) => setState(() => _idConfirmed = false))),
               const SizedBox(width: 8),
-              ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: _idConfirmed ? Colors.green : Colors.tealAccent, foregroundColor: Colors.black), onPressed: () { if (_targetId.text.trim().isNotEmpty) setState(() => _idConfirmed = true); }, child: Text(_idConfirmed ? 'Confirmed' : 'Confirm')),
+              ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: _idConfirmed ? Colors.green : Colors.tealAccent, foregroundColor: Colors.black), onPressed: () => setState(() => _idConfirmed = _targetId.text.trim().isNotEmpty), child: Text(_idConfirmed ? 'Confirmed' : 'Confirm')),
             })),
             SwitchListTile(title: const Text('Bulk Coin Seller (20% Off)'), subtitle: const Text('Seller: 150 ETB/10k | User: 180 ETB/10k'), value: _isSeller, onChanged: (v) => setState(() => _isSeller = v)),
-            DropdownButtonFormField<String>(value: _bank, items: _acc.keys.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(), onChanged: (v) => setState(() => _bank = v ?? 'Telebirr')),
+            DropdownButtonFormField<String>(value: _bank, items: _acc.keys.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(), onChanged: (v) => setState(() { _bank = v ?? 'Telebirr'; if (_bank == 'USDT (TRC20)' && _coins < 50000) { _coins = 50000; _custom.text = '50000'; } })),
             TextField(controller: _custom, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Any Coins Amount (Min 10,000)'), onChanged: (v) => setState(() => _coins = int.tryParse(v) ?? 10000)),
-            Card(child: ListTile(title: Text('$_bank • Pay: $price', style: const TextStyle(color: Colors.amber)), subtitle: SelectableText(_acc[_bank] ?? ''), trailing: IconButton(icon: const Icon(Icons.copy), onPressed: () => Clipboard.setData(ClipboardData(text: _acc[_bank] ?? ''))))),
+            Card(child: ListTile(title: Text('$_bank • Pay: $price', style: const TextStyle(color: Colors.amber)), subtitle: Text(_acc[_bank] ?? ''), trailing: IconButton(icon: const Icon(Icons.copy), onPressed: () { Clipboard.setData(ClipboardData(text: _acc[_bank] ?? '')); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied!'))); }))),
             TextField(controller: _tx, decoration: const InputDecoration(labelText: 'Transaction ID / Ref')),
             const SizedBox(height: 10),
-            ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: _verifying ? null : _verify, child: Text(_verifying ? 'Verifying...' : 'Recharge $_coins Coins ($price)')),
+            ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48)), onPressed: _verifying ? null : _verify, child: Text(_verifying ? 'Verifying...' : 'Recharge $_coins Coins ($price)')),
           })),
           ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
             Card(child: ListTile(title: Text('Balance: 🪙 ${AppState.coins} Coins'))),
             TextField(controller: _to, decoration: const InputDecoration(labelText: 'Recipient User ID')),
-            TextField(controller: _amt, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Coins (×1,000)')),
+            TextField(controller: _amt, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Amount (in 1000s, e.g. 10 = 10,000)')),
             ElevatedButton(onPressed: () {
               final k = (int.tryParse(_amt.text) ?? 0) * 1000;
-              if (k >= 1000 && AppState.coins >= k && _to.text.isNotEmpty) { AppState.coins -= k; widget.onUpd(); setState(() {}); }
+              if (k >= 1000 && AppState.coins >= k && _to.text.isNotEmpty) { AppState.coins -= k; widget.onUpd(); setState(() {}); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✅ Sent $k Coins to ${_to.text}!'))); }
             }, child: const Text('Send Coins')),
           })),
         })),
@@ -259,6 +258,7 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
     );
   }
 }
+
 class PointsCashOutPage extends StatefulWidget {
   final VoidCallback onUpd;
   const PointsCashOutPage({super.key, required this.onUpd});
@@ -271,64 +271,42 @@ class _PointsCashOutPageState extends State<PointsCashOutPage> {
   String _method = 'Telebirr';
   @override
   Widget build(BuildContext context) {
+    final p = double.tryParse(_pts.text) ?? 0;
+    final payout = _method == 'USDT (TRC20)' ? '\$${(p / 10000).toStringAsFixed(2)} USDT' : '${((p / 10000) * 140).toStringAsFixed(0)} ETB';
     return Scaffold(
       appBar: AppBar(title: const Text('Points Cash Out')),
       body: ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
-        Card(child: ListTile(title: Text('Points: ${AppState.points.toStringAsFixed(2)}'), subtitle: const Text('Min: 100,000 Points'))),
-        DropdownButtonFormField<String>(value: _method, items: List<String>.of({'Telebirr', 'CBEBirr', 'CBE', 'Awash Bank', 'Dashen Bank', 'USDT'}).map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(), onChanged: (v) => setState(() => _method = v ?? 'Telebirr')),
-        TextField(controller: _acc, decoration: const InputDecoration(labelText: 'Account / Phone / USDT')),
-        TextField(controller: _pts, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Points (Multiple of 100,000)')),
-        ElevatedButton(onPressed: () {
-          final a = double.tryParse(_pts.text) ?? 0;
-          if (a >= 100000 && AppState.points >= a && _acc.text.isNotEmpty) { AppState.points -= a; widget.onUpd(); setState(() {}); }
-        }, child: const Text('Withdraw')),
+        Card(child: ListTile(title: Text('Available Points: 💎 ${AppState.points.toStringAsFixed(2)}'), subtitle: const Text('10,000 Pts = 140 ETB or \$1.00 USDT'))),
+        DropdownButtonFormField<String>(value: _method, items: List<String>.of({'Telebirr', 'CBEBirr', 'CBE', 'Awash Bank', 'Dashen Bank', 'USDT (TRC20)'}).map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(), onChanged: (v) => setState(() => _method = v ?? 'Telebirr')),
+        TextField(controller: _pts, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Points to Withdraw (Min 100,000)'), onChanged: (_) => setState(() {})),
+        TextField(controller: _acc, decoration: InputDecoration(labelText: _method == 'USDT (TRC20)' ? 'TRC20 Wallet Address' : 'Phone or Account Number')),
+        const SizedBox(height: 12),
+        ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48)), onPressed: () {
+          if (p >= 100000 && AppState.points >= p && _acc.text.isNotEmpty) {
+            setState(() => AppState.points -= p);
+            widget.onUpd();
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✅ Cash Out ($payout) Submitted!')));
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Min 100,000 Points & Account required!')));
+          }
+        }, child: Text('Withdraw $payout')),
       })),
     );
   }
 }
 
-class AgencyCenterPage extends StatefulWidget {
-  final VoidCallback onUpd;
-  const AgencyCenterPage({super.key, required this.onUpd});
-  @override
-  State<AgencyCenterPage> createState() => _AgencyCenterPageState();
-}
-
-class _AgencyCenterPageState extends State<AgencyCenterPage> {
-  final _ag = TextEditingController(), _id = TextEditingController();
+class AppSettingsPage extends StatelessWidget {
+  const AppSettingsPage({super.key});
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: const Text('Agency Center')), body: ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
-      Card(child: ListTile(title: Text('Status: ${AppState.agencyStatus}'), subtitle: const Text('Commission: 12% ➔ 16%'))),
-      TextField(controller: _ag, decoration: const InputDecoration(labelText: 'Agency Name')),
-      TextField(controller: _id, decoration: const InputDecoration(labelText: 'National ID (FAN/FIN)')),
-      ElevatedButton(onPressed: () { if (_ag.text.isNotEmpty && _id.text.isNotEmpty) setState(() => AppState.agencyStatus = 'Pending'); }, child: const Text('Register Agency')),
-    })));
-  }
-}
-
-class ContactCenterPage extends StatelessWidget {
-  const ContactCenterPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: const Text('Support & Admin')), body: ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
-      Card(child: ListTile(title: const Text('WhatsApp & Telegram Admin'), subtitle: const Text('+251919108311'), trailing: IconButton(icon: const Icon(Icons.copy), onPressed: () => Clipboard.setData(const ClipboardData(text: '+251919108311'))))),
-    })));
-  }
-}
-
-class AppSettings5Page extends StatelessWidget {
-  final VoidCallback onUpd;
-  const AppSettings5Page({super.key, required this.onUpd});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: const Text('Settings & Policies')), body: ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
-      ListTile(title: const Text('1. Account & Security'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SettingsPage(onUpd: onUpd)))),
-      const ListTile(title: Text('2. Notifications & Audio')),
-      const ListTile(title: Text('3. Privacy & Blacklist')),
-      const ListTile(title: Text('4. Language (Afaan Oromoo / English)')),
-      const ListTile(title: Text('5. Policies & Terms'), subtitle: Text('Min Cash Out: 100,000 Pts • Support: +251919108311')),
-    })));
+    return Scaffold(
+      appBar: AppBar(title: const Text('Settings & Policies')),
+      body: ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
+        const ListTile(leading: Icon(Icons.language, color: Colors.amber), title: Text('Language'), subtitle: Text('English / Afaan Oromoo / አማርኛ')),
+        const ListTile(leading: Icon(Icons.security, color: Colors.tealAccent), title: Text('Privacy Policy & Child Safety'), subtitle: Text('18+ Only • Zero Tolerance for Abuse')),
+        const ListTile(leading: Icon(Icons.gavel, color: Colors.orange), title: Text('Terms & Policies'), subtitle: Text('Min Cash Out: 100,000 Pts • Support: +251919108311')),
+      })),
+    );
   }
 }
 
@@ -392,9 +370,9 @@ class StorePage extends StatefulWidget {
 
 class _StorePageState extends State<StorePage> {
   final _items = List<Map<String, dynamic>>.of({
-    {'name': '🏍️ Shark Moto Entry', 'price': 300000, 'tag': 'NEW'},
+    {'name': '🦈 Shark Moto Entry', 'price': 300000, 'tag': 'NEW'},
     {'name': '🐉 Ice-Fire Soul Ride', 'price': 400000, 'tag': 'NEW'},
-    {'name': '🌟 Star of Fortune Frame', 'price': 30000, 'tag': 'NEW'},
+    {'name': '👑 Star of Fortune Frame', 'price': 30000, 'tag': 'NEW'},
     {'name': '🍀 Lucky Bless Frame', 'price': 30000, 'tag': 'NEW'},
     {'name': '🏰 Abba Jifar Palace Theme', 'price': 4200, 'tag': 'ROYAL'},
     {'name': '☕ Jebena Gold ChatBubble', 'price': 10000, 'tag': 'VIP'},
@@ -406,7 +384,7 @@ class _StorePageState extends State<StorePage> {
       appBar: AppBar(title: Text('Store • 🪙 ${AppState.coins}')),
       body: GridView.builder(
         padding: const EdgeInsets.all(12),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 0.9),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 0.92),
         itemCount: _items.length,
         itemBuilder: (_, i) {
           final it = _items.elementAt(i);
@@ -416,10 +394,10 @@ class _StorePageState extends State<StorePage> {
               padding: const EdgeInsets.all(10),
               child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
                 Chip(label: Text(it['tag'] as String, style: const TextStyle(fontSize: 10))),
-                Text(it['name'] as String, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(it['name'] as String, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold)),
                 Text('🪙 $price', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 34)),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 36)),
                   onPressed: () {
                     if (AppState.coins >= price) { setState(() => AppState.coins -= price); widget.onUpd(); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Equipped ${it['name']}!'))); }
                     else { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not enough Coins!'))); }
