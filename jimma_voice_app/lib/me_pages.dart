@@ -367,10 +367,12 @@ class _UserRechargePageState extends State<UserRechargePage> {
 class OnlineAgencyServicePage extends StatelessWidget {
   const OnlineAgencyServicePage({super.key});
 
-    void _openWa(String phone, String msg) {
+  void _openWa(String phone, String msg) {
     Clipboard.setData(ClipboardData(text: '+$phone • $msg'));
   }
 
+  @override
+  Widget build(BuildContext context) {
     final sellers = List<Map<String, String>>.of({
       {'name': 'Ethio-Voice Official Agency', 'id': '1000001', 'sales': 'Recent 30-Day Coin Sales 1B+', 'banks': 'Telebirr • CBE • Awash • Dashen • Coop', 'wa': '251919108311'},
       {'name': 'Jimma Star Coin Agency', 'id': '1539458', 'sales': 'Recent 30-Day Coin Sales 500M+', 'banks': 'Telebirr • CBE • Awash • Dashen', 'wa': '251919108311'},
@@ -388,35 +390,42 @@ class OnlineAgencyServicePage extends StatelessWidget {
             color: const Color(0xFF1E293B),
             margin: const EdgeInsets.only(bottom: 12),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.amber.withOpacity(0.4))),
-            child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
-              Row(children: List<Widget>.of({
-                const CircleAvatar(radius: 24, backgroundColor: Colors.amber, child: Icon(Icons.verified, color: Colors.black)),
-                const SizedBox(width: 10),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: List<Widget>.of({
                   Row(children: List<Widget>.of({
-                    Flexible(child: Text(s['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
-                    const SizedBox(width: 6),
-                    Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(8)), child: const Text('Senior Seller', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black))),
+                    const CircleAvatar(radius: 24, backgroundColor: Colors.amber, child: Icon(Icons.verified, color: Colors.black)),
+                    const SizedBox(width: 10),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
+                      Row(children: List<Widget>.of({
+                        Flexible(child: Text(s['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
+                        const SizedBox(width: 6),
+                        Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(8)), child: const Text('Senior Seller', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black))),
+                      })),
+                      Text('ID: ${s['id']}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                    }))),
                   })),
-                  Text('ID: ${s['id']}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                }))),
-              })),
-              const SizedBox(height: 8),
-              Text(s['sales']!, style: const TextStyle(fontSize: 11, color: Colors.amber)),
-              Text('Payment Method: ${s['banks']}', style: const TextStyle(fontSize: 11.5, color: Colors.tealAccent)),
-              const SizedBox(height: 10),
-              Row(children: List<Widget>.of({
-                Expanded(child: ElevatedButton.icon(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF25D366), foregroundColor: Colors.white), onPressed: () => _openWa(s['wa']!, 'Hello ${s['name']}, I want to buy Ethio-Voice Coins for my ID: ${AppState.userId}'), icon: const Icon(Icons.chat, size: 18), label: const Text('WhatsApp'))),
-                const SizedBox(width: 10),
-                Expanded(child: ElevatedButton.icon(style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black), onPressed: () { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Opened Free Chat with ${s['name']} (ID: ${s['id']})'))); }, icon: const Icon(Icons.message, size: 18), label: const Text('Chat'))),
-              })),
-            }))),
+                  const SizedBox(height: 8),
+                  Text(s['sales']!, style: const TextStyle(fontSize: 11, color: Colors.amber)),
+                  Text('Payment Method: ${s['banks']}', style: const TextStyle(fontSize: 11.5, color: Colors.tealAccent)),
+                  const SizedBox(height: 10),
+                  Row(children: List<Widget>.of({
+                    Expanded(child: ElevatedButton.icon(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF25D366), foregroundColor: Colors.white), onPressed: () { _openWa(s['wa']!, 'Hello ${s['name']}, I want to buy Ethio-Voice Coins for my ID: ${AppState.userId}'); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Copied WhatsApp: +${s['wa']}'))); }, icon: const Icon(Icons.chat, size: 18), label: const Text('WhatsApp'))),
+                    const SizedBox(width: 10),
+                    Expanded(child: ElevatedButton.icon(style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black), onPressed: () { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Opened Free Chat with ${s['name']} (ID: ${s['id']})'))); }, icon: const Icon(Icons.message, size: 18), label: const Text('Chat'))),
+                  })),
+                }),
+              ),
+            ),
           );
         },
       ),
     );
   }
 }
+
 class CoinSellerPage extends StatefulWidget {
   final VoidCallback onUpd;
   const CoinSellerPage({super.key, required this.onUpd});
