@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'main.dart';
 
 class SudConfig {
@@ -22,79 +22,46 @@ class SudConfig {
   ];
 }
 
-class SudGameOverlaySheet extends StatefulWidget {
+class SudGameOverlaySheet extends StatelessWidget {
   final String roomId;
   final String gameName;
   final int mgId;
   final VoidCallback onUpd;
   const SudGameOverlaySheet({super.key, required this.roomId, required this.gameName, required this.mgId, required this.onUpd});
 
-  @override
-  State<SudGameOverlaySheet> createState() => _SudGameOverlaySheetState();
-}
-
-class _SudGameOverlaySheetState extends State<SudGameOverlaySheet> {
-  late final WebViewController _webCtrl;
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    final url = 'https://sud.tech{SudConfig.appId}&mg_id=${widget.mgId}&room_id=${Uri.encodeComponent(widget.roomId)}&user_id=${AppState.userId}&code=ethio_${AppState.userId}&lang=en-US';
-    _webCtrl = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0xFF090D16))
-      ..addJavaScriptChannel('EthioCoinBridge', onMessageReceived: (JavaScriptMessage msg) {
-        final raw = msg.message.trim();
-        if (raw.startsWith('BET:')) {
-          final bet = int.tryParse(raw.substring(4)) ?? 0;
-          if (bet > 0 && AppState.coins >= bet) {
-            setState(() => AppState.coins -= bet);
-            widget.onUpd();
-          }
-        } else if (raw.startsWith('WIN:')) {
-          final win = int.tryParse(raw.substring(4)) ?? 0;
-          if (win > 0) {
-            setState(() {
-              AppState.coins += win;
-              AppState.lastBigWinner = '${AppState.userName} won +$win Coins in ${widget.gameName}!';
-            });
-            widget.onUpd();
-          }
-        }
-      })
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageFinished: (_) {
-          if (mounted) setState(() => _loading = false);
-        },
-      ))
-      ..loadRequest(Uri.parse(url));
+  Future<void> _launchSudGame(BuildContext context) async {
+    final url = Uri.parse('https://sud.tech{SudConfig.appId}&mg_id=$mgId&room_id=${Uri.encodeComponent(roomId)}&user_id=${AppState.userId}&code=ethio_${AppState.userId}&lang=en-US');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.inAppWebView);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.74,
+      padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
         color: Color(0xFF0B1120),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         border: Border(top: BorderSide(color: Colors.amber, width: 2)),
       ),
-      child: Column(children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: <Widget>[
-            Text('🎮 ${widget.gameName} • 🪙 ${AppState.coins}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 14)),
-            const Text('🎙️ Voice Active', style: TextStyle(fontSize: 11, color: Colors.tealAccent)),
-            IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.pop(context)),
-          ]),
+      child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: <Widget>[
+          Text('🎮 $gameName • Official Sud.Tech', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 15)),
+          IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.pop(context)),
+        ]),
+        const SizedBox(height: 10),
+        Text('Room: $roomId • Player ID: ${AppState.userId}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+        const SizedBox(height: 6),
+        const Text('🎙️ Your Voice Room Mic stays active in background while playing!', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Colors.tealAccent)),
+        const SizedBox(height: 16),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25))),
+          onPressed: () => _launchSudGame(context),
+          icon: const Icon(Icons.play_arrow_rounded, size: 28),
+          label: Text('Launch $gameName Now', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         ),
-        Expanded(
-          child: Stack(children: <Widget>[
-            WebViewWidget(controller: _webCtrl),
-            if (_loading) const Center(child: CircularProgressIndicator(color: Colors.amber)),
-          ]),
-        ),
+        const SizedBox(height: 10),
       ]),
     );
   }
