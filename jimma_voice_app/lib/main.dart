@@ -5,16 +5,22 @@ import 'package:flutter/services.dart';
 import 'games_moments.dart';
 import 'me_pages.dart';
 import 'task_settings_admin.dart';
-
 void main() => runApp(const EthioVoiceApp());
 
 class AppState {
+  static bool isLoggedIn = false;
   static String userName = 'Ethio_User_${Random().nextInt(900) + 100}';
+  static String userPhone = '';
   static String userId = '${Random().nextInt(8999999) + 1000000}';
   static int coins = 0;
   static double points = 0.0;
   static int vipLevel = 0;
+  static int hostLv = 1;
   static int wealthLv = 1;
+  static bool isCoinSeller = false;
+  static bool isAgency = false;
+  static String agencyName = '';
+  static String agencyWhatsApp = '+251919108311';
   static int gamesPlayedToday = 0;
   static int roomMinutesToday = 0;
   static bool inviteClaimed = false;
@@ -34,9 +40,13 @@ class AppState {
   static final List<Map<String, String>> chatMessages = <Map<String, String>>[
     {'sender': 'Ethio-Voice Official', 'type': 'text', 'content': 'Welcome! Enjoy 100% Free Chat, Live Rooms & 24 HD Games!', 'time': 'Now'},
   ];
-  static final List<Map<String, String>> notifications = <Map<String, String>>[
-    {'title': 'Daily 24h Tasks Ready', 'body': 'Complete Daily Tasks & Host Mic Tasks every 24 hours for free Coins & Points!'},
+  static final List<Map<String, String>> systemReceipts = <Map<String, String>>[
+    {'type': 'bonus', 'title': 'Room Bomb Bonus', 'body': 'Congratulations on getting 500 coins in Room Bomb', 'time': '2026-11-15 10:30:00'},
   ];
+  static final List<Map<String, String>> officialNotices = <Map<String, String>>[
+    {'title': 'Welcome to Ethio-Voice!', 'body': 'Complete Daily 24h Tasks, host voice rooms & cash out via Payroll or Agency!', 'time': 'Now'},
+  ];
+  static final List<Map<String, String>> notifications = officialNotices;
 
   static bool hasProfanity(String text) {
     final t = text.toLowerCase();
@@ -59,10 +69,89 @@ class EthioVoiceApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF0B1120),
         appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF0F172A), elevation: 0),
       ),
-      home: const MainShell(),
+      home: AppState.isLoggedIn ? const MainShell() : const AuthGatePage(),
     );
   }
 }
+
+class AuthGatePage extends StatefulWidget {
+  const AuthGatePage({super.key});
+  @override
+  State<AuthGatePage> createState() => _AuthGatePageState();
+}
+
+class _AuthGatePageState extends State<AuthGatePage> {
+  bool _isSignUp = true;
+  final _nameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  final _refCtrl = TextEditingController();
+
+  void _submit() {
+    final phone = _phoneCtrl.text.trim();
+    final pass = _passCtrl.text.trim();
+    if (phone.length < 6 || pass.length < 4) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Enter valid Phone/Email & Password (4+ chars)!')));
+      return;
+    }
+    if (_isSignUp && _nameCtrl.text.trim().isNotEmpty && !AppState.hasProfanity(_nameCtrl.text)) {
+      AppState.userName = _nameCtrl.text.trim();
+    }
+    AppState.userPhone = phone;
+    if (_isSignUp && _refCtrl.text.trim().length >= 5) {
+      AppState.coins += 500;
+      AppState.inviteClaimed = true;
+    }
+    AppState.isLoggedIn = true;
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: <Color>[Color(0xFF064E3B), Color(0xFF0F172A), Color(0xFF090D16)])),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(children: List<Widget>.of({
+                const CircleAvatar(radius: 42, backgroundColor: Colors.amber, child: Icon(Icons.graphic_eq, size: 46, color: Colors.black)),
+                const SizedBox(height: 12),
+                const Text('ኢትዮ-ድምጽ • Ethio-Voice', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.amber)),
+                const Text('Live Voice Rooms • Education • 24 HD Games', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                const SizedBox(height: 22),
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber.withOpacity(0.5))),
+                  child: Column(children: List<Widget>.of({
+                    Row(children: List<Widget>.of({
+                      Expanded(child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: _isSignUp ? Colors.amber : Colors.white10, foregroundColor: _isSignUp ? Colors.black : Colors.white), onPressed: () => setState(() => _isSignUp = true), child: const Text('Sign Up', style: TextStyle(fontWeight: FontWeight.bold)))),
+                      const SizedBox(width: 8),
+                      Expanded(child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: !_isSignUp ? Colors.tealAccent : Colors.white10, foregroundColor: !_isSignUp ? Colors.black : Colors.white), onPressed: () => setState(() => _isSignUp = false), child: const Text('Login', style: TextStyle(fontWeight: FontWeight.bold)))),
+                    })),
+                    const SizedBox(height: 14),
+                    if (_isSignUp) TextField(controller: _nameCtrl, decoration: const InputDecoration(prefixIcon: Icon(Icons.person, color: Colors.amber), labelText: 'Full Name / Nickname')),
+                    TextField(controller: _phoneCtrl, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(prefixIcon: Icon(Icons.phone_android, color: Colors.tealAccent), labelText: 'Phone Number or Email')),
+                    TextField(controller: _passCtrl, obscureText: true, decoration: const InputDecoration(prefixIcon: Icon(Icons.lock, color: Colors.amber), labelText: 'Password')),
+                    if (_isSignUp) TextField(controller: _refCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(prefixIcon: Icon(Icons.card_giftcard, color: Colors.pinkAccent), labelText: 'Invite Code (Optional +500 Coins)')),
+                    const SizedBox(height: 18),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))),
+                      onPressed: _submit,
+                      child: Text(_isSignUp ? 'Create Account & Enter' : 'Login to Ethio-Voice', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                    ),
+                  })),
+                ),
+              })),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
