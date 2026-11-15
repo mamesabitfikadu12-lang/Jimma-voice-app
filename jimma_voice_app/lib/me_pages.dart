@@ -8,7 +8,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'task_settings_admin.dart';
 import 'main.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class TronVerifyHelper {
   static const String wallet = 'TVdr3JdbDZhXjfSGsUB9azNAnTbkHbUNcE';
@@ -368,13 +367,10 @@ class _UserRechargePageState extends State<UserRechargePage> {
 class OnlineAgencyServicePage extends StatelessWidget {
   const OnlineAgencyServicePage({super.key});
 
-  Future<void> _openWa(String phone, String msg) async {
-    final uri = Uri.parse('https://wa.me{Uri.encodeComponent(msg)}');
-    if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+    void _openWa(String phone, String msg) {
+    Clipboard.setData(ClipboardData(text: '+$phone • $msg'));
   }
 
-  @override
-  Widget build(BuildContext context) {
     final sellers = List<Map<String, String>>.of({
       {'name': 'Ethio-Voice Official Agency', 'id': '1000001', 'sales': 'Recent 30-Day Coin Sales 1B+', 'banks': 'Telebirr • CBE • Awash • Dashen • Coop', 'wa': '251919108311'},
       {'name': 'Jimma Star Coin Agency', 'id': '1539458', 'sales': 'Recent 30-Day Coin Sales 500M+', 'banks': 'Telebirr • CBE • Awash • Dashen', 'wa': '251919108311'},
@@ -704,10 +700,10 @@ class _PointsCashOutPageState extends State<PointsCashOutPage> {
   bool _agChecked = false;
   bool _hideFrozen = false;
 
-  Future<void> _openWa(String msg) async {
-    final uri = Uri.parse('https://wa.me{Uri.encodeComponent(msg)}');
-    if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+    void _openWa(String msg) {
+    Clipboard.setData(ClipboardData(text: '+251919108311 • $msg'));
   }
+
 
   @override
   Widget build(BuildContext context) {
