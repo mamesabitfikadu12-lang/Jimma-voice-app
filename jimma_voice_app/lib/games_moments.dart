@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
@@ -6,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'main.dart';
-import 'api_service.dart';
 
 class GamesTab extends StatefulWidget {
   final VoidCallback onUpd;
@@ -17,183 +15,231 @@ class GamesTab extends StatefulWidget {
 
 class _GamesTabState extends State<GamesTab> {
   String _cat = 'Hot';
-  int _bet = 100;
   final _cats = List<String>.of({'Latest', 'Hot', 'Slot', 'Fishing', 'Multi Player'});
-  final _bets = List<int>.of({100, 500, 1000, 5000, 10000});
 
-  final _allGames = List<Map<String, dynamic>>.of({
-    {'name': 'Ocean Hunt', 'icon': '🐙🎰', 'cat': 'Hot', 'tag': 'HOT', 'col': 0xFF7C3AED},
-    {'name': 'Jungle Hunt', 'icon': '🦁🌴', 'cat': 'Hot', 'tag': 'HOT', 'col': 0xFFB45309},
-    {'name': 'Royal Battle', 'icon': '👑⚔️', 'cat': 'Multi Player', 'tag': 'HOT', 'col': 0xFFBE123C},
-    {'name': 'Garo Gems III', 'icon': '🏺💎', 'cat': 'Slot', 'tag': 'NEW', 'col': 0xFFD97706},
-    {'name': 'Fruit Party', 'icon': '🍓🍊', 'cat': 'Slot', 'tag': 'HOT', 'col': 0xFF0284C7},
-    {'name': 'Fishing Tycoon', 'icon': '🦈⚓', 'cat': 'Fishing', 'tag': 'HOT', 'col': 0xFF0F766E},
-    {'name': 'Money Coming', 'icon': '💵🎰', 'cat': 'Slot', 'tag': 'NEW', 'col': 0xFF15803D},
-    {'name': 'The Monkey King', 'icon': '🐵👑', 'cat': 'Hot', 'tag': 'HOT', 'col': 0xFFDC2626},
-    {'name': 'Blaze Of Fortune', 'icon': '🔥🏮', 'cat': 'Latest', 'tag': 'NEW', 'col': 0xFF9A3412},
-    {'name': 'Lucky Piggy', 'icon': '🐷💰', 'cat': 'Slot', 'tag': 'NEW', 'col': 0xFFA16207},
-    {'name': 'Fortune Rabbit', 'icon': '🐰🧧', 'cat': 'Latest', 'tag': 'NEW', 'col': 0xFFDB2777},
-    {'name': 'Gates Of Olympus', 'icon': '⚡🏛️', 'cat': 'Hot', 'tag': 'NEW', 'col': 0xFF1D4ED8},
-    {'name': 'Lucky 77 Pro', 'icon': '7️⃣🍒', 'cat': 'Slot', 'tag': 'PRO', 'col': 0xFF991B1B},
-    {'name': 'Fortune Tiger', 'icon': '🐯🪙', 'cat': 'Hot', 'tag': 'HOT', 'col': 0xFFB45309},
-    {'name': 'Roulette Royal', 'icon': '🎡🎯', 'cat': 'Multi Player', 'tag': 'HOT', 'col': 0xFF065F46},
-    {'name': 'Deep Sea', 'icon': '🐟🌊', 'cat': 'Fishing', 'tag': 'HOT', 'col': 0xFF0369A1},
-    {'name': 'Color Game', 'icon': '🎲🎨', 'cat': 'Multi Player', 'tag': 'HOT', 'col': 0xFF6D28D9},
-    {'name': 'World Goal 2026', 'icon': '⚽🥅', 'cat': 'Multi Player', 'tag': 'HOT', 'col': 0xFF047857},
-    {'name': 'Sweet Bonanza', 'icon': '🍭🍬', 'cat': 'Slot', 'tag': 'HOT', 'col': 0xFFBE185D},
-    {'name': 'Dragon Ball', 'icon': '🐉🔮', 'cat': 'Latest', 'tag': 'NEW', 'col': 0xFF15803D},
-    {'name': 'Super Ace', 'icon': '🃏👑', 'cat': 'Slot', 'tag': 'HOT', 'col': 0xFF4D7C0F},
-    {'name': 'Chicken Road', 'icon': '🐔🛣️', 'cat': 'Latest', 'tag': 'NEW', 'col': 0xFF374151},
-    {'name': 'Teen Patti', 'icon': '♠️♥️', 'cat': 'Multi Player', 'tag': 'HOT', 'col': 0xFF1E3A8A},
-    {'name': 'Ludo King Party', 'icon': '🎲🏆', 'cat': 'Multi Player', 'tag': 'HOT', 'col': 0xFF0F766E},
+  final _games = List<Map<String, dynamic>>.of({
+    {'name': 'Ocean Hunt', 'cat': 'Fishing', 'tag': 'HOT', 'c1': 0xFF023E8A, 'c2': 0xFF0077B6, 'ic': '🐙🎰', 'syms': List<String>.of({'🐙', '🦈', '🐡', '💎', '👑'})},
+    {'name': 'Jungle Hunt', 'cat': 'Hot', 'tag': 'HOT', 'c1': 0xFF1B4332, 'c2': 0xFF40916C, 'ic': '🦁🌴', 'syms': List<String>.of({'🦁', '🐯', '🌴', '💎', '🪙'})},
+    {'name': 'Royal Battle', 'cat': 'Multi Player', 'tag': 'HOT', 'c1': 0xFF590D22, 'c2': 0xFFA4133C, 'ic': '👑⚔️', 'syms': List<String>.of({'👑', '⚔️', '🛡️', '💎', '🔥'})},
+    {'name': 'Garo Gems III', 'cat': 'Latest', 'tag': 'NEW', 'c1': 0xFF3C096C, 'c2': 0xFF7B2CBF, 'ic': '🏺💎', 'syms': List<String>.of({'💎', '🏺', '🔮', '👑', '⭐'})},
+    {'name': 'Fruit Party', 'cat': 'Slot', 'tag': 'HOT', 'c1': 0xFF004B23, 'c2': 0xFF38B000, 'ic': '🍓🍊', 'syms': List<String>.of({'🍓', '🍊', '🍉', '🍇', '7️⃣'})},
+    {'name': 'Fishing Tycoon', 'cat': 'Fishing', 'tag': 'HOT', 'c1': 0xFF03045E, 'c2': 0xFF0096C7, 'ic': '🦈⚓', 'syms': List<String>.of({'🦈', '🐋', '⚓', '💰', '💎'})},
+    {'name': 'Money Coming', 'cat': 'Slot', 'tag': 'NEW', 'c1': 0xFF7F5539, 'c2': 0xFFB08968, 'ic': '💵🎡', 'syms': List<String>.of({'💵', '🪙', '💰', '🎡', '👑'})},
+    {'name': 'The Monkey King', 'cat': 'Hot', 'tag': 'HOT', 'c1': 0xFF6A040F, 'c2': 0xFFD00000, 'ic': '🐒🔥', 'syms': List<String>.of({'🐒', '🔥', '🍑', '👑', '💎'})},
+    {'name': 'Blaze Of Fortune', 'cat': 'Latest', 'tag': 'NEW', 'c1': 0xFF9D0208, 'c2': 0xFFE85D04, 'ic': '🔥💎', 'syms': List<String>.of({'🔥', '💎', '⚡', '👑', '🪙'})},
+    {'name': 'Lucky Piggy', 'cat': 'Slot', 'tag': 'HOT', 'c1': 0xFF7209B7, 'c2': 0xFFF72585, 'ic': '🐷💰', 'syms': List<String>.of({'🐷', '💰', '🪙', '🍀', '💎'})},
+    {'name': 'Fortune Rabbit', 'cat': 'Slot', 'tag': 'HOT', 'c1': 0xFF800F2F, 'c2': 0xFFFF4D6D, 'ic': '🐰🧧', 'syms': List<String>.of({'🐰', '🧧', '🪙', '🌸', '👑'})},
+    {'name': 'Gates Of Olympus', 'cat': 'Hot', 'tag': 'HOT', 'c1': 0xFF1D3557, 'c2': 0xFF457B9D, 'ic': '⚡🏛️', 'syms': List<String>.of({'⚡', '🏛️', '👑', '💎', '🔥'})},
+    {'name': 'Lucky 77 Pro', 'cat': 'Slot', 'tag': 'NEW', 'c1': 0xFF370617, 'c2': 0xFF9D0208, 'ic': '7️⃣🔔', 'syms': List<String>.of({'7️⃣', '🔔', '🍒', '💎', '🪙'})},
+    {'name': 'Fortune Tiger', 'cat': 'Hot', 'tag': 'HOT', 'c1': 0xFF7F4F24, 'c2': 0xFFCA6702, 'ic': '🐯🪙', 'syms': List<String>.of({'🐯', '🪙', '🧧', '💎', '👑'})},
+    {'name': 'Roulette Royal', 'cat': 'Multi Player', 'tag': 'HOT', 'c1': 0xFF003049, 'c2': 0xFFD62828, 'ic': '🎡♠️', 'syms': List<String>.of({'🎡', '♠️', '♥️', '♦️', '👑'})},
+    {'name': 'Deep Sea', 'cat': 'Fishing', 'tag': 'NEW', 'c1': 0xFF001219, 'c2': 0xFF0A9396, 'ic': '🐋🧜‍♀️', 'syms': List<String>.of({'🐋', '🐙', '🐚', '💎', '🪙'})},
+    {'name': 'Color Game', 'cat': 'Multi Player', 'tag': 'HOT', 'c1': 0xFF240046, 'c2': 0xFF5A189A, 'ic': '🎲🎨', 'syms': List<String>.of({'🔴', '🟢', '🟡', '🔵', '👑'})},
+    {'name': 'World Goal 2026', 'cat': 'Multi Player', 'tag': 'NEW', 'c1': 0xFF081C15, 'c2': 0xFF2D6A4F, 'ic': '⚽🏆', 'syms': List<String>.of({'⚽', '🏆', '🥇', '🔥', '👑'})},
+    {'name': 'Sweet Bonanza', 'cat': 'Slot', 'tag': 'HOT', 'c1': 0xFF590D22, 'c2': 0xFFFF758F, 'ic': '🍭🍬', 'syms': List<String>.of({'🍭', '🍬', '🍇', '🍉', '💎'})},
+    {'name': 'Dragon Ball', 'cat': 'Latest', 'tag': 'NEW', 'c1': 0xFF540B0E, 'c2': 0xFFE09F3E, 'ic': '🐉🔮', 'syms': List<String>.of({'🐉', '🔮', '🔥', '⭐', '👑'})},
+    {'name': 'Super Ace', 'cat': 'Slot', 'tag': 'HOT', 'c1': 0xFF10002B, 'c2': 0xFF7B2CBF, 'ic': '🃏👑', 'syms': List<String>.of({'🃏', '👑', '♠️', '💎', '🪙'})},
+    {'name': 'Chicken Road', 'cat': 'Latest', 'tag': 'HOT', 'c1': 0xFF335C67, 'c2': 0xFFE09F3E, 'ic': '🐔🛣️', 'syms': List<String>.of({'🐔', '🥚', '🔥', '💰', '👑'})},
+    {'name': 'Teen Patti', 'cat': 'Multi Player', 'tag': 'HOT', 'c1': 0xFF1B4332, 'c2': 0xFF52B788, 'ic': '🎴💎', 'syms': List<String>.of({'🎴', '♠️', '♥️', '💎', '👑'})},
+    {'name': 'Ludo King Party', 'cat': 'Multi Player', 'tag': 'HOT', 'c1': 0xFF003566, 'c2': 0xFFFFC300, 'ic': '🎲👑', 'syms': List<String>.of({'🎲', '👑', '🔴', '🟢', '🟡'})},
   });
 
-  void _openGameDialog(Map<String, dynamic> g) {
-    final reels = List<String>.of({'💎', '👑', '🪙'});
-    String msg = 'Select Bet (100 - 10,000) & Tap SPIN!';
-    bool spinning = false;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF0F172A),
-      builder: (_) => StatefulBuilder(
-        builder: (ctx, setG) => SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: List<Widget>.of({
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
-                  Text('${g['icon']} ${g['name']}', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.amber)),
-                  Text('🪙 ${AppState.coins}', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-                })),
-                const SizedBox(height: 12),
-                Row(children: reels.map((r) => Expanded(child: Card(color: Colors.black54, child: Padding(padding: const EdgeInsets.all(14), child: Center(child: Text(r, style: const TextStyle(fontSize: 26))))))).toList()),
-                const SizedBox(height: 8),
-                Wrap(spacing: 6, children: _bets.map((b) => ChoiceChip(label: Text('$b'), selected: _bet == b, onSelected: (_) => setG(() => _bet = b))).toList()),
-                const SizedBox(height: 8),
-                Text(msg, style: const TextStyle(color: Colors.tealAccent, fontSize: 13, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 46)),
-                  onPressed: spinning ? null : () async {
-                    if (AppState.coins < _bet) { setG(() => msg = 'Not enough Coins! Recharge first.'); return; }
-                    setG(() { spinning = true; AppState.coins -= _bet; msg = 'Spinning... 🎵'; });
-                    SystemSound.play(SystemSoundType.click);
-                    HapticFeedback.lightImpact();
-                    widget.onUpd();
-                    await Future.delayed(const Duration(milliseconds: 550));
-                    // 65% Galii Appichaa eeguuf carraan mo'achuu 35%
-                    if (Random().nextInt(100) < 35) {
-                      final sym = List<String>.of({'💎', '👑', '🪙', '🦁', '☕'}).elementAt(Random().nextInt(5));
-                      final win = _bet * 2;
-                      SystemSound.play(SystemSoundType.alert);
-                      HapticFeedback.heavyImpact();
-                      setG(() {
-                        AppState.coins += win;
-                        reels[0] = sym; reels[1] = sym; reels[2] = sym;
-                        spinning = false;
-                        msg = '🎉 BIG WIN! +$win Coins!';
-                      });
-                    } else {
-                      setG(() {
-                        reels[0] = '💎'; reels[1] = '🦁'; reels[2] = '🪙';
-                        spinning = false;
-                        msg = 'Try again! Next spin could hit Jackpot!';
-                      });
-                    }
-                    widget.onUpd();
-                  },
-                  child: Text('PLAY / SPIN ($_bet Coins)', style: const TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              }),
-            ),
-          ),
-        ),
-      ),
-    );
+  void _openFullGame(Map<String, dynamic> g) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => FullScreenGameArena(game: g, onUpd: () { setState(() {}); widget.onUpd(); })));
   }
 
-  void _convertCoinsToPoints() {
-    final ctrl = TextEditingController(text: '10000');
-    showDialog(context: context, builder: (_) => AlertDialog(
-      title: const Text('Convert Won Coins ➔ Points'),
-      content: TextField(controller: ctrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Coins Amount (10,000 Coins = 9,000 Pts)')),
-      actions: List<Widget>.of({
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        ElevatedButton(onPressed: () {
-          final c = int.tryParse(ctrl.text) ?? 0;
-          if (c >= 1000 && AppState.coins >= c) {
-            setState(() { AppState.coins -= c; AppState.points += (c * 0.90); });
-            widget.onUpd();
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Converted $c Coins to ${(c * 0.90).toStringAsFixed(0)} Points!')));
-          }
-        }, child: const Text('Convert')),
-      }),
-    ));
+  void _convertCoins() {
+    if (AppState.coins < 10000) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Min 10,000 Coins required to convert!')));
+      return;
+    }
+    setState(() { AppState.coins -= 10000; AppState.points += 9000; });
+    widget.onUpd();
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Converted 10,000 Coins ➔ 9,000 Points!')));
   }
 
   @override
   Widget build(BuildContext context) {
-    final list = _cat == 'Hot' ? _allGames : _allGames.where((g) => g['cat'] == _cat).toList();
+    final list = _games.where((g) => g['cat'] == _cat || (_cat == 'Hot' && g['tag'] == 'HOT')).toList();
     return Scaffold(
       appBar: AppBar(
         title: Text('Games • 🪙 ${AppState.coins}'),
         actions: List<Widget>.of({
-          TextButton.icon(onPressed: _convertCoinsToPoints, icon: const Icon(Icons.swap_horiz, color: Colors.tealAccent), label: const Text('Coins➔Pts', style: TextStyle(color: Colors.tealAccent, fontSize: 12))),
+          TextButton.icon(onPressed: _convertCoins, icon: const Icon(Icons.swap_horiz, color: Colors.tealAccent), label: const Text('Coins➔Pts', style: TextStyle(color: Colors.tealAccent))),
         }),
       ),
-      body: Column(
-        children: List<Widget>.of({
-          SizedBox(
-            height: 46,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              itemCount: _cats.length,
-              itemBuilder: (_, i) {
-                final c = _cats.elementAt(i);
-                final sel = c == _cat;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: ChoiceChip(label: Text(c), selected: sel, selectedColor: Colors.tealAccent.shade700, onSelected: (_) => setState(() => _cat = c)),
-                );
-              },
-            ),
+      body: Column(children: List<Widget>.of({
+        SizedBox(
+          height: 46,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            itemCount: _cats.length,
+            itemBuilder: (_, i) {
+              final c = _cats.elementAt(i);
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(label: Text(c), selected: _cat == c, selectedColor: Colors.teal.shade700, onSelected: (_) => setState(() => _cat = c)),
+              );
+            },
           ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(10),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 0.85),
-              itemCount: list.length,
-              itemBuilder: (_, i) {
-                final g = list.elementAt(i);
-                return InkWell(
-                  onTap: () => _openGameDialog(g),
-                  child: Container(
-                    decoration: BoxDecoration(color: Color(g['col'] as int).withOpacity(0.55), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.white24)),
-                    child: Stack(
-                      children: List<Widget>.of({                        Positioned(top: 4, right: 4, child: Container(padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2), decoration: BoxDecoration(color: g['tag'] == 'HOT' ? Colors.red : Colors.green, borderRadius: BorderRadius.circular(6)), child: Text(g['tag'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)))),
-                        Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: List<Widget>.of({
-                          Text(g['icon'] as String, style: const TextStyle(fontSize: 28)),
-                          const SizedBox(height: 6),
-                          Text(g['name'] as String, textAlign: TextAlign.center, maxLines: 2, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                        }))),
-                      }),
-                    ),
+        ),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(12),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 0.85),
+            itemCount: list.length,
+            itemBuilder: (_, i) {
+              final g = list.elementAt(i);
+              return InkWell(
+                onTap: () => _openFullGame(g),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: <Color>[Color(g['c1'] as int), Color(g['c2'] as int)]),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.amber.withOpacity(0.55), width: 1.4),
                   ),
-                );
-              },
-            ),
+                  child: Stack(children: List<Widget>.of({
+                    Positioned(top: 6, right: 6, child: Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: g['tag'] == 'HOT' ? Colors.redAccent : Colors.green, borderRadius: BorderRadius.circular(8)), child: Text(g['tag'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)))),
+                    Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: List<Widget>.of({
+                      Text(g['ic'] as String, style: const TextStyle(fontSize: 32)),
+                      const SizedBox(height: 8),
+                      Text(g['name'] as String, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                    }))),
+                  })),
+                ),
+              );
+            },
           ),
-        }),
-      ),
+        ),
+      })),
     );
   }
 }
 
+class FullScreenGameArena extends StatefulWidget {
+  final Map<String, dynamic> game;
+  final VoidCallback onUpd;
+  const FullScreenGameArena({super.key, required this.game, required this.onUpd});
+  @override
+  State<FullScreenGameArena> createState() => _FullScreenGameArenaState();
+}
+
+class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  final _bets = List<int>.of({100, 500, 1000, 5000, 10000});
+  int _bet = 100;
+  bool _spinning = false;
+  String _status = 'Select Bet & Tap SPIN to Win 3X!';
+  List<String> _reels = List<String>.of({'💎', '👑', '🪙'});
+
+  @override
+  void initState() {
+    super.initState();
+    final syms = widget.game['syms'] as List<String>;
+    _reels = List<String>.of({syms.elementAt(0), syms.elementAt(1), syms.elementAt(2)});
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..addListener(() {
+      if (_spinning) {
+        final r = Random();
+        setState(() {
+          _reels = List<String>.of({syms.elementAt(r.nextInt(syms.length)), syms.elementAt(r.nextInt(syms.length)), syms.elementAt(r.nextInt(syms.length))});
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _spin() async {
+    if (_spinning) return;
+    if (AppState.coins < _bet) {
+      setState(() => _status = '⚠️ Not enough Coins! Recharge first.');
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    SystemSound.play(SystemSoundType.click);
+    setState(() { _spinning = true; AppState.coins -= _bet; _status = '🎰 Spinning... Good Luck!'; });
+    widget.onUpd();
+    _ctrl.repeat();
+    await Future.delayed(const Duration(milliseconds: 1300));
+    _ctrl.stop();
+    final r = Random();
+    final syms = widget.game['syms'] as List<String>;
+    final win = r.nextInt(100) < 35;
+    setState(() {
+      _spinning = false;
+      if (win) {
+        final s = syms.elementAt(r.nextInt(syms.length));
+        _reels = List<String>.of({s, s, s});
+        final prize = _bet * 3;
+        AppState.coins += prize;
+        _status = '🎉 JACKPOT WIN! +$prize Coins!';
+        HapticFeedback.heavyImpact();
+      } else {
+        _reels = List<String>.of({syms.elementAt(0), syms.elementAt(1), syms.elementAt(2)});
+        _status = 'Try Again! Next spin could be 3X!';
+      }
+    });
+    widget.onUpd();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c1 = Color(widget.game['c1'] as int);
+    final c2 = Color(widget.game['c2'] as int);
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(gradient: RadialGradient(center: Alignment.topCenter, radius: 1.3, colors: <Color>[c2, c1, const Color(0xFF090D16)])),
+        child: SafeArea(
+          child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
+                IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white), onPressed: () => Navigator.pop(context)),
+                Text('${widget.game['ic']} ${widget.game['name']}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber)), child: Text('🪙 ${AppState.coins}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber))),
+              })),
+            ),
+            Column(children: List<Widget>.of({
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 18),
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(color: Colors.black.withOpacity(0.55), borderRadius: BorderRadius.circular(24), border: Border.all(color: Colors.amber, width: 2.5)),
+                child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: _reels.map((sym) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 120),
+                  width: 82, height: 96,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(gradient: const LinearGradient(colors: <Color>[Color(0xFF1E293B), Color(0xFF0F172A)]), borderRadius: BorderRadius.circular(16), border: Border.all(color: _spinning ? Colors.tealAccent : Colors.amber, width: 2)),
+                  child: Text(sym, style: const TextStyle(fontSize: 44)),
+                )).toList()),
+              ),
+              const SizedBox(height: 16),
+              Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(12)), child: Text(_status, style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold, fontSize: 14))),
+            })),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(color: Color(0xFF111827), borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+              child: Column(children: List<Widget>.of({
+                Wrap(spacing: 8, children: _bets.map((b) => ChoiceChip(label: Text('🪙 $b'), selected: _bet == b, selectedColor: Colors.amber, labelStyle: TextStyle(color: _bet == b ? Colors.black : Colors.white, fontWeight: FontWeight.bold), onSelected: (_) => setState(() => _bet = b))).toList()),
+                const SizedBox(height: 14),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 54), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                  onPressed: _spinning ? null : _spin,
+                  child: Text(_spinning ? 'SPINNING...' : '🎰 SPIN & WIN ($_bet Coins)', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                ),
+              })),
+            ),
+          })),
+        ),
+      ),
+    );
+  }
+}
 class MomentsTab extends StatefulWidget {
   final VoidCallback onUpd;
   const MomentsTab({super.key, required this.onUpd});
@@ -202,58 +248,59 @@ class MomentsTab extends StatefulWidget {
 }
 
 class _MomentsTabState extends State<MomentsTab> {
-  final _c = TextEditingController();
   final _picker = ImagePicker();
-  String? _imgPath;
+  String _filter = 'All';
 
-  Future<void> _pickImg() async {
-    final XFile? f = await _picker.pickImage(source: ImageSource.gallery);
-    if (f != null) setState(() => _imgPath = f.path);
+  void _newPost() {
+    final c = TextEditingController();
+    String tag = '#EthioVoice';
+    String? imgPath;
+    showModalBottomSheet(context: context, isScrollControlled: true, builder: (ctx) => StatefulBuilder(builder: (ctx, setB) => Padding(
+      padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
+      child: Column(mainAxisSize: MainAxisSize.min, children: List<Widget>.of({
+        const Text('Share a Moment', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        TextField(controller: c, maxLines: 3, decoration: const InputDecoration(hintText: 'Write something positive...')),
+        Row(children: List<Widget>.of({
+          TextButton.icon(onPressed: () async { final XFile? f = await _picker.pickImage(source: ImageSource.gallery); if (f != null) setB(() => imgPath = f.path); }, icon: const Icon(Icons.photo, color: Colors.amber), label: Text(imgPath == null ? 'Add Photo' : 'Photo Added')),
+          const Spacer(),
+          DropdownButton<String>(value: tag, items: List<String>.of({'#EthioVoice', '#OromoCulture', '#VoiceParty'}).map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(), onChanged: (v) => setB(() => tag = v ?? '#EthioVoice')),
+        })),
+        ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 44)), onPressed: () {
+          if (AppState.hasProfanity(c.text)) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('⚠️ Abusive words are strictly prohibited!')));
+            return;
+          }
+          if (c.text.trim().isNotEmpty || imgPath != null) {
+            AppState.moments.insert(0, {'user': AppState.userName, 'tag': tag, 'text': c.text.trim(), 'likes': '1', 'img': imgPath ?? ''});
+            setState(() {});
+            Navigator.pop(ctx);
+          }
+        }, child: const Text('Post Moment')),
+      })),
+    )));
   }
 
   @override
   Widget build(BuildContext context) {
+    final list = _filter == 'All' ? AppState.moments : AppState.moments.where((m) => m['tag'] == _filter).toList();
     return Scaffold(
-      appBar: AppBar(title: const Text('Moments (Free Post & Photo)')),
-      body: ListView(
-        padding: const EdgeInsets.all(14),
-        children: List<Widget>.of({
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(children: List<Widget>.of({
-                Row(children: List<Widget>.of({
-                  IconButton(icon: const Icon(Icons.add_a_photo, color: Colors.amber), onPressed: _pickImg),
-                  Expanded(child: TextField(controller: _c, decoration: const InputDecoration(hintText: 'Share photo or text (Free)...', border: InputBorder.none))),
-                  ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: () {
-                    if (_c.text.trim().isNotEmpty || _imgPath != null) {
-                      setState(() {
-                        AppState.moments.insert(0, {'user': AppState.userName, 'tag': '#EthioVoice', 'text': _c.text.trim().isEmpty ? '📷 Shared a Photo' : _c.text.trim(), 'image': _imgPath ?? '', 'likes': '1'});
-                        _c.clear(); _imgPath = null;
-                      });
-                    }
-                  }, child: const Text('Post')),
-                })),
-                if (_imgPath != null) const Text('✅ Photo ready to post!', style: TextStyle(color: Colors.greenAccent, fontSize: 12)),
-              })),
-            ),
-          ),
-          ...AppState.moments.map((m) {
-            final p = m['image'] ?? '';
-            return Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({Text('${m['user']} • ${m['tag']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)), Text('❤️ ${m['likes']}')})),
-                  const SizedBox(height: 6),
-                  Text(m['text'] ?? ''),
-                  if (p.isNotEmpty && !kIsWeb) Padding(padding: const EdgeInsets.only(top: 8), child: Image.file(File(p), height: 180, width: double.infinity, fit: BoxFit.cover)),
-                })),
-              ),
-            );
-          }),
-        }),
-      ),
+      appBar: AppBar(title: const Text('Moments'), actions: List<Widget>.of({IconButton(icon: const Icon(Icons.add_a_photo, color: Colors.amber), onPressed: _newPost)})),
+      body: Column(children: List<Widget>.of({
+        Wrap(spacing: 8, children: List<String>.of({'All', '#EthioVoice', '#OromoCulture', '#VoiceParty'}).map((t) => ChoiceChip(label: Text(t), selected: _filter == t, onSelected: (_) => setState(() => _filter = t))).toList()),
+        Expanded(child: ListView.builder(padding: const EdgeInsets.all(12), itemCount: list.length, itemBuilder: (_, i) {
+          final m = list.elementAt(i);
+          final img = m['img'] ?? '';
+          return Card(margin: const EdgeInsets.only(bottom: 12), child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
+            Row(children: List<Widget>.of({const CircleAvatar(backgroundColor: Colors.amber, child: Icon(Icons.person, color: Colors.black)), const SizedBox(width: 10), Text(m['user'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)), const Spacer(), Chip(label: Text(m['tag'] ?? '', style: const TextStyle(fontSize: 11)))})),
+            if ((m['text'] ?? '').isNotEmpty) Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(m['text'] ?? '')),
+            if (img.isNotEmpty && !kIsWeb) ClipRRect(borderRadius: BorderRadius.circular(10), child: Image.file(File(img), height: 180, width: double.infinity, fit: BoxFit.cover)),
+            Row(children: List<Widget>.of({
+              IconButton(icon: const Icon(Icons.favorite, color: Colors.redAccent), onPressed: () => setState(() => m['likes'] = '${(int.tryParse(m['likes'] ?? '0') ?? 0) + 1}')),
+              Text('${m['likes']} Likes'),
+            })),
+          }))));
+        })),
+      })),
     );
   }
 }
@@ -269,56 +316,53 @@ class _MessagesTabState extends State<MessagesTab> {
   final _msgCtrl = TextEditingController();
   final _picker = ImagePicker();
 
+  void _sendText() {
+    final t = _msgCtrl.text.trim();
+    if (t.isEmpty) return;
+    if (AppState.hasProfanity(t)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('⚠️ Abusive language is not allowed!')));
+      return;
+    }
+    setState(() { AppState.chatMessages.add({'sender': AppState.userName, 'type': 'text', 'content': t, 'time': 'Now'}); _msgCtrl.clear(); });
+  }
+
   Future<void> _sendPhoto() async {
     final XFile? f = await _picker.pickImage(source: ImageSource.gallery);
-    if (f != null) {
-      setState(() => AppState.chatMessages.add({'sender': AppState.userName, 'type': 'image', 'content': '📷 Payment Receipt / Photo Sent', 'image': f.path, 'time': 'Now'}));
-    }
+    if (f != null) setState(() => AppState.chatMessages.add({'sender': AppState.userName, 'type': 'image', 'content': f.path, 'time': 'Now'}));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Free Chat & ID Coin Trade')),
-      body: SafeArea(
-        top: false,
-        child: Column(children: List<Widget>.of({
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: AppState.chatMessages.length,
-              itemBuilder: (_, i) {
-                final m = AppState.chatMessages.elementAt(i);
-                final p = m['image'] ?? '';
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
-                      Text('${m['sender']} • ${m['time']}', style: const TextStyle(fontSize: 11, color: Colors.amber)),
-                      const SizedBox(height: 4),
-                      Text(m['content'] ?? ''),
-                      if (p.isNotEmpty && !kIsWeb) Padding(padding: const EdgeInsets.only(top: 6), child: Image.file(File(p), height: 140, fit: BoxFit.cover)),
-                    })),
-                  ),
-                );
-              },
+    return DefaultTabController(length: 2, child: Scaffold(
+      appBar: AppBar(title: const Text('Messages (100% Free)'), bottom: TabBar(tabs: List<Widget>.of({const Tab(text: 'Free Chat'), const Tab(text: 'Notifications')}))),
+      body: TabBarView(children: List<Widget>.of({
+        Column(children: List<Widget>.of({
+          Expanded(child: ListView.builder(padding: const EdgeInsets.all(12), itemCount: AppState.chatMessages.length, itemBuilder: (_, i) {
+            final m = AppState.chatMessages.elementAt(i);
+            final isMe = m['sender'] == AppState.userName;
+            return Align(alignment: isMe ? Alignment.centerRight : Alignment.centerLeft, child: Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isMe ? Colors.teal.shade800 : const Color(0xFF1E293B), borderRadius: BorderRadius.circular(12)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
+              Text(m['sender'] ?? '', style: const TextStyle(fontSize: 10, color: Colors.amber)),
+              if (m['type'] == 'image' && !kIsWeb) ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.file(File(m['content'] ?? ''), width: 170, height: 130, fit: BoxFit.cover)) else Text(m['content'] ?? ''),
+            }))));
+          })),
+          SafeArea(
+            top: false,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              color: const Color(0xFF111827),
+              child: Row(children: List<Widget>.of({
+                IconButton(icon: const Icon(Icons.photo, color: Colors.amber), onPressed: _sendPhoto),
+                Expanded(child: TextField(controller: _msgCtrl, decoration: const InputDecoration(hintText: 'Free message or User ID...', border: InputBorder.none))),
+                IconButton(icon: const Icon(Icons.send, color: Colors.tealAccent), onPressed: _sendText),
+              })),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Row(children: List<Widget>.of({
-              IconButton(icon: const Icon(Icons.photo, color: Colors.cyanAccent), onPressed: _sendPhoto),
-              Expanded(child: TextField(controller: _msgCtrl, decoration: const InputDecoration(hintText: 'Send User ID / Free Text...'))),
-              IconButton(icon: const Icon(Icons.send, color: Colors.amber), onPressed: () {
-                if (_msgCtrl.text.trim().isNotEmpty) {
-                  setState(() { AppState.chatMessages.add({'sender': AppState.userName, 'type': 'text', 'content': _msgCtrl.text.trim(), 'time': 'Now'}); _msgCtrl.clear(); });
-                }
-              }),
-            })),
-          ),
         })),
-      ),
-    );
+        ListView.builder(padding: const EdgeInsets.all(12), itemCount: AppState.notifications.length, itemBuilder: (_, i) {
+          final n = AppState.notifications.elementAt(i);
+          return Card(child: ListTile(leading: const Icon(Icons.notifications_active, color: Colors.amber), title: Text(n['title'] ?? ''), subtitle: Text(n['body'] ?? '')));
+        }),
+      })),
+    ));
   }
 }
-
