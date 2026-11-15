@@ -343,60 +343,46 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.teal, content: Text('🎙️ Room minimized! Audio active while you complete Daily Tasks!')));
   }
 
-    void _openQuickInRoomGame() {
-    final inRoomGames = List<Map<String, dynamic>>.of({
-      {'name': 'Jungle Hunt', 'cat': 'Hot', 'tag': 'HOT', 'c1': 0xFF1B4332, 'c2': 0xFF40916C, 'ic': '🦁🌴', 'syms': List<String>.of({'WILD', 'SCATTER', '🍍', '🍎', '🍉', '🫐', '👑'})},
-      {'name': 'Ocean Hunt', 'cat': 'Fishing', 'tag': 'HOT', 'c1': 0xFF023E8A, 'c2': 0xFF0077B6, 'ic': '🐙🎰', 'syms': List<String>.of({'WILD', 'SCATTER', '🐙', '🦈', '🐡', '💎', '👑'})},
-      {'name': 'Royal Battle', 'cat': 'Multi Player', 'tag': 'HOT', 'c1': 0xFF590D22, 'c2': 0xFFA4133C, 'ic': '👑⚔️', 'syms': List<String>.of({'WILD', 'SCATTER', '👑', '⚔️', '🛡️', '💎', '🔥'})},
-      {'name': 'Garo Gems III', 'cat': 'Latest', 'tag': 'NEW', 'c1': 0xFF3C096C, 'c2': 0xFF7B2CBF, 'ic': '🏺💎', 'syms': List<String>.of({'WILD', 'SCATTER', '💎', '🏺', '🔮', '👑', '⭐'})},
-      {'name': 'Fruit Party', 'cat': 'Slot', 'tag': 'HOT', 'c1': 0xFF004B23, 'c2': 0xFF38B000, 'ic': '🍓🍊', 'syms': List<String>.of({'WILD', 'SCATTER', '🍓', '🍊', '🍉', '🍇', '7️⃣'})},
-      {'name': 'Fishing Tycoon', 'cat': 'Fishing', 'tag': 'HOT', 'c1': 0xFF03045E, 'c2': 0xFF0096C7, 'ic': '🦈⚓', 'syms': List<String>.of({'WILD', 'SCATTER', '🦈', '🐋', '⚓', '💰', '💎'})},
-      {'name': 'Money Coming', 'cat': 'Slot', 'tag': 'NEW', 'c1': 0xFF7F5539, 'c2': 0xFFB08968, 'ic': '💵🎡', 'syms': List<String>.of({'WILD', 'SCATTER', '💵', '🪙', '💰', '🎡', '👑'})},
-      {'name': 'The Monkey King', 'cat': 'Hot', 'tag': 'HOT', 'c1': 0xFF6A040F, 'c2': 0xFFD00000, 'ic': '🐒🔥', 'syms': List<String>.of({'WILD', 'SCATTER', '🐒', '🔥', '🍑', '👑', '💎'})},
-      {'name': 'Lucky Piggy', 'cat': 'Slot', 'tag': 'HOT', 'c1': 0xFF7209B7, 'c2': 0xFFF72585, 'ic': '🐷💰', 'syms': List<String>.of({'WILD', 'SCATTER', '🐷', '💰', '🪙', '🍀', '💎'})},
-      {'name': 'Fortune Rabbit', 'cat': 'Slot', 'tag': 'HOT', 'c1': 0xFF800F2F, 'c2': 0xFFFF4D6D, 'ic': '🐰🧧', 'syms': List<String>.of({'WILD', 'SCATTER', '🐰', '🧧', '🪙', '🌸', '👑'})},
-      {'name': 'Gates Of Olympus', 'cat': 'Hot', 'tag': 'HOT', 'c1': 0xFF1D3557, 'c2': 0xFF457B9D, 'ic': '⚡🏛️', 'syms': List<String>.of({'WILD', 'SCATTER', '⚡', '🏛️', '👑', '💎', '🔥'})},
-      {'name': 'Fortune Tiger', 'cat': 'Hot', 'tag': 'HOT', 'c1': 0xFF7F4F24, 'c2': 0xFFCA6702, 'ic': '🐯🪙', 'syms': List<String>.of({'WILD', 'SCATTER', '🐯', '🪙', '🧧', '💎', '👑'})},
-      {'name': 'Sweet Bonanza', 'cat': 'Slot', 'tag': 'HOT', 'c1': 0xFF590D22, 'c2': 0xFFFF758F, 'ic': '🍭🍬', 'syms': List<String>.of({'WILD', 'SCATTER', '🍭', '🍬', '🍇', '🍉', '💎'})},
-      {'name': 'Dragon Ball', 'cat': 'Latest', 'tag': 'NEW', 'c1': 0xFF540B0E, 'c2': 0xFFE09F3E, 'ic': '🐉🔮', 'syms': List<String>.of({'WILD', 'SCATTER', '🐉', '🔮', '🔥', '⭐', '👑'})},
-      {'name': 'Super Ace', 'cat': 'Slot', 'tag': 'HOT', 'c1': 0xFF10002B, 'c2': 0xFF7B2CBF, 'ic': '🃏👑', 'syms': List<String>.of({'WILD', 'SCATTER', '🃏', '👑', '♠️', '💎', '🪙'})},
-      {'name': 'Ludo King Party', 'cat': 'Multi Player', 'tag': 'HOT', 'c1': 0xFF003566, 'c2': 0xFFFFC300, 'ic': '🎲👑', 'syms': List<String>.of({'WILD', 'SCATTER', '🎲', '👑', '🔴', '🟢', '🟡'})},
+      void _openQuickInRoomGame() {
+    final webGames = List<Map<String, String>>.of({
+      {'name': 'Ludo King Party (HTML5)', 'ic': '🎲👑', 'url': 'https://html5games.com'},
+      {'name': 'Domino Classic (HTML5)', 'ic': '🁣✨', 'url': 'https://html5games.com'},
+      {'name': 'Carrom Pool (HTML5)', 'ic': '🎯🏆', 'url': 'https://html5games.com'},
+      {'name': 'Chess Master (HTML5)', 'ic': '♟️👑', 'url': 'https://html5games.com'},
     });
     showModalBottomSheet(context: context, backgroundColor: const Color(0xFF0F172A), builder: (ctx) => Padding(
       padding: const EdgeInsets.all(14),
       child: Column(mainAxisSize: MainAxisSize.min, children: List<Widget>.of({
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
-          Text('🎮 Live Room Games • 🪙 ${AppState.coins}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.amber)),
-          const Text('Audio Active 🎙️', style: TextStyle(fontSize: 11, color: Colors.tealAccent)),
+          Text('🎮 In-Room Party Games • 🪙 ${AppState.coins}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.amber)),
+          const Text('🎙️ Voice Active', style: TextStyle(fontSize: 11, color: Colors.tealAccent)),
         })),
         const SizedBox(height: 10),
-        SizedBox(
-          height: 230,
-          child: GridView.builder(
-            itemCount: inRoomGames.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 0.85),
-            itemBuilder: (_, i) {
-              final g = inRoomGames.elementAt(i);
-              return InkWell(
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => FullScreenGameArena(game: g, onUpd: () { setState(() {}); widget.onUpd(); })));
-                },
-                child: Container(
-                  decoration: BoxDecoration(gradient: LinearGradient(colors: <Color>[Color(g['c1'] as int), Color(g['c2'] as int)]), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber.withOpacity(0.5))),
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: List<Widget>.of({
-                    Text(g['ic'] as String, style: const TextStyle(fontSize: 24)),
-                    const SizedBox(height: 4),
-                    Text(g['name'] as String, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.white)),
-                  })),
-                ),
-              );
-            },
+        ...webGames.map((wg) => Card(
+          color: const Color(0xFF1E293B),
+          child: ListTile(
+            leading: Text(wg['ic']!, style: const TextStyle(fontSize: 26)),
+            title: Text(wg['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            subtitle: const Text('Play inside Voice Room without closing Mic', style: TextStyle(fontSize: 11, color: Colors.white60)),
+            trailing: ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black),
+              onPressed: () {
+                Navigator.pop(ctx);
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => WebViewMiniGameSheet(title: wg['name']!, gameUrl: wg['url']!, onUpd: () { setState(() {}); widget.onUpd(); }),
+                );
+              },
+              child: const Text('Play', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
           ),
-        ),
+        )),
       })),
     ));
   }
+
 
 
   void _openBasicTools() {
