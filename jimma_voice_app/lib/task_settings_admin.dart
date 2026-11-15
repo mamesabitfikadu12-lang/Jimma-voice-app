@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'main.dart';
 
 class TaskCenterPage extends StatefulWidget {
@@ -7,92 +9,164 @@ class TaskCenterPage extends StatefulWidget {
   @override
   State<TaskCenterPage> createState() => _TaskCenterPageState();
 }
+
 class _TaskCenterPageState extends State<TaskCenterPage> {
-  final Set<String> _done = {};
-  Widget _row(String t, int c, double p) {
-    final ok = _done.contains(t);
-    return Card(child: ListTile(title: Text(t), trailing: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: ok ? Colors.grey : Colors.green), onPressed: ok ? null : () { setState(() => _done.add(t)); AppState.coins += c; AppState.points += p; widget.onUpd(); }, child: Text(ok ? 'Done' : 'Go'))));
-  }
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(length: 3, child: Scaffold(
-      appBar: AppBar(title: const Text('Task Center'), bottom: const TabBar(tabs: [Tab(text: 'Tasks'), Tab(text: 'Host Tasks'), Tab(text: 'Events')])),
-      body: TabBarView(children: [
-        ListView(children: [_row('Playing Royal Battle (+500 Coins)', 500, 0), _row('Recharge Once X1 Day (+1,000 Coins)', 1000, 0), _row('Send Jebena Lucky Gifts (+800 Coins)', 800, 0), _row('Win Coins in Abba Jifar Slot (+600 Coins)', 600, 0)]),
-        ListView(children: [_row('Host on Mic 2 Hours (+3,000 Pts)', 0, 3000), _row('Party Crown Room Goal (+5,000 Pts)', 0, 5000), _row('1M / 2M Monthly Target (+20,000 Pts)', 0, 20000)]),
-        ListView(children: [_row('Oromia & Ethiopia Cultural Festival (+1,500 Coins)', 1500, 0)]),
-      ]),
-    ));
-  }
-}
+  late Timer _timer;
+  Duration _left = const Duration(hours: 24);
+  final int _hostMins = 45;
+  final int _giftIncome = 1200;
 
-class SettingsPage extends StatefulWidget {
-  final VoidCallback onUpd;
-  const SettingsPage({super.key, required this.onUpd});
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
-}
-class _SettingsPageState extends State<SettingsPage> {
-  final _name = TextEditingController(text: AppState.userName);
-  void _pol(String t, String b) => showDialog(context: context, builder: (_) => AlertDialog(title: Text(t), content: Text(b), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))]));
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: const Text('Settings')), body: ListView(padding: const EdgeInsets.all(14), children: [
-      TextField(controller: _name, decoration: const InputDecoration(labelText: 'Display Name')),
-      ElevatedButton(onPressed: () { AppState.userName = _name.text.trim(); widget.onUpd(); }, child: const Text('Save Name')),
-      const ListTile(title: Text('Account Password • Security PIN • Mail'), trailing: Text('Set >')),
-      SwitchListTile(title: const Text('Top Message Banner'), value: AppState.msgBanner, onChanged: (v) => setState(() => AppState.msgBanner = v)),
-      SwitchListTile(title: const Text('Sounds & Vibration'), value: AppState.msgSound, onChanged: (v) => setState(() => AppState.msgSound = v)),
-      ListTile(title: const Text('1. Privacy Policy'), onTap: () => _pol('Privacy Policy', 'Jimma Voice Chat Family protects Ethiopian & global user data and voice privacy.')),
-      ListTile(title: const Text('2. User Service Terms'), onTap: () => _pol('User Service Terms', 'Users must be 18+ and follow Jimma Voice Chat Family community rules.')),
-      ListTile(title: const Text('3. Streaming Protocol / Host Agreement'), onTap: () => _pol('Streaming Protocol', 'Fair hourly and gift point rewards for verified hosts.')),
-      ListTile(title: const Text('4. Child Safety Policy'), onTap: () => _pol('Child Safety Policy', 'Zero tolerance for minor exploitation. Strict 18+ age rule.')),
-      ListTile(title: const Text('5. User Recharge Agreement'), onTap: () => _pol('User Recharge Agreement', 'Coins purchased via Telebirr, CBE, or USDT are instant and non-refundable.')),
-    ]));
+  void initState() {
+    super.initState();
+    _calcRemaining();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(_calcRemaining);
+    });
   }
-}
 
-class SuperAdminPanel extends StatefulWidget {
-  final VoidCallback onUpd;
-  const SuperAdminPanel({super.key, required this.onUpd});
-  @override
-  State<SuperAdminPanel> createState() => _SuperAdminPanelState();
-}
-class _SuperAdminPanelState extends State<SuperAdminPanel> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: const Text('Super Admin Control Panel')), body: ListView(padding: const EdgeInsets.all(14), children: [
-      ListTile(title: const Text('Mint 100,000 Test Coins'), trailing: ElevatedButton(onPressed: () { AppState.coins += 100000; widget.onUpd(); setState(() {}); }, child: const Text('+100k'))),
-      ListTile(title: Text('Agency: ${AppState.pendingAgencyName} (${AppState.pendingNationalId})'), trailing: ElevatedButton(onPressed: () { AppState.agencyStatus = 'Approved'; widget.onUpd(); setState(() {}); }, child: const Text('Approve'))),
-    ]));
+  void _calcRemaining() {
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    final diff = tomorrow.difference(now);
+    if (diff.inSeconds <= 1) {
+      AppState.claimedTasks.clear();
+    }
+    _left = diff;
   }
-}
-class AgencyCenterPage extends StatefulWidget {
-  final VoidCallback onUpd;
-  const AgencyCenterPage({super.key, required this.onUpd});
-  @override
-  State<AgencyCenterPage> createState() => _AgencyCenterPageState();
-}
 
-class _AgencyCenterPageState extends State<AgencyCenterPage> {
-  final _name = TextEditingController();
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  String _fmtDuration(Duration d) {
+    final h = d.inHours.toString().padLeft(2, '0');
+    final m = (d.inMinutes % 60).toString().padLeft(2, '0');
+    final s = (d.inSeconds % 60).toString().padLeft(2, '0');
+    return '$h:$m:$s';
+  }
+
+  void _claimTask(String id, int coins, double pts, String title) {
+    if (AppState.claimedTasks.contains(id)) return;
+    setState(() {
+      AppState.claimedTasks.add(id);
+      AppState.coins += coins;
+      AppState.points += pts;
+    });
+    widget.onUpd();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('Claimed: $title!')));
+  }
+
+  Widget _taskTile({required String id, required String icon, required String title, required String prog, required String rewardText, required int coins, double pts = 0, required bool ready}) {
+    final done = AppState.claimedTasks.contains(id);
+    return Card(
+      color: const Color(0xFF1E293B),
+      margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: ListTile(
+        leading: CircleAvatar(radius: 22, backgroundColor: Colors.amber.withOpacity(0.15), child: Text(icon, style: const TextStyle(fontSize: 22))),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white)),
+        subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
+          const SizedBox(height: 2),
+          Text(prog, style: const TextStyle(fontSize: 11, color: Colors.white60)),
+          const SizedBox(height: 3),
+          Text(rewardText, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber)),
+        })),
+        trailing: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: done ? Colors.white12 : (ready ? Colors.tealAccent : Colors.amber),
+            foregroundColor: done ? Colors.white54 : Colors.black,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          ),
+          onPressed: done ? null : () {
+            if (ready) {
+              _claimTask(id, coins, pts, title);
+            } else {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Go complete: $title')));
+            }
+          },
+          child: Text(done ? 'Done' : (ready ? 'Claim' : 'Go'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Agency Center')),
-      body: ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
-        const Card(child: ListTile(leading: Icon(Icons.business, color: Colors.amber), title: Text('Agency Commission: 12% - 16%'), subtitle: Text('Recruit Hosts & Earn Weekly Rewards'))),
-        TextField(controller: _name, decoration: const InputDecoration(labelText: 'New Agency Name')),
-        const SizedBox(height: 10),
-        ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: () {
-          if (_name.text.trim().isNotEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Agency "${_name.text}" Registered!')));
-          }
-        }, child: const Text('Create Agency')),
-      })),
+    final doneCount = AppState.claimedTasks.length;
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Task Center'),
+          actions: List<Widget>.of({
+            Center(child: Padding(padding: const EdgeInsets.only(right: 12), child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), borderRadius: BorderRadius.circular(10)), child: Text('Reset: ${_fmtDuration(_left)}', style: const TextStyle(fontSize: 11, color: Colors.amber, fontWeight: FontWeight.bold))))),
+          }),
+          bottom: TabBar(tabs: List<Widget>.of({const Tab(text: 'Tasks'), const Tab(text: 'Host Tasks'), const Tab(text: 'Events')})),
+        ),
+        body: TabBarView(children: List<Widget>.of({
+          ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(gradient: const LinearGradient(colors: <Color>[Color(0xFF7F4F24), Color(0xFFCA6702)]), borderRadius: BorderRadius.circular(16)),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
+                const Text('Beginner & Daily Chests', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const Text('Complete tasks to unlock 3 treasure chests!', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                const SizedBox(height: 10),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: List<Widget>.of({
+                  ElevatedButton.icon(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: () => _claimTask('chest_1', 300, 0, 'Chest 1 (+300 Coins)'), icon: const Icon(Icons.redeem, size: 16), label: const Text('Chest 1')),
+                  ElevatedButton.icon(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: () => _claimTask('chest_2', 800, 0, 'Chest 2 (+800 Coins)'), icon: const Icon(Icons.redeem, size: 16), label: const Text('Chest 2')),
+                  ElevatedButton.icon(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: () => _claimTask('chest_3', 2000, 0, 'Chest 3 (+2000 Coins)'), icon: const Icon(Icons.redeem, size: 16), label: const Text('Chest 3')),
+                })),
+              })),
+            ),
+            const SizedBox(height: 14),
+            const Text('Daily Tasks (Resets in 24h)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.tealAccent)),
+            const SizedBox(height: 8),
+            _taskTile(id: 'daily_checkin', icon: '📅', title: 'Daily Check-In Bonus', prog: '(1/1)', rewardText: '+150 Coins', coins: 150, ready: true),
+            _taskTile(id: 'stay_room', icon: '🎙️', title: 'Stay in a Voice Room for 5 Mins', prog: '(${AppState.roomMinutesToday >= 5 ? 5 : AppState.roomMinutesToday}/5)', rewardText: '+200 Coins', coins: 200, ready: AppState.roomMinutesToday >= 5 || doneCount >= 1),
+            _taskTile(id: 'play_ocean', icon: '🐙', title: 'Play Ocean Hunt Once', prog: '(${AppState.gamesPlayedToday >= 1 ? 1 : 0}/1)', rewardText: '+100 Coins', coins: 100, ready: AppState.gamesPlayedToday >= 1),
+            _taskTile(id: 'win_jungle', icon: '🦁', title: 'Win 10,000 Coins in Jungle Hunt', prog: '(${AppState.coins >= 10000 ? '10K' : '0'}/10K)', rewardText: '+300 Coins', coins: 300, ready: AppState.coins >= 10000),
+            _taskTile(id: 'play_royal', icon: '👑', title: 'Play Royal Battle', prog: '(${AppState.gamesPlayedToday >= 2 ? 1 : 0}/1)', rewardText: '+50 Points', coins: 0, pts: 50, ready: AppState.gamesPlayedToday >= 2),
+            _taskTile(id: 'play_garo', icon: '🏺', title: 'Play Garo Gems III', prog: '(${AppState.gamesPlayedToday >= 3 ? 1 : 0}/1)', rewardText: '+250 Coins', coins: 250, ready: AppState.gamesPlayedToday >= 3),
+            _taskTile(id: 'win_fishing', icon: '🦈', title: 'Win 500 Coins in Fishing Tycoon', prog: '(${AppState.coins >= 500 ? 500 : 0}/500)', rewardText: '+100 Points', coins: 0, pts: 100, ready: AppState.coins >= 500),
+            _taskTile(id: 'follow_hosts', icon: '➕', title: 'Follow 3 Hosts in Live Room', prog: '(3/3)', rewardText: '+150 Coins', coins: 150, ready: true),
+            _taskTile(id: 'vip_once', icon: '🌟', title: 'Purchase VIP Once', prog: '(${AppState.vipLevel >= 1 ? 1 : 0}/1)', rewardText: '+500 Points', coins: 0, pts: 500, ready: AppState.vipLevel >= 1),
+          })),
+          ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.tealAccent.withOpacity(0.5))),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
+                  Text('On Mic Today: $_hostMins / 120 mins', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text('$_giftIncome Pts', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.tealAccent)),
+                })),
+                const SizedBox(height: 8),
+                const Text('Hourly Salary Tiers: 600/h -> 1200/h -> 3000/h -> 5000/h', style: TextStyle(fontSize: 12, color: Colors.amber)),
+              })),
+            ),
+            const SizedBox(height: 12),
+            _taskTile(id: 'host_2h', icon: '🎤', title: 'On Mic for 2 Hours', prog: '($_hostMins/120 mins)', rewardText: '+500 Points', coins: 0, pts: 500, ready: _hostMins >= 120),
+            _taskTile(id: 'host_crown', icon: '👑', title: 'Join Party & Crowned for 1 Hour', prog: '(1/1)', rewardText: '+300 Points', coins: 0, pts: 300, ready: true),
+            _taskTile(id: 'host_jebena', icon: '☕', title: 'Receive a Jebena Gold Gift', prog: '(1/1)', rewardText: '+150 Points', coins: 0, pts: 150, ready: true),
+            _taskTile(id: 'host_palace', icon: '🏰', title: 'Receive an Abba Jifar Palace Gift', prog: '(0/1)', rewardText: '+5,000 Points', coins: 0, pts: 5000, ready: false),
+            _taskTile(id: 'host_1m', icon: '🏆', title: '1M Points Earnings Milestone', prog: '(${AppState.points.toInt()}/1M)', rewardText: '+20,000 Points', coins: 0, pts: 20000, ready: AppState.points >= 1000000),
+          })),
+          ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
+            _taskTile(id: 'ev_invite', icon: '🤝', title: 'Invite 1 Friend to Ethio-Voice', prog: '(1/1)', rewardText: '+2,000 Coins', coins: 2000, ready: true),
+            _taskTile(id: 'ev_jackpot', icon: '🎰', title: 'Win 100,000 Coins in Jungle Hunt', prog: '(${AppState.coins >= 100000 ? '100K' : '0'}/100K)', rewardText: '+1,000 Coins', coins: 1000, ready: AppState.coins >= 100000),
+            _taskTile(id: 'ev_ocean200', icon: '🐙', title: 'Win 200,000 Coins in Ocean Hunt', prog: '(${AppState.coins >= 200000 ? '200K' : '0'}/200K)', rewardText: '+3,000 Coins', coins: 3000, ready: AppState.coins >= 200000),
+          })),
+        })),
+      ),
     );
   }
 }
+
 class AgencyCenterPage extends StatefulWidget {
   final VoidCallback onUpd;
   const AgencyCenterPage({super.key, required this.onUpd});
