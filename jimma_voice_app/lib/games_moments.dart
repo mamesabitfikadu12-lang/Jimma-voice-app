@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'main.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class GamesTab extends StatefulWidget {
   final VoidCallback onUpd;
