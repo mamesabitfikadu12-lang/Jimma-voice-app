@@ -100,7 +100,6 @@ class _MainShellState extends State<MainShell> {
                   gradient: const LinearGradient(colors: <Color>[Color(0xFF0077B6), Color(0xFF7209B7)]),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(color: Colors.amber, width: 2),
-                  boxShadow: List<BoxShadow>.of({BoxShadow(color: Colors.black.withOpacity(0.6), blurRadius: 10)}),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: List<Widget>.of({
                   const Icon(Icons.graphic_eq, color: Colors.tealAccent, size: 20),
@@ -208,6 +207,82 @@ class _HomeTabState extends State<HomeTab> {
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
                   Text(r['title'] as String, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
                   const SizedBox(height: 4),
+                  Text('Host: ${r['host']} • ${r['tag']}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                }))),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(14)), child: Text('🔥 ${r['users']}', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold))),
+              })),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class LiveVoiceRoomPage extends StatefulWidget {
+  final Map<String, dynamic> room;
+  final VoidCallback onUpd;
+  const LiveVoiceRoomPage({super.key, required this.room, required this.onUpd});
+  @override
+  State<LiveVoiceRoomPage> createState() => _LiveVoiceRoomPageState();
+}
+
+class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
+  late int _micCount;
+  int _mySeat = 0;
+  bool _muted = false;
+  final _chatCtrl = TextEditingController();
+  final List<String> _logs = List<String>.of({
+    '🔔 System: Welcome to the live education & voice chat room! Respectful language only.',
+    '📢 Announcement: Tap Minimize anytime to do Daily Tasks while listening!',
+  });
+
+  @override
+  void initState() {
+    super.initState();
+    _micCount = widget.room['mics'] as int? ?? 9;
+    AppState.roomMinutesToday += 5;
+  }
+
+  void _minimizeRoom() {
+    AppState.floatingRoom = widget.room;
+    widget.onUpd();
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.teal, content: Text('🎙️ Room minimized! Audio active while you complete Daily Tasks!')));
+  }  void _openQuickInRoomGame() {
+    showModalBottomSheet(context: context, backgroundColor: const Color(0xFF111827), builder: (ctx) => Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(mainAxisSize: MainAxisSize.min, children: List<Widget>.of({
+        Text('🎮 Quick In-Room Mini Games • 🪙 ${AppState.coins}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber)),
+        const SizedBox(height: 12),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: List<Widget>.of({
+          ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: () {
+            if (AppState.coins >= 100) {
+              final win = Random().nextBool();
+              setState(() {
+                AppState.coins += win ? 100 : -100;
+                _logs.add(win ? '🎲 ${AppState.userName} won +200 Coins in Lucky Dice!' : '🎲 ${AppState.userName} rolled Lucky Dice — Try Again!');
+              });
+              widget.onUpd();
+              Navigator.pop(ctx);
+            }
+          }, child: const Text('🎲 Lucky Dice (100)')),
+          ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black), onPressed: () {
+            if (AppState.coins >= 500) {
+              final win = Random().nextInt(100) < 40;
+              setState(() {
+                AppState.coins += win ? 1000 : -500;
+                _logs.add(win ? '🎡 ${AppState.userName} hit 3X (+1,500 Coins) on Quick Wheel!' : '🎡 ${AppState.userName} spun Quick Wheel — Try Again!');
+              });
+              widget.onUpd();
+              Navigator.pop(ctx);
+            }
+          }, child: const Text('🎡 Quick Wheel (500)')),
+        })),
+      })),
+    ));
+  }
+
   void _sendGiftSheet() {
     final gifts = List<Map<String, dynamic>>.of({
       {'name': '☕ Jebena Coffee', 'cost': 100},
@@ -239,7 +314,6 @@ class _HomeTabState extends State<HomeTab> {
       })),
     ));
   }
-
   @override
   Widget build(BuildContext context) {
     final is30 = _micCount == 30;
@@ -340,3 +414,4 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 }
+
