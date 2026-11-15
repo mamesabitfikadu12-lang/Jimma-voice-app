@@ -294,4 +294,130 @@ class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTi
       ),
     );
   }
+}class MomentsTab extends StatefulWidget {
+  final VoidCallback onUpd;
+  const MomentsTab({super.key, required this.onUpd});
+  @override
+  State<MomentsTab> createState() => _MomentsTabState();
 }
+
+class _MomentsTabState extends State<MomentsTab> {
+  final _picker = ImagePicker();
+  String _filter = 'All';
+
+  void _newPost() {
+    final c = TextEditingController();
+    String tag = '#EthioVoice';
+    String? imgPath;
+    showModalBottomSheet(context: context, isScrollControlled: true, builder: (ctx) => StatefulBuilder(builder: (ctx, setB) => Padding(
+      padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
+      child: Column(mainAxisSize: MainAxisSize.min, children: List<Widget>.of({
+        const Text('Share a Moment', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        TextField(controller: c, maxLines: 3, decoration: const InputDecoration(hintText: 'Write something positive...')),
+        Row(children: List<Widget>.of({
+          TextButton.icon(onPressed: () async { final XFile? f = await _picker.pickImage(source: ImageSource.gallery); if (f != null) setB(() => imgPath = f.path); }, icon: const Icon(Icons.photo, color: Colors.amber), label: Text(imgPath == null ? 'Add Photo' : 'Photo Added')),
+          const Spacer(),
+          DropdownButton<String>(value: tag, items: List<String>.of({'#EthioVoice', '#OromoCulture', '#VoiceParty'}).map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(), onChanged: (v) => setB(() => tag = v ?? '#EthioVoice')),
+        })),
+        ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 44)), onPressed: () {
+          if (AppState.hasProfanity(c.text)) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Abusive words are strictly prohibited!')));
+            return;
+          }
+          if (c.text.trim().isNotEmpty || imgPath != null) {
+            AppState.moments.insert(0, {'user': AppState.userName, 'tag': tag, 'text': c.text.trim(), 'likes': '1', 'img': imgPath ?? ''});
+            setState(() {});
+            Navigator.pop(ctx);
+          }
+        }, child: const Text('Post Moment')),
+      })),
+    )));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final list = _filter == 'All' ? AppState.moments : AppState.moments.where((m) => m['tag'] == _filter).toList();
+    return Scaffold(
+      appBar: AppBar(title: const Text('Moments'), actions: List<Widget>.of({IconButton(icon: const Icon(Icons.add_a_photo, color: Colors.amber), onPressed: _newPost)})),
+      body: Column(children: List<Widget>.of({
+        Wrap(spacing: 8, children: List<String>.of({'All', '#EthioVoice', '#OromoCulture', '#VoiceParty'}).map((t) => ChoiceChip(label: Text(t), selected: _filter == t, onSelected: (_) => setState(() => _filter = t))).toList()),
+        Expanded(child: ListView.builder(padding: const EdgeInsets.all(12), itemCount: list.length, itemBuilder: (_, i) {
+          final m = list.elementAt(i);
+          final img = m['img'] ?? '';
+          return Card(margin: const EdgeInsets.only(bottom: 12), child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
+            Row(children: List<Widget>.of({const CircleAvatar(backgroundColor: Colors.amber, child: Icon(Icons.person, color: Colors.black)), const SizedBox(width: 10), Text(m['user'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)), const Spacer(), Chip(label: Text(m['tag'] ?? '', style: const TextStyle(fontSize: 11)))})),
+            if ((m['text'] ?? '').isNotEmpty) Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(m['text'] ?? '')),
+            if (img.isNotEmpty && !kIsWeb) ClipRRect(borderRadius: BorderRadius.circular(10), child: Image.file(File(img), height: 180, width: double.infinity, fit: BoxFit.cover)),
+            Row(children: List<Widget>.of({
+              IconButton(icon: const Icon(Icons.favorite, color: Colors.redAccent), onPressed: () => setState(() => m['likes'] = '${(int.tryParse(m['likes'] ?? '0') ?? 0) + 1}')),
+              Text('${m['likes']} Likes'),
+            })),
+          }))));
+        })),
+      })),
+    );
+  }
+}
+
+class MessagesTab extends StatefulWidget {
+  final VoidCallback onUpd;
+  const MessagesTab({super.key, required this.onUpd});
+  @override
+  State<MessagesTab> createState() => _MessagesTabState();
+}
+
+class _MessagesTabState extends State<MessagesTab> {
+  final _msgCtrl = TextEditingController();
+  final _picker = ImagePicker();
+
+  void _sendText() {
+    final t = _msgCtrl.text.trim();
+    if (t.isEmpty) return;
+    if (AppState.hasProfanity(t)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Abusive language is not allowed!')));
+      return;
+    }
+    setState(() { AppState.chatMessages.add({'sender': AppState.userName, 'type': 'text', 'content': t, 'time': 'Now'}); _msgCtrl.clear(); });
+  }
+
+  Future<void> _sendPhoto() async {
+    final XFile? f = await _picker.pickImage(source: ImageSource.gallery);
+    if (f != null) setState(() => AppState.chatMessages.add({'sender': AppState.userName, 'type': 'image', 'content': f.path, 'time': 'Now'}));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(length: 2, child: Scaffold(
+      appBar: AppBar(title: const Text('Messages (100% Free)'), bottom: TabBar(tabs: List<Widget>.of({const Tab(text: 'Free Chat'), const Tab(text: 'Notifications')}))),
+      body: TabBarView(children: List<Widget>.of({
+        Column(children: List<Widget>.of({
+          Expanded(child: ListView.builder(padding: const EdgeInsets.all(12), itemCount: AppState.chatMessages.length, itemBuilder: (_, i) {
+            final m = AppState.chatMessages.elementAt(i);
+            final isMe = m['sender'] == AppState.userName;
+            return Align(alignment: isMe ? Alignment.centerRight : Alignment.centerLeft, child: Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isMe ? Colors.teal.shade800 : const Color(0xFF1E293B), borderRadius: BorderRadius.circular(12)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
+              Text(m['sender'] ?? '', style: const TextStyle(fontSize: 10, color: Colors.amber)),
+              if (m['type'] == 'image' && !kIsWeb) ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.file(File(m['content'] ?? ''), width: 170, height: 130, fit: BoxFit.cover)) else Text(m['content'] ?? ''),
+            }))));
+          })),
+          SafeArea(
+            top: false,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              color: const Color(0xFF111827),
+              child: Row(children: List<Widget>.of({
+                IconButton(icon: const Icon(Icons.photo, color: Colors.amber), onPressed: _sendPhoto),
+                Expanded(child: TextField(controller: _msgCtrl, decoration: const InputDecoration(hintText: 'Free message or User ID...', border: InputBorder.none))),
+                IconButton(icon: const Icon(Icons.send, color: Colors.tealAccent), onPressed: _sendText),
+              })),
+            ),
+          ),
+        })),
+        ListView.builder(padding: const EdgeInsets.all(12), itemCount: AppState.notifications.length, itemBuilder: (_, i) {
+          final n = AppState.notifications.elementAt(i);
+          return Card(child: ListTile(leading: const Icon(Icons.notifications_active, color: Colors.amber), title: Text(n['title'] ?? ''), subtitle: Text(n['body'] ?? '')));
+        }),
+      })),
+    ));
+  }
+}
+
