@@ -342,49 +342,58 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.teal, content: Text('🎙️ Room minimized! Audio active while you complete Daily Tasks!')));
   }
-
-      void _openQuickInRoomGame() {
-    final webGames = List<Map<String, String>>.of({
-      {'name': 'Ludo King Party (HTML5)', 'ic': '🎲👑', 'url': 'https://html5games.com'},
-      {'name': 'Domino Classic (HTML5)', 'ic': '🁣✨', 'url': 'https://html5games.com'},
-      {'name': 'Carrom Pool (HTML5)', 'ic': '🎯🏆', 'url': 'https://html5games.com'},
-      {'name': 'Chess Master (HTML5)', 'ic': '♟️👑', 'url': 'https://html5games.com'},
-    });
+  void _openQuickInRoomGame() {
     showModalBottomSheet(context: context, backgroundColor: const Color(0xFF0F172A), builder: (ctx) => Padding(
       padding: const EdgeInsets.all(14),
-      child: Column(mainAxisSize: MainAxisSize.min, children: List<Widget>.of({
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
-          Text('🎮 In-Room Party Games • 🪙 ${AppState.coins}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.amber)),
-          const Text('🎙️ Voice Active', style: TextStyle(fontSize: 11, color: Colors.tealAccent)),
-        })),
+      child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: <Widget>[
+          Text('🎮 Official Sud.Tech Games (12) • 🪙 ${AppState.coins}', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.amber)),
+          const Text('🎙️ Mic Open', style: TextStyle(fontSize: 11, color: Colors.tealAccent)),
+        ]),
         const SizedBox(height: 10),
-        ...webGames.map((wg) => Card(
-          color: const Color(0xFF1E293B),
-          child: ListTile(
-            leading: Text(wg['ic']!, style: const TextStyle(fontSize: 26)),
-            title: Text(wg['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-            subtitle: const Text('Play inside Voice Room without closing Mic', style: TextStyle(fontSize: 11, color: Colors.white60)),
-            trailing: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black),
-              onPressed: () {
-                Navigator.pop(ctx);
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (_) => WebViewMiniGameSheet(title: wg['name']!, gameUrl: wg['url']!, onUpd: () { setState(() {}); widget.onUpd(); }),
-                );
-              },
-              child: const Text('Play', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
+        SizedBox(
+          height: 245,
+          child: GridView.builder(
+            itemCount: SudConfig.games.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 0.85),
+            itemBuilder: (_, i) {
+              final sg = SudConfig.games.elementAt(i);
+              return InkWell(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => SudGameOverlaySheet(
+                      roomId: widget.room['title'] as String,
+                      gameName: sg['name'] as String,
+                      mgId: sg['mgId'] as int,
+                      onUpd: () { setState(() {}); widget.onUpd(); },
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: <Color>[Color(sg['c1'] as int), Color(sg['c2'] as int)]),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.withOpacity(0.55)),
+                  ),
+                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+                    Text(sg['ic'] as String, style: const TextStyle(fontSize: 24)),
+                    const SizedBox(height: 4),
+                    Text(sg['name'] as String, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ]),
+                ),
+              );
+            },
           ),
-        )),
-      })),
+        ),
+      ]),
     ));
   }
 
-
-
+      
   void _openBasicTools() {
     final tools = List<Map<String, dynamic>>.of({
       {'ic': Icons.volume_up, 'name': _voiceOn ? 'Voice On' : 'Voice Off'},
