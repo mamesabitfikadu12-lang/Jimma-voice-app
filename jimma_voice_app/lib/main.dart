@@ -368,7 +368,7 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
                     builder: (_) => SudGameOverlaySheet(
                       roomId: widget.room['title'] as String,
                       gameName: sg['name'] as String,
-                      mgId: sg['mgId'] as int,
+                      mgId: sg['mgId'].toString(),
                       onUpd: () { setState(() {}); widget.onUpd(); },
                     ),
                   );
