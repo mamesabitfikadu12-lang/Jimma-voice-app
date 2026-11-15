@@ -235,7 +235,7 @@ class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTi
                 IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white), onPressed: () { _autoSpin = false; Navigator.pop(context); }),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(color: Colors.black64, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber, width: 1.5)),
+                  decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber, width: 1.5)),
                   child: Row(children: List<Widget>.of({const Text('🪙 ', style: TextStyle(fontSize: 16)), Text('${AppState.coins}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber))})),
                 ),
                 Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(10)), child: Text(widget.game['name'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black))),
