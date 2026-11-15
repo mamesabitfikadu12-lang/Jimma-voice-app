@@ -6,7 +6,7 @@ import 'games_moments.dart';
 import 'me_pages.dart';
 import 'task_settings_admin.dart';
 void main() => runApp(const EthioVoiceApp());
-
+import 'sud_game_arena.dart';
 class AppState {
   static bool isLoggedIn = false;
   static String userName = 'Ethio_User_${Random().nextInt(900) + 100}';
