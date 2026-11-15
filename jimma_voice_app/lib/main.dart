@@ -18,6 +18,12 @@ class AppState {
   static int gamesPlayedToday = 0;
   static int roomMinutesToday = 0;
   static bool inviteClaimed = false;
+    static String agencyStatus = 'None';
+  static String pendingAgencyName = '';
+  static String pendingNationalId = '';
+  static bool msgBanner = true;
+  static bool msgSound = true;
+
   static Map<String, dynamic>? floatingRoom;
 
   static final Set<String> claimedTasks = <String>{};
