@@ -16,3 +16,5 @@ dependencies:
 
 flutter:
   uses-material-design: true
+  audioplayers: ^6.1.0
+  audio_session: ^0.1.21
