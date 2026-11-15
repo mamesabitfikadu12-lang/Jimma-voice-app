@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,7 +57,7 @@ class _GamesTabState extends State<GamesTab> {
     }
     setState(() { AppState.coins -= 10000; AppState.points += 9000; });
     widget.onUpd();
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Converted 10,000 Coins ➔ 9,000 Points!')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Converted 10,000 Coins -> 9,000 Points!')));
   }
 
   @override
@@ -65,7 +67,7 @@ class _GamesTabState extends State<GamesTab> {
       appBar: AppBar(
         title: Text('Games • 🪙 ${AppState.coins}'),
         actions: List<Widget>.of({
-          TextButton.icon(onPressed: _convertCoins, icon: const Icon(Icons.swap_horiz, color: Colors.tealAccent), label: const Text('Coins➔Pts', style: TextStyle(color: Colors.tealAccent))),
+          TextButton.icon(onPressed: _convertCoins, icon: const Icon(Icons.swap_horiz, color: Colors.tealAccent), label: const Text('Coins->Pts', style: TextStyle(color: Colors.tealAccent))),
         }),
       ),
       body: Column(children: List<Widget>.of({
@@ -128,21 +130,56 @@ class FullScreenGameArena extends StatefulWidget {
 
 class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
+  final AudioPlayer _sfx = AudioPlayer();
   final _bets = List<int>.of({100, 500, 1000, 5000, 10000, 50000});
   int _betIdx = 0;
   bool _spinning = false;
   bool _autoSpin = false;
   bool _turbo = false;
   String _status = 'BET LINES: 20 • Tap SPIN!';
+  String _winBanner = '';
+  int _winAmount = 0;
   List<String> _grid = List<String>.filled(15, '🍍');
 
   @override
   void initState() {
     super.initState();
+    _initAudioMix();
     _fillRandomGrid();
     _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..addListener(() {
       if (_spinning) setState(_fillRandomGrid);
     });
+  }
+
+  Future<void> _initAudioMix() async {
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration(
+        avAudioSessionCategory: AVAudioSessionCategory.playback,
+        avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.mixWithOthers,
+        androidAudioAttributes: AndroidAudioAttributes(contentType: AndroidAudioContentType.sonification, usage: AndroidAudioUsage.game),
+        androidAudioFocusGainType: AndroidAudioFocusGainType.gainTransientMayDuck,
+      ));
+    } catch (_) {}
+  }
+
+  Future<void> _playTierSfx(String tier) async {
+    try {
+      await _sfx.stop();
+      if (tier == 'spin') {
+        await _sfx.play(UrlSource('https://mixkit.co'));
+      } else if (tier == 'WIN') {
+        await _sfx.play(UrlSource('https://mixkit.co'));
+      } else if (tier == 'BIG WIN') {
+        await _sfx.play(UrlSource('https://mixkit.co'));
+      } else if (tier == 'MEGA JACKPOT') {
+        await _sfx.play(UrlSource('https://mixkit.co'));
+      } else {
+        await _sfx.play(UrlSource('https://mixkit.co'));
+      }
+    } catch (_) {
+      SystemSound.play(SystemSoundType.click);
+    }
   }
 
   void _fillRandomGrid() {
@@ -155,6 +192,7 @@ class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTi
   void dispose() {
     _autoSpin = false;
     _ctrl.dispose();
+    _sfx.dispose();
     super.dispose();
   }
 
@@ -162,12 +200,12 @@ class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTi
     final bet = _bets.elementAt(_betIdx);
     if (_spinning) return;
     if (AppState.coins < bet) {
-      setState(() { _status = '⚠️ Not enough Coins! Recharge first.'; _autoSpin = false; });
+      setState(() { _status = 'Not enough Coins! Recharge first.'; _autoSpin = false; });
       return;
     }
     HapticFeedback.mediumImpact();
-    SystemSound.play(SystemSoundType.click);
-    setState(() { _spinning = true; AppState.coins -= bet; AppState.gamesPlayedToday++; _status = '🎰 Spinning 20 Lines...'; });
+    _playTierSfx('spin');
+    setState(() { _spinning = true; _winBanner = ''; AppState.coins -= bet; AppState.gamesPlayedToday++; _status = 'Spinning 20 Lines...'; });
     widget.onUpd();
     _ctrl.repeat();
     await Future.delayed(Duration(milliseconds: _turbo ? 650 : 1250));
@@ -178,25 +216,45 @@ class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTi
     setState(() {
       _spinning = false;
       _fillRandomGrid();
-      if (roll < 36) {
+      if (roll < 38) {
         final winSym = syms.elementAt(2 + r.nextInt(syms.length - 2));
-        _grid[5] = winSym; _grid[6] = 'WILD'; _grid[7] = winSym; _grid[8] = 'WILD'; _grid[9] = winSym;
-        final mult = roll < 8 ? 5 : (roll < 20 ? 3 : 2);
+        _grid = winSym; _grid = 'WILD'; _grid = winSym; _grid = 'WILD'; _grid = winSym;
+        int mult = 2;
+        String tier = 'WIN';
+        if (roll < 5) {
+          mult = 31;
+          tier = 'MEGA JACKPOT';
+        } else if (roll < 16) {
+          mult = 8;
+          tier = 'BIG WIN';
+        } else {
+          mult = 2 + r.nextInt(2);
+          tier = 'WIN';
+        }
         final prize = bet * mult;
         AppState.coins += prize;
-        _status = '🎉 BIG WIN (${mult}X)! +$prize Coins!';
+        _winBanner = '$tier (${mult}X)';
+        _winAmount = prize;
+        _status = '$tier! +$prize Coins!';
+        AppState.lastBigWinner = '${AppState.userName} won ${mult}x (+$prize Coins) in ${widget.game['name']}!';
         HapticFeedback.heavyImpact();
+        _playTierSfx(tier);
       } else {
+        _winBanner = '';
         _status = 'Try Again! Spin for WILD & SCATTER!';
+        _playTierSfx('lose');
       }
     });
     widget.onUpd();
+    if (_winBanner.isNotEmpty && mounted) {
+      await Future.delayed(const Duration(milliseconds: 1400));
+      if (mounted) setState(() => _winBanner = '');
+    }
     if (_autoSpin && mounted) {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 450));
       if (_autoSpin && mounted) _spin();
     }
   }
-
   Widget _buildCell(String sym) {
     if (sym == 'WILD') {
       return Container(
@@ -228,73 +286,93 @@ class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTi
       body: Container(
         decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: <Color>[c1, c2, const Color(0xFF081C15)])),
         child: SafeArea(
-          child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
-                IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white), onPressed: () { _autoSpin = false; Navigator.pop(context); }),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber, width: 1.5)),
-                  child: Row(children: List<Widget>.of({const Text('🪙 ', style: TextStyle(fontSize: 16)), Text('${AppState.coins}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber))})),
-                ),
-                Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(10)), child: Text(widget.game['name'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black))),
-              })),
-            ),
-            Column(children: List<Widget>.of({
-              Text('${widget.game['ic']} ${widget.game['name']} • HD 20 LINES', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.amber)),
-              const SizedBox(height: 8),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.black.withOpacity(0.55), borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.amber, width: 2.5)),
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: 15,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, crossAxisSpacing: 5, mainAxisSpacing: 5, childAspectRatio: 0.92),
-                  itemBuilder: (_, i) => _buildCell(_grid.elementAt(i)),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.tealAccent.withOpacity(0.5))), child: Text(_status, style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold, fontSize: 13))),
-            })),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              decoration: BoxDecoration(color: Colors.black.withOpacity(0.75), borderRadius: const BorderRadius.vertical(top: Radius.circular(22)), border: const Border(top: BorderSide(color: Colors.amber, width: 1.5))),
-              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
-                InkWell(
-                  onTap: () { setState(() => _autoSpin = !_autoSpin); if (_autoSpin) _spin(); },
-                  child: CircleAvatar(radius: 24, backgroundColor: _autoSpin ? Colors.redAccent : Colors.orange.shade800, child: Text(_autoSpin ? 'STOP' : 'AUTO', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white))),
-                ),
-                Column(children: List<Widget>.of({
-                  Text('SINGLE LINE: ${(bet / 20).toStringAsFixed(0)}   BET LINES: 20', style: const TextStyle(fontSize: 9, color: Colors.amber, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Row(children: List<Widget>.of({
-                    InkWell(onTap: () => setState(() { if (_betIdx > 0) _betIdx--; }), child: Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.remove, size: 18, color: Colors.black))),
-                    Container(width: 78, alignment: Alignment.center, child: Text('$bet', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white))),
-                    InkWell(onTap: () => setState(() { if (_betIdx < _bets.length - 1) _betIdx++; }), child: Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.add, size: 18, color: Colors.black))),
-                    const SizedBox(width: 6),
-                    InkWell(onTap: () => setState(() => _turbo = !_turbo), child: Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6), decoration: BoxDecoration(color: _turbo ? Colors.tealAccent : Colors.amber.shade700, borderRadius: BorderRadius.circular(8)), child: Text(_turbo ? '2.0X' : '1.0X', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black)))),
-                  })),
+          child: Stack(children: List<Widget>.of({
+            Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
+                  IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white), onPressed: () { _autoSpin = false; Navigator.pop(context); }),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber, width: 1.5)),
+                    child: Row(children: List<Widget>.of({const Text('🪙 ', style: TextStyle(fontSize: 16)), Text('${AppState.coins}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber))})),
+                  ),
+                  Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(10)), child: Text(widget.game['name'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black))),
                 })),
-                InkWell(
-                  onTap: _spinning ? null : _spin,
-                  child: Container(
-                    width: 66, height: 66,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(shape: BoxShape.circle, gradient: const LinearGradient(colors: <Color>[Color(0xFF38B000), Color(0xFF007200)]), border: Border.all(color: Colors.amber, width: 3)),
-                    child: Text(_spinning ? '...' : 'SPIN', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.white)),
+              ),
+              Column(children: List<Widget>.of({
+                Text('${widget.game['ic']} ${widget.game['name']} • HD 20 LINES', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.amber)),
+                const SizedBox(height: 8),
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.55), borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.amber, width: 2.5)),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 15,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, crossAxisSpacing: 5, mainAxisSpacing: 5, childAspectRatio: 0.92),
+                    itemBuilder: (_, i) => _buildCell(_grid.elementAt(i)),
                   ),
                 ),
+                const SizedBox(height: 10),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.tealAccent.withOpacity(0.5))), child: Text(_status, style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold, fontSize: 13))),
               })),
-            ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(color: Colors.black.withOpacity(0.75), borderRadius: const BorderRadius.vertical(top: Radius.circular(22)), border: const Border(top: BorderSide(color: Colors.amber, width: 1.5))),
+                child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
+                  InkWell(
+                    onTap: () { setState(() => _autoSpin = !_autoSpin); if (_autoSpin) _spin(); },
+                    child: CircleAvatar(radius: 24, backgroundColor: _autoSpin ? Colors.redAccent : Colors.orange.shade800, child: Text(_autoSpin ? 'STOP' : 'AUTO', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white))),
+                  ),
+                  Column(children: List<Widget>.of({
+                    Text('SINGLE LINE: ${(bet / 20).toStringAsFixed(0)}   BET LINES: 20', style: const TextStyle(fontSize: 9, color: Colors.amber, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Row(children: List<Widget>.of({
+                      InkWell(onTap: () => setState(() { if (_betIdx > 0) _betIdx--; }), child: Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.remove, size: 18, color: Colors.black))),
+                      Container(width: 78, alignment: Alignment.center, child: Text('$bet', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white))),
+                      InkWell(onTap: () => setState(() { if (_betIdx < _bets.length - 1) _betIdx++; }), child: Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.add, size: 18, color: Colors.black))),
+                      const SizedBox(width: 6),
+                      InkWell(onTap: () => setState(() => _turbo = !_turbo), child: Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6), decoration: BoxDecoration(color: _turbo ? Colors.tealAccent : Colors.amber.shade700, borderRadius: BorderRadius.circular(8)), child: Text(_turbo ? '2.0X' : '1.0X', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black)))),
+                    })),
+                  })),
+                  InkWell(
+                    onTap: _spinning ? null : _spin,
+                    child: Container(
+                      width: 66, height: 66,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(shape: BoxShape.circle, gradient: const LinearGradient(colors: <Color>[Color(0xFF38B000), Color(0xFF007200)]), border: Border.all(color: Colors.amber, width: 3)),
+                      child: Text(_spinning ? '...' : 'SPIN', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.white)),
+                    ),
+                  ),
+                })),
+              ),
+            })),
+            if (_winBanner.isNotEmpty)
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: _winBanner.contains('MEGA') ? <Color>[const Color(0xFF7209B7), const Color(0xFFF72585)] : (_winBanner.contains('BIG') ? <Color>[const Color(0xFFD00000), const Color(0xFFFFB703)] : <Color>[const Color(0xFF007200), const Color(0xFF38B000)])),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.amber, width: 3),
+                  ),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: List<Widget>.of({
+                    Text(_winBanner.contains('MEGA') ? '👑🔥🎰' : (_winBanner.contains('BIG') ? '🎉💰✨' : '🪙✨'), style: const TextStyle(fontSize: 34)),
+                    Text(_winBanner, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white)),
+                    Text('+🪙 $_winAmount', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.amber)),
+                  })),
+                ),
+              ),
           })),
         ),
       ),
     );
   }
-}class MomentsTab extends StatefulWidget {
+}
+
+class MomentsTab extends StatefulWidget {
   final VoidCallback onUpd;
   const MomentsTab({super.key, required this.onUpd});
   @override
@@ -420,4 +498,3 @@ class _MessagesTabState extends State<MessagesTab> {
     ));
   }
 }
-
