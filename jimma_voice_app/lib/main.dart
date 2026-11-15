@@ -47,7 +47,7 @@ class AppState {
     {'title': 'Welcome to Ethio-Voice!', 'body': 'Complete Daily 24h Tasks, host voice rooms & cash out via Payroll or Agency!', 'time': 'Now'},
   ];
   static final List<Map<String, String>> notifications = officialNotices;
-
+static final List<Map<String, String>> pendingRecharges = <Map<String, String>>[];
   static bool hasProfanity(String text) {
     final t = text.toLowerCase();
     final bad = List<String>.of({'fuck', 'bitch', 'shit', 'dick', 'pussy', 'sex', 'porn', 'nude', 'sarmuta', 'sharmuta', 'qomata', 'bushti', 'fincaan', 'udaan', 'saluu', 'gadihee'});
