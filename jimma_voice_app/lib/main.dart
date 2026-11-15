@@ -23,12 +23,13 @@ class AppState {
   static String pendingNationalId = '';
   static bool msgBanner = true;
   static bool msgSound = true;
+  static String lastBigWinner = 'Abdi so lucky & won 31x prize!';
   static Map<String, dynamic>? floatingRoom;
 
   static final Set<String> claimedTasks = <String>{};
   static final List<Map<String, String>> moments = <Map<String, String>>[
     {'user': 'Biftu_Oromia', 'tag': '#OromoCulture', 'text': 'Baga nagaan gara ኢትዮ-ድምጽ dhuftan! Barumsa fi tapha gaarii!', 'likes': '48', 'img': ''},
-    {'user': 'Dawit_Finfinnee', 'tag': '#EthioVoice', 'text': 'Jungle Hunt 20 Lines irraa 5X mo\'adheera!', 'likes': '92', 'img': ''},
+    {'user': 'Dawit_Finfinnee', 'tag': '#EthioVoice', 'text': 'Jungle Hunt 20 Lines irraa 31X mo\'adheera!', 'likes': '92', 'img': ''},
   ];
   static final List<Map<String, String>> chatMessages = <Map<String, String>>[
     {'sender': 'Ethio-Voice Official', 'type': 'text', 'content': 'Welcome! Enjoy 100% Free Chat, Live Rooms & 24 HD Games!', 'time': 'Now'},
@@ -231,10 +232,12 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
   late int _micCount;
   int _mySeat = 0;
   bool _muted = false;
+  bool _voiceOn = true;
+  String _logFilter = 'All';
   final _chatCtrl = TextEditingController();
-  final List<String> _logs = List<String>.of({
-    '🔔 System: Welcome to the live education & voice chat room! Respectful language only.',
-    '📢 Announcement: Tap Minimize anytime to do Daily Tasks while listening!',
+  final List<Map<String, String>> _logs = List<Map<String, String>>.of({
+    {'type': 'Room', 'text': '🔔 System: Welcome to the voice chat room! Please follow these rules:\n1. Use respectful language; inappropriate remarks are prohibited.\n2. Violators may be warned, muted, or banned.'},
+    {'type': 'Room', 'text': '📢 Announcement: Game play & daily tasks active! Tap Minimize anytime to do tasks.'},
   });
 
   @override
@@ -249,7 +252,9 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
     widget.onUpd();
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.teal, content: Text('🎙️ Room minimized! Audio active while you complete Daily Tasks!')));
-  }  void _openQuickInRoomGame() {
+  }
+
+  void _openQuickInRoomGame() {
     showModalBottomSheet(context: context, backgroundColor: const Color(0xFF111827), builder: (ctx) => Padding(
       padding: const EdgeInsets.all(16),
       child: Column(mainAxisSize: MainAxisSize.min, children: List<Widget>.of({
@@ -261,7 +266,7 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
               final win = Random().nextBool();
               setState(() {
                 AppState.coins += win ? 100 : -100;
-                _logs.add(win ? '🎲 ${AppState.userName} won +200 Coins in Lucky Dice!' : '🎲 ${AppState.userName} rolled Lucky Dice — Try Again!');
+                _logs.add({'type': 'Room', 'text': win ? '🎲 ${AppState.userName} won +200 Coins in Lucky Dice!' : '🎲 ${AppState.userName} rolled Lucky Dice — Try Again!'});
               });
               widget.onUpd();
               Navigator.pop(ctx);
@@ -272,7 +277,7 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
               final win = Random().nextInt(100) < 40;
               setState(() {
                 AppState.coins += win ? 1000 : -500;
-                _logs.add(win ? '🎡 ${AppState.userName} hit 3X (+1,500 Coins) on Quick Wheel!' : '🎡 ${AppState.userName} spun Quick Wheel — Try Again!');
+                _logs.add({'type': 'Room', 'text': win ? '🎡 ${AppState.userName} hit 31x (+1,500 Coins) on Quick Wheel!' : '🎡 ${AppState.userName} spun Quick Wheel — Try Again!'});
               });
               widget.onUpd();
               Navigator.pop(ctx);
@@ -283,47 +288,216 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
     ));
   }
 
-  void _sendGiftSheet() {
-    final gifts = List<Map<String, dynamic>>.of({
-      {'name': '☕ Jebena Coffee', 'cost': 100},
-      {'name': '🌹 Oromo Rose', 'cost': 500},
-      {'name': '🦁 Abyssinia Lion', 'cost': 2000},
-      {'name': '🏰 Abba Jifar Palace', 'cost': 10000},
+  void _openBasicTools() {
+    final tools = List<Map<String, dynamic>>.of({
+      {'ic': Icons.volume_up, 'name': _voiceOn ? 'Voice On' : 'Voice Off'},
+      {'ic': Icons.share, 'name': 'Share'},
+      {'ic': Icons.music_note, 'name': 'Music'},
+      {'ic': Icons.settings, 'name': 'Room Settings'},
+      {'ic': Icons.admin_panel_settings, 'name': 'Room Admin'},
+      {'ic': Icons.lock, 'name': 'Set Password'},
+      {'ic': Icons.mic, 'name': 'Open all mic'},
+      {'ic': Icons.mic_off, 'name': 'Close all mic'},
+      {'ic': Icons.redeem, 'name': 'Red Packet'},
+      {'ic': Icons.backpack, 'name': 'Backpack'},
+      {'ic': Icons.auto_awesome, 'name': 'Effect Setting'},
+      {'ic': Icons.bolt, 'name': 'PK'},
     });
-    showModalBottomSheet(context: context, backgroundColor: const Color(0xFF111827), builder: (ctx) => Padding(
-      padding: const EdgeInsets.all(14),
+    showModalBottomSheet(context: context, backgroundColor: const Color(0xFF0F172A), builder: (ctx) => Padding(
+      padding: const EdgeInsets.all(16),
       child: Column(mainAxisSize: MainAxisSize.min, children: List<Widget>.of({
-        Text('Send Gift • 🪙 ${AppState.coins}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
-        const SizedBox(height: 10),
-        Wrap(spacing: 10, runSpacing: 10, children: gifts.map((g) => ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E293B), foregroundColor: Colors.white),
-          onPressed: () {
-            final cost = g['cost'] as int;
-            if (AppState.coins >= cost) {
-              setState(() {
-                AppState.coins -= cost;
-                AppState.points += cost * 0.7;
-                _logs.add('🎁 ${AppState.userName} sent ${g['name']} (🪙 $cost) to ${widget.room['host']}!');
-              });
-              widget.onUpd();
-              Navigator.pop(ctx);
-            }
+        const Text('Basic Tools', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+        const SizedBox(height: 14),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: tools.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, crossAxisSpacing: 8, mainAxisSpacing: 12, childAspectRatio: 1.0),
+          itemBuilder: (_, i) {
+            final t = tools.elementAt(i);
+            return InkWell(
+              onTap: () {
+                Navigator.pop(ctx);
+                setState(() {
+                  if (i == 0) _voiceOn = !_voiceOn;
+                  _logs.add({'type': 'Room', 'text': '🛠️ ${t['name']} activated by ${AppState.userName}'});
+                });
+              },
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: List<Widget>.of({
+                Icon(t['ic'] as IconData, color: Colors.white, size: 26),
+                const SizedBox(height: 6),
+                Text(t['name'] as String, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10.5, color: Colors.white70)),
+              })),
+            );
           },
-          child: Text('${g['name']} (${g['cost']})'),
-        )).toList()),
+        ),
       })),
     ));
   }
+  void _sendGiftSheet() {
+    String cat = 'Hot';
+    String target = 'All';
+    int qty = 1;
+    int selectedIdx = 0;
+
+    final Map<String, List<Map<String, dynamic>>> catalog = {
+      'Anniversary': List<Map<String, dynamic>>.of({
+        {'ic': '🎂', 'name': 'Birthday Hala', 'cost': 500},
+        {'ic': '🎉', 'name': 'Party Confetti', 'cost': 1000},
+        {'ic': '🥂', 'name': 'Golden Toast', 'cost': 5000},
+        {'ic': '👑', 'name': 'Anniversary Crown', 'cost': 50000},
+      }),
+      'Hot': List<Map<String, dynamic>>.of({
+        {'ic': '🧧', 'name': 'Lucky Bag', 'cost': 100},
+        {'ic': '🐘', 'name': 'HalaElephant', 'cost': 100},
+        {'ic': '💖', 'name': 'Heart', 'cost': 100},
+        {'ic': '🔦', 'name': 'Light Stick', 'cost': 200},
+        {'ic': '🍹', 'name': 'Beverage', 'cost': 300},
+        {'ic': '🍦', 'name': 'Ice Cream', 'cost': 500},
+        {'ic': '📿', 'name': 'Pendant', 'cost': 750},
+        {'ic': '🎤', 'name': 'Mic', 'cost': 1000},
+        {'ic': '☕', 'name': 'Coffee', 'cost': 1500},
+        {'ic': '🥁', 'name': 'Drum', 'cost': 2000},
+        {'ic': '💄', 'name': 'Lipstick', 'cost': 3000},
+        {'ic': '🪄', 'name': 'Magic Carpet', 'cost': 4500},
+        {'ic': '🦄', 'name': 'Bouncy Pony', 'cost': 6000},
+        {'ic': '👑', 'name': 'Crown', 'cost': 10000},
+        {'ic': '🔫', 'name': 'Money Gun', 'cost': 30000},
+        {'ic': '💍', 'name': 'Emerald Ring', 'cost': 48000},
+        {'ic': '🐱', 'name': 'Cup Cat', 'cost': 58000},
+        {'ic': '🏰', 'name': 'Castle Feast', 'cost': 100000},
+        {'ic': '🏎️', 'name': 'Golden Sports Car', 'cost': 250000},
+        {'ic': '❄️', 'name': 'Ice Castle', 'cost': 500000},
+        {'ic': '👼', 'name': 'Heavenly King', 'cost': 600000},
+        {'ic': '🐘', 'name': 'Treasure Elephant', 'cost': 700000},
+        {'ic': '🚘', 'name': 'Blitz Maserati', 'cost': 888888},
+      }),
+      'Lucky': List<Map<String, dynamic>>.of({
+        {'ic': '🍭', 'name': 'Lollipop', 'cost': 10},
+        {'ic': '🍾', 'name': 'Hala Champagne', 'cost': 10},
+        {'ic': '🐚', 'name': 'Capiz', 'cost': 20},
+        {'ic': '🧸', 'name': 'Teddy Bear', 'cost': 50},
+        {'ic': '⭐', 'name': 'Star', 'cost': 50},
+        {'ic': '🍺', 'name': 'Beer', 'cost': 70},
+        {'ic': '🪙', 'name': 'Gold Bar', 'cost': 100},
+        {'ic': '🎧', 'name': 'Headphones', 'cost': 2000},
+        {'ic': '🪔', 'name': 'Magic Lamp', 'cost': 5000},
+        {'ic': '⏳', 'name': 'Hourglass', 'cost': 5000},
+        {'ic': '🪄', 'name': 'Magic Wand', 'cost': 10000},
+      }),
+      'Luxury': List<Map<String, dynamic>>.of({
+        {'ic': '🚢', 'name': 'Titanic', 'cost': 1000000},
+        {'ic': '🌃', 'name': 'Sky Romance', 'cost': 1299999},
+        {'ic': '🥂', 'name': 'Champagne Night', 'cost': 1399999},
+        {'ic': '💞', 'name': 'Sweet Confession', 'cost': 1699999},
+        {'ic': '🌹', 'name': 'Rose Sprite', 'cost': 1999999},
+        {'ic': '🚀', 'name': 'Love Rocket', 'cost': 2000000},
+        {'ic': '🎈', 'name': 'Hot Air Balloon', 'cost': 2000000},
+        {'ic': '🛳️', 'name': 'Aircraft Carrier', 'cost': 3000000},
+        {'ic': '🪑', 'name': 'Golden Throne King', 'cost': 4000000},
+        {'ic': '🏯', 'name': 'Dream Castle', 'cost': 4000000},
+        {'ic': '🧑‍🚀', 'name': 'Astro-Heart', 'cost': 4999999},
+      }),
+      'Intimacy': List<Map<String, dynamic>>.of({
+        {'ic': '💗', 'name': 'Intimate Heart', 'cost': 188},
+        {'ic': '🌹', 'name': 'Intimate Rose', 'cost': 18888},
+        {'ic': '🕊️', 'name': 'CP Bird', 'cost': 19999},
+        {'ic': '💍', 'name': 'CP Ring', 'cost': 79999},
+        {'ic': '🎀', 'name': 'Intimate Cable', 'cost': 288888},
+        {'ic': '🌍', 'name': 'CP Global', 'cost': 999999},
+      }),
+    };
+
+    showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: const Color(0xFF0B1120), builder: (ctx) => StatefulBuilder(builder: (ctx, setG) {
+      final list = catalog[cat] ?? catalog['Hot']!;
+      if (selectedIdx >= list.length) selectedIdx = 0;
+      return Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(mainAxisSize: MainAxisSize.min, children: List<Widget>.of({
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
+            Text('Recipient: $target', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 12)),
+            Wrap(spacing: 6, children: List<String>.of({'All', 'Host', 'Self'}).map((t) => ChoiceChip(
+              label: Text(t, style: const TextStyle(fontSize: 10)),
+              selected: target == t,
+              selectedColor: Colors.tealAccent,
+              labelStyle: TextStyle(color: target == t ? Colors.black : Colors.white),
+              onSelected: (_) => setG(() => target = t),
+            )).toList()),
+          })),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: catalog.keys.map((c) => Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: ChoiceChip(label: Text(c, style: const TextStyle(fontSize: 11)), selected: cat == c, selectedColor: Colors.amber, labelStyle: TextStyle(color: cat == c ? Colors.black : Colors.white, fontWeight: FontWeight.bold), onSelected: (_) => setG(() { cat = c; selectedIdx = 0; })),
+            )).toList()),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 215,
+            child: GridView.builder(
+              itemCount: list.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, crossAxisSpacing: 6, mainAxisSpacing: 6, childAspectRatio: 0.85),
+              itemBuilder: (_, i) {
+                final g = list.elementAt(i);
+                final sel = selectedIdx == i;
+                return InkWell(
+                  onTap: () => setG(() => selectedIdx = i),
+                  child: Container(
+                    decoration: BoxDecoration(color: sel ? Colors.teal.withOpacity(0.3) : const Color(0xFF1E293B), borderRadius: BorderRadius.circular(12), border: Border.all(color: sel ? Colors.tealAccent : Colors.white12, width: sel ? 2 : 1)),
+                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: List<Widget>.of({
+                      Text(g['ic'] as String, style: const TextStyle(fontSize: 24)),
+                      Text(g['name'] as String, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Text('🪙 ${g['cost']}', style: const TextStyle(fontSize: 9.5, color: Colors.amber)),
+                    })),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(children: List<Widget>.of({
+            Text('🪙 ${AppState.coins} >', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 14)),
+            const Spacer(),
+            DropdownButton<int>(value: qty, items: List<int>.of({1, 5, 10, 99}).map((q) => DropdownMenuItem(value: q, child: Text('x$q'))).toList(), onChanged: (v) => setG(() => qty = v ?? 1)),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
+              onPressed: () {
+                final g = list.elementAt(selectedIdx);
+                final total = (g['cost'] as int) * qty;
+                if (AppState.coins >= total) {
+                  SystemSound.play(SystemSoundType.click);
+                  HapticFeedback.heavyImpact();
+                  setState(() {
+                    AppState.coins -= total;
+                    AppState.points += total * 0.7;
+                    _logs.add({'type': 'Room', 'text': '🎁 ${AppState.userName} sent ${g['ic']} ${g['name']} x$qty (🪙 $total) to $target!'});
+                  });
+                  widget.onUpd();
+                  Navigator.pop(ctx);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Not enough Coins! Recharge first.')));
+                }
+              },
+              child: const Text('Send', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          })),
+        })),
+      );
+    }));
+  }
+
   @override
   Widget build(BuildContext context) {
     final is30 = _micCount == 30;
+    final filteredLogs = _logFilter == 'All' ? _logs : _logs.where((l) => l['type'] == _logFilter).toList();
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: <Color>[Color(widget.room['c1'] as int), Color(widget.room['c2'] as int), const Color(0xFF090D16)])),
         child: SafeArea(
           child: Column(children: List<Widget>.of({
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               child: Row(children: List<Widget>.of({
                 CircleAvatar(backgroundColor: Colors.amber, child: Text((widget.room['host'] as String).substring(0, 1), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
                 const SizedBox(width: 8),
@@ -339,12 +513,22 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
                 IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () { AppState.floatingRoom = null; widget.onUpd(); Navigator.pop(context); }),
               })),
             ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(gradient: const LinearGradient(colors: <Color>[Color(0xFF1B4332), Color(0xFF7F4F24)]), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber)),
+              child: Row(children: List<Widget>.of({
+                Expanded(child: Text('🎰 ${AppState.lastBigWinner}', overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white))),
+                const SizedBox(width: 6),
+                InkWell(onTap: _openQuickInRoomGame, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(10)), child: const Text('Play >', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black)))),
+              })),
+            ),
             SizedBox(
-              height: is30 ? 275 : 220,
+              height: is30 ? 255 : 205,
               child: GridView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 itemCount: _micCount,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: is30 ? 6 : 3, crossAxisSpacing: 6, mainAxisSpacing: 6, childAspectRatio: is30 ? 0.82 : 1.15),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: is30 ? 6 : 3, crossAxisSpacing: 6, mainAxisSpacing: 6, childAspectRatio: is30 ? 0.85 : 1.18),
                 itemBuilder: (_, i) {
                   final seatNum = i + 1;
                   final isHost = seatNum == 1;
@@ -353,9 +537,9 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
                     onTap: () => setState(() => _mySeat = isMine ? 0 : seatNum),
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: List<Widget>.of({
                       CircleAvatar(
-                        radius: is30 ? 16 : 22,
+                        radius: is30 ? 15 : 21,
                         backgroundColor: isHost || isMine ? Colors.amber : Colors.white12,
-                        child: Icon(isHost || isMine ? Icons.mic : Icons.chair_alt, size: is30 ? 15 : 20, color: isHost || isMine ? Colors.black : Colors.amber),
+                        child: Icon(isHost || isMine ? Icons.mic : Icons.chair_alt, size: is30 ? 14 : 19, color: isHost || isMine ? Colors.black : Colors.amber),
                       ),
                       const SizedBox(height: 2),
                       Text(isHost ? (widget.room['host'] as String) : (isMine ? AppState.userName : '$seatNum'), overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, color: Colors.white)),
@@ -365,47 +549,59 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
               ),
             ),
             Expanded(
-              child: Stack(children: List<Widget>.of({
-                ListView.builder(
-                  padding: const EdgeInsets.only(left: 12, right: 72, top: 6, bottom: 6),
-                  itemCount: _logs.length,
-                  itemBuilder: (_, i) => Container(
-                    margin: const EdgeInsets.only(bottom: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(10)),
-                    child: Text(_logs.elementAt(i), style: const TextStyle(fontSize: 12, color: Colors.white)),
+              child: Row(children: List<Widget>.of({
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: List<String>.of({'All', 'Room', 'Chat'}).map((f) => InkWell(
+                  onTap: () => setState(() => _logFilter = f),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                    decoration: BoxDecoration(color: _logFilter == f ? Colors.tealAccent : Colors.black45, borderRadius: BorderRadius.circular(8)),
+                    child: Text(f, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _logFilter == f ? Colors.black : Colors.white70)),
+                  ),
+                )).toList()),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    itemCount: filteredLogs.length,
+                    itemBuilder: (_, i) => Container(
+                      margin: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(10)),
+                      child: Text(filteredLogs.elementAt(i)['text'] ?? '', style: const TextStyle(fontSize: 11.5, color: Colors.white)),
+                    ),
                   ),
                 ),
-                Positioned(
-                  right: 10,
-                  bottom: 10,
-                  child: Column(children: List<Widget>.of({
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Column(mainAxisAlignment: MainAxisAlignment.end, children: List<Widget>.of({
                     InkWell(
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskCenterPage(onUpd: () { setState(() {}); widget.onUpd(); }))),
-                      child: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.teal.shade700, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.amber)), child: const Column(children: <Widget>[Icon(Icons.task_alt, color: Colors.amber, size: 22), Text('Task', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold))])),
+                      child: Container(padding: const EdgeInsets.all(7), decoration: BoxDecoration(color: Colors.teal.shade700, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.amber)), child: const Column(children: <Widget>[Icon(Icons.task_alt, color: Colors.amber, size: 20), Text('Task', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold))])),
                     ),
                     const SizedBox(height: 8),
                     InkWell(
                       onTap: _openQuickInRoomGame,
-                      child: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.purple.shade800, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.amber)), child: const Column(children: <Widget>[Text('🎰', style: TextStyle(fontSize: 18)), Text('Play', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold))])),
+                      child: Container(padding: const EdgeInsets.all(7), decoration: BoxDecoration(color: Colors.purple.shade800, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.amber)), child: const Column(children: <Widget>[Text('🎰', style: TextStyle(fontSize: 16)), Text('Play', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold))])),
                     ),
+                    const SizedBox(height: 8),
                   })),
                 ),
               })),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               color: Colors.black54,
               child: Row(children: List<Widget>.of({
                 Expanded(child: TextField(controller: _chatCtrl, decoration: const InputDecoration(hintText: 'Say Hello...', isDense: true, border: InputBorder.none))),
-                IconButton(icon: const Icon(Icons.send, color: Colors.tealAccent), onPressed: () {
+                IconButton(icon: const Icon(Icons.send, color: Colors.tealAccent, size: 20), onPressed: () {
                   if (_chatCtrl.text.trim().isNotEmpty && !AppState.hasProfanity(_chatCtrl.text)) {
-                    setState(() { _logs.add('💬 ${AppState.userName}: ${_chatCtrl.text.trim()}'); _chatCtrl.clear(); });
+                    setState(() { _logs.add({'type': 'Chat', 'text': '💬 ${AppState.userName}: ${_chatCtrl.text.trim()}'}); _chatCtrl.clear(); });
                   }
                 }),
-                IconButton(icon: Icon(_muted ? Icons.mic_off : Icons.mic, color: _muted ? Colors.redAccent : Colors.white), onPressed: () => setState(() => _muted = !_muted)),
-                IconButton(icon: const Icon(Icons.sports_esports, color: Colors.purpleAccent), onPressed: _openQuickInRoomGame),
-                IconButton(icon: const Icon(Icons.card_giftcard, color: Colors.amber), onPressed: _sendGiftSheet),
+                IconButton(icon: Icon(_muted ? Icons.mic_off : Icons.mic, color: _muted ? Colors.redAccent : Colors.white, size: 20), onPressed: () => setState(() => _muted = !_muted)),
+                IconButton(icon: const Icon(Icons.sports_esports, color: Colors.purpleAccent, size: 22), onPressed: _openQuickInRoomGame),
+                IconButton(icon: const Icon(Icons.card_giftcard, color: Colors.amber, size: 22), onPressed: _sendGiftSheet),
+                IconButton(icon: const Icon(Icons.grid_view_rounded, color: Colors.white70, size: 22), onPressed: _openBasicTools),
               })),
             ),
           })),
@@ -414,4 +610,3 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
     );
   }
 }
-
