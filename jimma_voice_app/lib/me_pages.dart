@@ -124,7 +124,7 @@ class _MeTabState extends State<MeTab> {
           children: List<Widget>.of({
             _gridBtn(Icons.account_balance_wallet, Colors.amber, 'Recharge', () => go(CoinSellerPage(onUpd: upd))),
             _gridBtn(Icons.storefront, Colors.pinkAccent, 'Store', () => go(StorePage(onUpd: upd))),
-            _gridBtn(Icons.card_giftcard, Colors.redAccent, 'Invite', () => go(const ContactCenterPage())),
+            _gridBtn(Icons.card_giftcard, Colors.redAccent, 'Invite', () => go(ContactCenterPage())),
             _gridBtn(Icons.backpack, Colors.lightBlue, 'Backpack', () => go(StorePage(onUpd: upd))),
             _gridBtn(Icons.payments, Colors.tealAccent, 'Cash Out', () => go(PointsCashOutPage(onUpd: upd))),
             _gridBtn(Icons.stars, Colors.purpleAccent, 'VIP Club', () => go(VipClubPage(onUpd: upd))),
@@ -139,7 +139,7 @@ class _MeTabState extends State<MeTab> {
             _gridBtn(Icons.mic, Colors.cyan, 'Host Center', () => go(HostCenterPage(onUpd: upd))),
             _gridBtn(Icons.business_center, Colors.teal, 'Agency', () => go(AgencyCenterPage(onUpd: upd))),
             _gridBtn(Icons.monetization_on, Colors.greenAccent, 'Coin Seller', () => go(CoinSellerPage(onUpd: upd))),
-            _gridBtn(Icons.headset_mic, Colors.blueAccent, 'Support', () => go(const ContactCenterPage())),
+            _gridBtn(Icons.headset_mic, Colors.blueAccent, 'Support', () => go( ContactCenterPage())),
             _gridBtn(Icons.policy, Colors.amber, 'Policies', () => go(const AppSettingsPage())),
             _gridBtn(Icons.settings, Colors.white70, 'Settings', () => go(const AppSettingsPage())),
           }),
