@@ -1,7 +1,5 @@
 import 'dart:io';
 import 'dart:math';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -130,7 +128,6 @@ class FullScreenGameArena extends StatefulWidget {
 
 class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
-  final AudioPlayer _sfx = AudioPlayer();
   final _bets = List<int>.of({100, 500, 1000, 5000, 10000, 50000});
   int _betIdx = 0;
   bool _spinning = false;
@@ -144,41 +141,29 @@ class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTi
   @override
   void initState() {
     super.initState();
-    _initAudioMix();
     _fillRandomGrid();
     _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..addListener(() {
       if (_spinning) setState(_fillRandomGrid);
     });
   }
 
-  Future<void> _initAudioMix() async {
-    try {
-      final session = await AudioSession.instance;
-      await session.configure(const AudioSessionConfiguration(
-        avAudioSessionCategory: AVAudioSessionCategory.playback,
-        avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.mixWithOthers,
-        androidAudioAttributes: AndroidAudioAttributes(contentType: AndroidAudioContentType.sonification, usage: AndroidAudioUsage.game),
-        androidAudioFocusGainType: AndroidAudioFocusGainType.gainTransientMayDuck,
-      ));
-    } catch (_) {}
-  }
-
   Future<void> _playTierSfx(String tier) async {
-    try {
-      await _sfx.stop();
-      if (tier == 'spin') {
-        await _sfx.play(UrlSource('https://mixkit.co'));
-      } else if (tier == 'WIN') {
-        await _sfx.play(UrlSource('https://mixkit.co'));
-      } else if (tier == 'BIG WIN') {
-        await _sfx.play(UrlSource('https://mixkit.co'));
-      } else if (tier == 'MEGA JACKPOT') {
-        await _sfx.play(UrlSource('https://mixkit.co'));
-      } else {
-        await _sfx.play(UrlSource('https://mixkit.co'));
-      }
-    } catch (_) {
+    SystemSound.play(SystemSoundType.click);
+    if (tier == 'MEGA JACKPOT') {
+      HapticFeedback.heavyImpact();
+      await Future.delayed(const Duration(milliseconds: 80));
       SystemSound.play(SystemSoundType.click);
+      HapticFeedback.heavyImpact();
+      await Future.delayed(const Duration(milliseconds: 80));
+      SystemSound.play(SystemSoundType.click);
+    } else if (tier == 'BIG WIN') {
+      HapticFeedback.heavyImpact();
+      await Future.delayed(const Duration(milliseconds: 90));
+      SystemSound.play(SystemSoundType.click);
+    } else if (tier == 'WIN') {
+      HapticFeedback.mediumImpact();
+    } else {
+      HapticFeedback.lightImpact();
     }
   }
 
@@ -192,7 +177,6 @@ class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTi
   void dispose() {
     _autoSpin = false;
     _ctrl.dispose();
-    _sfx.dispose();
     super.dispose();
   }
 
@@ -203,7 +187,6 @@ class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTi
       setState(() { _status = 'Not enough Coins! Recharge first.'; _autoSpin = false; });
       return;
     }
-    HapticFeedback.mediumImpact();
     _playTierSfx('spin');
     setState(() { _spinning = true; _winBanner = ''; AppState.coins -= bet; AppState.gamesPlayedToday++; _status = 'Spinning 20 Lines...'; });
     widget.onUpd();
@@ -218,7 +201,7 @@ class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTi
       _fillRandomGrid();
       if (roll < 38) {
         final winSym = syms.elementAt(2 + r.nextInt(syms.length - 2));
-        _grid = winSym; _grid = 'WILD'; _grid = winSym; _grid = 'WILD'; _grid = winSym;
+        _grid.setRange(5, 10, List<String>.of({winSym, 'WILD', winSym, 'WILD', winSym}));
         int mult = 2;
         String tier = 'WIN';
         if (roll < 5) {
@@ -237,7 +220,6 @@ class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTi
         _winAmount = prize;
         _status = '$tier! +$prize Coins!';
         AppState.lastBigWinner = '${AppState.userName} won ${mult}x (+$prize Coins) in ${widget.game['name']}!';
-        HapticFeedback.heavyImpact();
         _playTierSfx(tier);
       } else {
         _winBanner = '';
@@ -465,8 +447,8 @@ class _MessagesTabState extends State<MessagesTab> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(length: 2, child: Scaffold(
-      appBar: AppBar(title: const Text('Messages (100% Free)'), bottom: TabBar(tabs: List<Widget>.of({const Tab(text: 'Free Chat'), const Tab(text: 'Notifications')}))),
+    return DefaultTabController(length: 3, child: Scaffold(
+      appBar: AppBar(title: const Text('Messages'), bottom: const TabBar(isScrollable: true, tabs: <Tab>[Tab(text: 'Free Chat'), Tab(text: 'System Message'), Tab(text: 'Official Notification')])),
       body: TabBarView(children: List<Widget>.of({
         Column(children: List<Widget>.of({
           Expanded(child: ListView.builder(padding: const EdgeInsets.all(12), itemCount: AppState.chatMessages.length, itemBuilder: (_, i) {
@@ -490,9 +472,37 @@ class _MessagesTabState extends State<MessagesTab> {
             ),
           ),
         })),
-        ListView.builder(padding: const EdgeInsets.all(12), itemCount: AppState.notifications.length, itemBuilder: (_, i) {
-          final n = AppState.notifications.elementAt(i);
-          return Card(child: ListTile(leading: const Icon(Icons.notifications_active, color: Colors.amber), title: Text(n['title'] ?? ''), subtitle: Text(n['body'] ?? '')));
+        ListView.builder(padding: const EdgeInsets.all(12), itemCount: AppState.systemReceipts.length, itemBuilder: (_, i) {
+          final r = AppState.systemReceipts.elementAt(i);
+          if (r['type'] == 'bonus') {
+            return Card(color: const Color(0xFF1E293B), margin: const EdgeInsets.only(bottom: 12), child: ListTile(leading: const Icon(Icons.redeem, color: Colors.amber), title: Text(r['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)), subtitle: Text('${r['body']}\n${r['time']}')));
+          }
+          return Card(
+            color: const Color(0xFF1E293B),
+            margin: const EdgeInsets.only(bottom: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.tealAccent.withOpacity(0.4))),
+            child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
+              const Text('Withdrawal received', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+              const SizedBox(height: 6),
+              Center(child: Text(r['amount'] ?? '', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.amber))),
+              Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3), decoration: BoxDecoration(color: Colors.green.withOpacity(0.25), borderRadius: BorderRadius.circular(10)), child: Text(r['status'] ?? 'Done', style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 12)))),
+              const Divider(height: 20),
+              Text('Order ID: ${r['orderId']}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+              Text('Applicant: ${r['applicant']}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+              Text('Method: ${r['method']}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+              Text('Application Time: ${r['appTime']}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+              Text('Notarize Time: ${r['notarizeTime']}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+              Text('Finish Time: ${r['finishTime']}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+              const SizedBox(height: 12),
+              OutlinedButton(style: OutlinedButton.styleFrom(foregroundColor: Colors.tealAccent, side: const BorderSide(color: Colors.tealAccent), minimumSize: const Size(double.infinity, 40)), onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Official Payroll WhatsApp: +251919108311')));
+              }, child: const Text('Contact payroll')),
+            }))),
+          );
+        }),
+        ListView.builder(padding: const EdgeInsets.all(12), itemCount: AppState.officialNotices.length, itemBuilder: (_, i) {
+          final n = AppState.officialNotices.elementAt(i);
+          return Card(color: const Color(0xFF1E293B), child: ListTile(leading: const Icon(Icons.campaign, color: Colors.amber), title: Text(n['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)), subtitle: Text('${n['body'] ?? ''}\n${n['time'] ?? ''}')));
         }),
       })),
     ));
