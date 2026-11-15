@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'main.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 class GamesTab extends StatefulWidget {
   final VoidCallback onUpd;
@@ -509,77 +508,4 @@ class _MessagesTabState extends State<MessagesTab> {
     ));
   }
 }
-class WebViewMiniGameSheet extends StatefulWidget {
-  final String title;
-  final String gameUrl;
-  final VoidCallback onUpd;
-  const WebViewMiniGameSheet({super.key, required this.title, required this.gameUrl, required this.onUpd});
-  @override
-  State<WebViewMiniGameSheet> createState() => _WebViewMiniGameSheetState();
-}
 
-class _WebViewMiniGameSheetState extends State<WebViewMiniGameSheet> {
-  late final WebViewController _webCtrl;
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _webCtrl = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0xFF090D16))
-      ..addJavaScriptChannel('EthioCoinBridge', onMessageReceived: (JavaScriptMessage msg) {
-        final raw = msg.message.trim();
-        if (raw.startsWith('BET:')) {
-          final bet = int.tryParse(raw.substring(4)) ?? 0;
-          if (bet > 0 && AppState.coins >= bet) {
-            setState(() => AppState.coins -= bet);
-            widget.onUpd();
-          }
-        } else if (raw.startsWith('WIN:')) {
-          final win = int.tryParse(raw.substring(4)) ?? 0;
-          if (win > 0) {
-            setState(() {
-              AppState.coins += win;
-              AppState.lastBigWinner = '${AppState.userName} won +$win Coins in ${widget.title}!';
-            });
-            widget.onUpd();
-          }
-        }
-      })
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageFinished: (_) {
-          if (mounted) setState(() => _loading = false);
-        },
-      ))
-      ..loadRequest(Uri.parse(widget.gameUrl));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.72,
-      decoration: const BoxDecoration(
-        color: Color(0xFF0B1120),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        border: Border(top: BorderSide(color: Colors.amber, width: 2)),
-      ),
-      child: Column(children: List<Widget>.of({
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
-            Text('🎮 ${widget.title} • 🪙 ${AppState.coins}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 14)),
-            const Text('🎙️ Voice Active', style: TextStyle(fontSize: 11, color: Colors.tealAccent)),
-            IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.pop(context)),
-          })),
-        ),
-        Expanded(
-          child: Stack(children: List<Widget>.of({
-            WebViewWidget(controller: _webCtrl),
-            if (_loading) const Center(child: CircularProgressIndicator(color: Colors.amber)),
-          })),
-        ),
-      })),
-    );
-  }
-}
