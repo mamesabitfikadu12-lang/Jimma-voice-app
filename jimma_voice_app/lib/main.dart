@@ -8,7 +8,6 @@ import 'task_settings_admin.dart';
 import 'sud_game_arena.dart';
 
 void main() => runApp(const EthioVoiceApp());
-
 class AppState {
   static bool isLoggedIn = false;
   static String userName = 'Ethio_User_${Random().nextInt(900) + 100}';
