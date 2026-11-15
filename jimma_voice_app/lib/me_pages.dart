@@ -186,6 +186,8 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
     'Awash Bank': '014251157710000',
     'Dashen Bank': '2952945930711',
     'USDT (TRC20)': 'TVdr3JdbDZhXjfSGsUB9azNAnTbkHbUNcE',
+  };
+
   Future<void> _verify() async {
     final ref = _tx.text.trim();
     final uid = _targetId.text.trim();
