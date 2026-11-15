@@ -480,7 +480,8 @@ class _MessagesTabState extends State<MessagesTab> {
           return Card(
             color: const Color(0xFF1E293B),
             margin: const EdgeInsets.only(bottom: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.tealAccent.withOpacity(0.4))),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), (border: Border.all -> side: BorderSide):
+side: BorderSide(color: Colors.tealAccent.withOpacity(0.4))),
             child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
               const Text('Withdrawal received', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
               const SizedBox(height: 6),
