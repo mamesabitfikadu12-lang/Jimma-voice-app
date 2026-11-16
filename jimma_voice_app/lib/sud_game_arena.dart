@@ -111,7 +111,7 @@ class _SudGameOverlaySheetState extends State<SudGameOverlaySheet> {
           child: Text(_matchStatus, textAlign: TextAlign.center, style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold, fontSize: 13.5)),
         ),
         const SizedBox(height: 12),
-        Wrap(spacing: 8, children: <int>.map((b) => ChoiceChip(
+        Wrap(spacing: 8, children: <int>[100, 500, 1000, 5000].map((b) => ChoiceChip(
           label: Text('🪙 $b'),
           selected: _bet == b,
           selectedColor: Colors.amber,
