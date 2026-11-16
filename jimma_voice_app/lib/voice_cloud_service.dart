@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:zego_express_engine/zego_express_engine.dart';
 import 'main.dart';
 
@@ -63,7 +65,7 @@ class CloudSyncService {
           }
         };
       }
-      return {'ok': false, 'msg': 'Server connecting... Tap Login again in 10 seconds!'};
+      return {'ok': false, 'msg': 'Server connecting... Tap Login again in 5 seconds!'};
     }
   }
 
@@ -108,7 +110,7 @@ class CloudSyncService {
     }
   }
 
-  static Future<void> syncBalance() async {
+  static Future<void> syncBalance({int giftedAdd = 0, int receivedAdd = 0}) async {
     final contact = AppState.userPhone.trim().toLowerCase();
     if (contact.isEmpty) return;
     try {
@@ -123,12 +125,90 @@ class CloudSyncService {
           'vipLevel': AppState.vipLevel,
           'hostLv': AppState.hostLv,
           'wealthLv': AppState.wealthLv,
+          if (giftedAdd > 0) 'totalGifted': giftedAdd,
+          if (receivedAdd > 0) 'totalReceived': receivedAdd,
         }),
       );
     } catch (_) {}
   }
-}
 
+  static Future<Map<String, dynamic>> fetchLeaderboard() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/api/leaderboard')).timeout(const Duration(seconds: 15));
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    } catch (_) {
+      return {
+        'ok': true,
+        'topGifters': [
+          {'uid': '1000001', 'name': 'Mohammedsabit (Founder)', 'vipLevel': 19, 'gifted': 120000},
+          {'uid': '1000002', 'name': 'Jimma Star 🇪🇹', 'vipLevel': 12, 'gifted': 85000},
+          {'uid': '1000003', 'name': 'Addis Queen 👑', 'vipLevel': 10, 'gifted': 64000},
+        ],
+        'topHosts': [
+          {'uid': '1000001', 'name': 'Mohammedsabit (Founder)', 'vipLevel': 19, 'received': 95000},
+          {'uid': '1000004', 'name': 'Oromia Voice 🎙️', 'vipLevel': 14, 'received': 72000},
+          {'uid': '1000005', 'name': 'Sheger Live ✨', 'vipLevel': 9, 'received': 51000},
+        ],
+      };
+    }
+  }
+
+  static Future<bool> uploadRechargeReceipt({
+    required String method,
+    required String etb,
+    required int coins,
+    String? imagePath,
+  }) async {
+    String b64 = '';
+    if (imagePath != null && imagePath.isNotEmpty && !kIsWeb) {
+      try {
+        final bytes = await File(imagePath).readAsBytes();
+        b64 = base64Encode(bytes);
+      } catch (_) {}
+    }
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/recharge/submit'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'uid': AppState.userId,
+          'name': AppState.userName,
+          'method': method,
+          'etb': etb,
+          'coins': coins,
+          'screenshotBase64': b64,
+        }),
+      ).timeout(const Duration(seconds: 25));
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchPendingRecharges() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/api/recharge/pending')).timeout(const Duration(seconds: 15));
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final list = data['list'] as List<dynamic>? ?? <dynamic>[];
+      return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {
+      return <Map<String, dynamic>>[];
+    }
+  }
+
+  static Future<bool> approveRecharge(String orderId) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/recharge/approve'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'id': orderId}),
+      ).timeout(const Duration(seconds: 15));
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+}
 
 class ZegoVoiceService {
   static const int appId = 1984681954;
@@ -186,3 +266,22 @@ class ZegoVoiceService {
   }
 }
 
+class RoomSeatSyncService {
+  static IO.Socket? _socket;
+  static Map<String, dynamic> seats = <String, dynamic>{};
+  static VoidCallback? onSeatsChanged;
+
+  static void connect(String roomId) {
+    disconnect();
+    _socket = IO.io(
+      CloudSyncService.baseUrl,
+      IO.OptionBuilder().setTransports(<String>['websocket']).disableAutoConnect().build(),
+    );
+    _socket!.connect();
+    _socket!.onConnect((_) {
+      _socket!.emit('join_room', {'roomId': roomId});
+    });
+    _socket!.on('seats_update', (data) {
+      if (data is Map) {
+        seats = Map<String, dynamic>.from(data);
+        if (onSeatsChanged != null) onSeatsChanged!();
