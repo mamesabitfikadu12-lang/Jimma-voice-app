@@ -456,6 +456,11 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
     super.initState();
     _micCount = widget.room['mics'] as int? ?? 9;
     AppState.roomMinutesToday += 5;
+    final rId = (widget.room['title'] ?? 'EthioRoom').toString();
+ZegoVoiceService.joinRoom(rId);
+RoomSeatSyncService.onSeatsChanged = () { if (mounted) setState(() {}); };
+RoomSeatSyncService.connect(rId);
+
   }
 
   void _minimizeRoom() {
@@ -758,19 +763,37 @@ class _LiveVoiceRoomPageState extends State<LiveVoiceRoomPage> {
                 itemCount: _micCount,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: is30 ? 6 : 3, crossAxisSpacing: 6, mainAxisSpacing: 6, childAspectRatio: is30 ? 0.85 : 1.18),
                 itemBuilder: (_, i) {
-                  final seatNum = i + 1;
+                                    final seatNum = i + 1;
                   final isHost = seatNum == 1;
                   final isMine = _mySeat == seatNum;
+                  final seatUser = RoomSeatSyncService.seats['$i'];
+                  final occupied = isHost || isMine || seatUser != null;
+                  final displayLabel = isHost
+                      ? (widget.room['host'] as String)
+                      : (seatUser != null ? (seatUser['name'] ?? 'User').toString() : (isMine ? AppState.userName : '$seatNum'));
                   return InkWell(
-                    onTap: () => setState(() => _mySeat = isMine ? 0 : seatNum),
+                    onTap: () {
+                      final rId = (widget.room['title'] ?? 'EthioRoom').toString();
+                      final nextSeat = isMine ? 0 : seatNum;
+                      setState(() => _mySeat = nextSeat);
+                      if (nextSeat > 0) {
+                        RoomSeatSyncService.takeSeat(rId, i);
+                        ZegoVoiceService.setMicOn(true);
+                      } else {
+                        RoomSeatSyncService.leaveSeat(rId);
+                        ZegoVoiceService.setMicOn(false);
+                      }
+                    },
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: List<Widget>.of({
                       CircleAvatar(
                         radius: is30 ? 15 : 21,
-                        backgroundColor: isHost || isMine ? Colors.amber : Colors.white12,
-                        child: Icon(isHost || isMine ? Icons.mic : Icons.chair_alt, size: is30 ? 14 : 19, color: isHost || isMine ? Colors.black : Colors.amber),
+                        backgroundColor: occupied ? Colors.amber : Colors.white12,
+                        child: Icon(occupied ? Icons.mic : Icons.chair_alt, size: is30 ? 14 : 19, color: occupied ? Colors.black : Colors.white54),
                       ),
                       const SizedBox(height: 2),
-                      Text(isHost ? (widget.room['host'] as String) : (isMine ? AppState.userName : '$seatNum'), overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, color: Colors.white)),
+                      Text(displayLabel, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 9.5, color: occupied ? Colors.amber : Colors.white70)),
+                    })),
+
                     })),
                   );
                 },
