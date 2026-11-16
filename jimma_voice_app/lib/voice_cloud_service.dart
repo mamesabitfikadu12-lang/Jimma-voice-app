@@ -265,7 +265,6 @@ class ZegoVoiceService {
     _activeRoomId = null;
   }
 }
-
 class RoomSeatSyncService {
   static IO.Socket? _socket;
   static Map<String, dynamic> seats = <String, dynamic>{};
@@ -284,4 +283,33 @@ class RoomSeatSyncService {
     _socket!.on('seats_update', (data) {
       if (data is Map) {
         seats = Map<String, dynamic>.from(data);
-        if (onSeatsChanged != null) onSeatsChanged!();
+        if (onSeatsChanged != null) {
+          onSeatsChanged!();
+        }
+      }
+    });
+  }
+
+  static void takeSeat(String roomId, int seatIndex) {
+    _socket?.emit('take_seat', {
+      'roomId': roomId,
+      'seatIndex': '$seatIndex',
+      'user': {
+        'uid': AppState.userId,
+        'name': AppState.userName,
+        'vip': AppState.vipLevel,
+      },
+    });
+  }
+
+  static void leaveSeat(String roomId) {
+    _socket?.emit('leave_seat', {'roomId': roomId, 'uid': AppState.userId});
+  }
+
+  static void disconnect() {
+    _socket?.dispose();
+    _socket = null;
+    seats = <String, dynamic>{};
+  }
+}
+
