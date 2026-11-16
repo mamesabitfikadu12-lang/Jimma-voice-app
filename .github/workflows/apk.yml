@@ -55,21 +55,8 @@ jobs:
           EOF
           sed -i 's/<application/<uses-permission android:name="android.permission.RECORD_AUDIO" \/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" \/>\n    <uses-permission android:name="android.permission.INTERNET" \/>\n    <application/' android/app/src/main/AndroidManifest.xml
           sed -i 's/android {/android {\n    lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }/' android/app/build.gradle.kts
-          cat << 'EOF' > fix_sdk.awk
-          /subprojects \{/ {
-              print
-              print "    val applySdk = Action<Project> { p ->"
-              print "        p.extensions.findByName(\"android\")?.let { ext ->"
-              print "            ext.javaClass.methods.firstOrNull { it.name == \"setCompileSdkVersion\" && it.parameterTypes.firstOrNull() == Int::class.javaPrimitiveType }?.invoke(ext, 35)"
-              print "        }"
-              print "    }"
-              print "    if (state.executed) applySdk.execute(this) else afterEvaluate(applySdk)"
-              next
-          }
-          { print }
-          EOF
-          awk -f fix_sdk.awk android/build.gradle.kts > android/build.gradle.kts.tmp && mv android/build.gradle.kts.tmp android/build.gradle.kts
           flutter pub get
+          find ~/.pub-cache -name "build.gradle" -exec sed -i 's/compileSdkVersion 31/compileSdkVersion 35/g; s/compileSdk 31/compileSdk 35/g' {} +
           flutter build apk --release
           flutter build appbundle --release
 
