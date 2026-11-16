@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'main.dart';
@@ -35,9 +36,17 @@ class SudGameOverlaySheet extends StatefulWidget {
 }
 
 class _SudGameOverlaySheetState extends State<SudGameOverlaySheet> {
+  final AudioPlayer _player = AudioPlayer();
   int _bet = 500;
-  String _matchStatus = 'Ready to Play • 🎙️ Voice Mic Active';
+  String _matchStatus = 'Ready to Play • 🔊 Sound & Voice Active';
   bool _playing = false;
+
+  Future<void> _playSfx(String file) async {
+    try {
+      await _player.stop();
+      await _player.play(AssetSource('sounds/$file'));
+    } catch (_) {}
+  }
 
   Future<void> _playMatch() async {
     if (_playing) return;
@@ -46,6 +55,7 @@ class _SudGameOverlaySheetState extends State<SudGameOverlaySheet> {
       return;
     }
     HapticFeedback.mediumImpact();
+    _playSfx('spin.wav');
     setState(() {
       _playing = true;
       AppState.coins -= _bet;
@@ -63,11 +73,18 @@ class _SudGameOverlaySheetState extends State<SudGameOverlaySheet> {
         AppState.lastBigWinner = '${AppState.userName} won +$prize Coins in ${widget.gameName}!';
         _matchStatus = '🏆 VICTORY! +$prize Coins won!';
         HapticFeedback.heavyImpact();
+        _playSfx('bigwin.wav');
       } else {
         _matchStatus = 'Good game! Tap Play Again to rematch!';
       }
     });
     widget.onUpd();
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
   }
 
   @override
@@ -94,7 +111,7 @@ class _SudGameOverlaySheetState extends State<SudGameOverlaySheet> {
           child: Text(_matchStatus, textAlign: TextAlign.center, style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold, fontSize: 13.5)),
         ),
         const SizedBox(height: 12),
-        Wrap(spacing: 8, children: <int>[100, 500, 1000, 5000].map((b) => ChoiceChip(
+        Wrap(spacing: 8, children: <int>.map((b) => ChoiceChip(
           label: Text('🪙 $b'),
           selected: _bet == b,
           selectedColor: Colors.amber,
