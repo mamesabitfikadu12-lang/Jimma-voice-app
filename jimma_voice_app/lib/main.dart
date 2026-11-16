@@ -839,24 +839,47 @@ RoomSeatSyncService.connect(rId);
                 ),
               })),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              color: Colors.black54,
-              child: Row(children: List<Widget>.of({
-                Expanded(child: TextField(controller: _chatCtrl, decoration: const InputDecoration(hintText: 'Say Hello...', isDense: true, border: InputBorder.none))),
-                IconButton(icon: const Icon(Icons.send, color: Colors.tealAccent, size: 20), onPressed: () {
+                      Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            color: Colors.black54,
+            child: Row(children: List<Widget>.of({
+              Expanded(
+                child: TextField(
+                  controller: _chatCtrl,
+                  decoration: const InputDecoration(hintText: 'Say Hello...', isDense: true),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.send, color: Colors.tealAccent, size: 20),
+                onPressed: () {
                   if (_chatCtrl.text.trim().isNotEmpty && !AppState.hasProfanity(_chatCtrl.text)) {
-                    setState(() { _logs.add({'type': 'Chat', 'text': '💬 ${AppState.userName}: ${_chatCtrl.text.trim()}'}); _chatCtrl.clear(); });
+                    setState(() => _logs.add(<String, dynamic>{'type': 'chat', 'text': '💬 ${AppState.userName}: ${_chatCtrl.text.trim()}'}));
+                    _chatCtrl.clear();
                   }
-                }),
-                IconButton(icon: Icon(_muted ? Icons.mic_off : Icons.mic, color: _muted ? Colors.redAccent : Colors.white, size: 20), onPressed: () => setState(() => _muted = !_muted)),
-                IconButton(icon: const Icon(Icons.sports_esports, color: Colors.purpleAccent, size: 22), onPressed: _openQuickInRoomGame),
-                IconButton(icon: const Icon(Icons.card_giftcard, color: Colors.amber, size: 22), onPressed: _sendGiftSheet),
-                IconButton(icon: const Icon(Icons.grid_view_rounded, color: Colors.white70, size: 22), onPressed: _openBasicTools),
-              })),
-            ),
-          })),
-        ),
+                },
+              ),
+              IconButton(
+                icon: Icon(_muted ? Icons.mic_off : Icons.mic, color: _muted ? Colors.redAccent : Colors.white, size: 22),
+                onPressed: () {
+                  setState(() => _muted = !_muted);
+                  ZegoVoiceService.setMicOn(!_muted);
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.sports_esports, color: Colors.purpleAccent, size: 22),
+                onPressed: _openQuickInRoomGame,
+              ),
+              IconButton(
+                icon: const Icon(Icons.card_giftcard, color: Colors.amber, size: 22),
+                onPressed: _sendGiftSheet,
+              ),
+              IconButton(
+                icon: const Icon(Icons.grid_view_rounded, color: Colors.white70, size: 22),
+                onPressed: _openRoomTools,
+              ),
+            })),
+          ),
+        ])),
       ),
     );
   }
