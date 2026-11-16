@@ -244,121 +244,28 @@ class _AuthGatePageState extends State<AuthGatePage> {
                       Align(
                         alignment: Alignment.centerRight,
 
-class AuthGatePage extends StatefulWidget {
-  const AuthGatePage({super.key});
-  @override
-  State<AuthGatePage> createState() => _AuthGatePageState();
-}
-
-class _AuthGatePageState extends State<AuthGatePage> {
-  bool _isSignUp = false;
-  final _nameCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
-  final _passCtrl = TextEditingController();
-  final _refCtrl = TextEditingController();
-  bool _hidePass = true;
-
-  static final Map<String, Map<String, String>> _accounts = <String, Map<String, String>>{
-    'admin@ethiovoice.com': {'name': 'Mohammedsabit (Founder)', 'pass': '142730', 'uid': '1000001'},
-  };
-
-  void _submit() {
-    final phone = _phoneCtrl.text.trim().toLowerCase();
-    final pass = _passCtrl.text.trim();
-    if (phone.length < 5 || pass.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Enter valid Phone/Email & Password (min 6 chars)!')));
-      return;
-    }
-
-    if (_isSignUp) {
-      final name = _nameCtrl.text.trim();
-      if (name.isEmpty || AppState.hasProfanity(name)) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Enter a valid clean Name!')));
-        return;
-      }
-      if (_accounts.containsKey(phone)) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.orange, content: Text('Account already exists! Switch to Login or tap Forgot Password.')));
-        return;
-      }
-      final newUid = '${1000000 + _accounts.length + 1}';
-      _accounts[phone] = {'name': name, 'pass': pass, 'uid': newUid};
-      AppState.userName = name;
-      AppState.userId = newUid;
-      AppState.userPhone = phone;
-      if (_refCtrl.text.trim().length >= 5) {
-        AppState.coins += 500;
-        AppState.inviteClaimed = true;
-      }
-      AppState.isLoggedIn = true;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
-    } else {
-      final acc = _accounts[phone];
-      if (acc == null || acc['pass'] != pass) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Wrong Email/Phone or Incorrect Password! Try again or tap Forgot Password.')));
-        return;
-      }
-      AppState.userName = acc['name']!;
-      AppState.userId = acc['uid']!;
-      AppState.userPhone = phone;
-      AppState.isLoggedIn = true;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
+                          child: TextButton(
+                            onPressed: _openForgotPassword,
+                            child: const Text('Forgot Password? (OTP / Direct Login)', style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      const SizedBox(height: 14),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                        onPressed: _loading ? null : _submit,
+                        child: Text(_loading ? 'Connecting to Cloud...' : (_isSignUp ? 'Create Account & Enter' : 'Login to Ethio-Voice'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ]),
+                  ),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      );
     }
   }
 
-  void _openForgotPassword() {
-    final recCtrl = TextEditingController(text: _phoneCtrl.text.trim());
-    final otpCtrl = TextEditingController();
-    final newPassCtrl = TextEditingController();
-    String otpCode = '';
-    bool sent = false;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDlg) => AlertDialog(
-          backgroundColor: const Color(0xFF0F172A),
-          title: const Text('🔐 Forgot Password / OTP Login', style: TextStyle(color: Colors.amber, fontSize: 15, fontWeight: FontWeight.bold)),
-          content: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-              TextField(controller: recCtrl, decoration: const InputDecoration(labelText: 'Registered Email or Phone Number', prefixIcon: Icon(Icons.email, color: Colors.tealAccent))),
-              const SizedBox(height: 10),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 42)),
-                onPressed: () {
-                  final key = recCtrl.text.trim().toLowerCase();
-                  if (!_accounts.containsKey(key)) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('No account found with this Email/Phone!')));
-                    return;
-                  }
-                  final code = '${100000 + (DateTime.now().millisecondsSinceEpoch % 899999)}';
-                  setDlg(() {
-                    otpCode = code;
-                    sent = true;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, duration: const Duration(seconds: 8), content: Text('Verification Code sent to $key: $code')));
-                },
-                icon: const Icon(Icons.send, size: 18),
-                label: Text(sent ? 'Resend Verification Code' : 'Send Verification Code'),
-              ),
-              if (sent) ...<Widget>[
-                const SizedBox(height: 8),
-                Text('Your 6-Digit Code: $otpCode', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 13)),
-                TextField(controller: otpCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Enter 6-Digit Code')),
-                TextField(controller: newPassCtrl, obscureText: true, decoration: const InputDecoration(labelText: 'New Password (optional for direct login)')),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 44)),
-                  onPressed: () {
-                    final key = recCtrl.text.trim().toLowerCase();
-                    if (otpCtrl.text.trim() != otpCode) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Invalid 6-Digit Verification Code!')));
-                      return;
-                    }
-                    final acc = _accounts[key]!;
-                    if (newPassCtrl.text.trim().length >= 6) {
-                      acc['pass'] = newPassCtrl.text.trim();
-                    }
-                    AppState.userName = acc['name']!;
 
 
 class MainShell extends StatefulWidget {
