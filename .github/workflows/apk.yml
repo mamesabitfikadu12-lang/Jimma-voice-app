@@ -25,7 +25,7 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Configure App Name, Audio Assets & Build
+      - name: Configure App Name, ZegoVoice, Audio Assets & Build
         run: |
           cd jimma_voice_app
           flutter create --org com.ethiovoice --project-name jimma_voice_app .
@@ -46,11 +46,14 @@ jobs:
             socket_io_client: ^2.0.3+1
             image_picker: ^1.1.2
             audioplayers: ^6.1.0
+            zego_express_engine: ^3.18.0
+            permission_handler: ^11.3.1
           flutter:
             uses-material-design: true
             assets:
               - assets/sounds/
           EOF
+          sed -i 's/<application/<uses-permission android:name="android.permission.RECORD_AUDIO" \/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" \/>\n    <uses-permission android:name="android.permission.INTERNET" \/>\n    <application/' android/app/src/main/AndroidManifest.xml
           sed -i 's/android {/android {\n    lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }/' android/app/build.gradle.kts
           flutter pub get
           flutter build apk --release
