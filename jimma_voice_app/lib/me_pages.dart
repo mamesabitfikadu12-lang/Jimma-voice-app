@@ -656,7 +656,7 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
               })),
 
               ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
-              children: List<Widget>.of({
+    
                 Text('My Points: 💎 ${AppState.points.toStringAsFixed(3)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.tealAccent)),
                 const SizedBox(height: 10),
                 TextField(controller: _exCustomCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Custom Points to Exchange (Min 10,000)'), onChanged: (_) => setState(() {})),
