@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -38,8 +39,13 @@ class SudGameOverlaySheet extends StatefulWidget {
 class _SudGameOverlaySheetState extends State<SudGameOverlaySheet> {
   final AudioPlayer _player = AudioPlayer();
   int _bet = 500;
-  String _matchStatus = 'Ready to Play • 🔊 Sound & Voice Active';
-  bool _playing = false;
+  bool _inRound = false;
+  int _playerScore = 0;
+  int _botScore = 0;
+  int _movesLeft = 3;
+  int _targetIndex = 4;
+  String _status = 'Select Bet & Tap Start Game to Play!';
+  List<int> _revealed = <int>[];
 
   Future<void> _playSfx(String file) async {
     try {
@@ -48,34 +54,54 @@ class _SudGameOverlaySheetState extends State<SudGameOverlaySheet> {
     } catch (_) {}
   }
 
-  Future<void> _playMatch() async {
-    if (_playing) return;
+  void _startRound() {
     if (AppState.coins < _bet) {
-      setState(() => _matchStatus = 'Not enough Coins! Recharge first.');
+      setState(() => _status = 'Not enough Coins! Recharge first.');
       return;
     }
     HapticFeedback.mediumImpact();
     _playSfx('spin.wav');
     setState(() {
-      _playing = true;
       AppState.coins -= _bet;
       AppState.gamesPlayedToday++;
-      _matchStatus = 'Matching players in Room...';
+      _inRound = true;
+      _playerScore = 0;
+      _botScore = 0;
+      _movesLeft = 3;
+      _revealed = <int>[];
+      _targetIndex = Random().nextInt(9);
+      _status = 'Tap glowing targets / tiles (3 Moves)!';
     });
     widget.onUpd();
-    await Future.delayed(const Duration(milliseconds: 1200));
-    final win = Random().nextInt(100) < 45;
-    final prize = _bet * 2;
+  }
+
+  void _tapTile(int idx) {
+    if (!_inRound || _movesLeft <= 0) return;
+    HapticFeedback.lightImpact();
+    _playSfx('spin.wav');
+    final hit = idx == _targetIndex || Random().nextInt(100) < 48;
+    final pts = hit ? (25 + Random().nextInt(30)) : (5 + Random().nextInt(12));
+    final botPts = 15 + Random().nextInt(28);
     setState(() {
-      _playing = false;
-      if (win) {
-        AppState.coins += prize;
-        AppState.lastBigWinner = '${AppState.userName} won +$prize Coins in ${widget.gameName}!';
-        _matchStatus = '🏆 VICTORY! +$prize Coins won!';
-        HapticFeedback.heavyImpact();
-        _playSfx('bigwin.wav');
+      _movesLeft--;
+      _playerScore += pts;
+      _botScore += botPts;
+      _revealed.add(idx);
+      _targetIndex = Random().nextInt(9);
+      if (_movesLeft == 0) {
+        _inRound = false;
+        if (_playerScore >= _botScore) {
+          final prize = _bet * 2;
+          AppState.coins += prize;
+          AppState.lastBigWinner = '${AppState.userName} won +$prize Coins in ${widget.gameName}!';
+          _status = '🏆 YOU WON! ($_playerScore vs $_botScore) • +$prize Coins!';
+          HapticFeedback.heavyImpact();
+          _playSfx('bigwin.wav');
+        } else {
+          _status = 'Opponent won ($_playerScore vs $_botScore). Tap Play Again!';
+        }
       } else {
-        _matchStatus = 'Good game! Tap Play Again to rematch!';
+        _status = hit ? '💥 GREAT HIT! +$pts pts • $_movesLeft moves left' : 'Hit +$pts pts • $_movesLeft moves left';
       }
     });
     widget.onUpd();
@@ -91,7 +117,7 @@ class _SudGameOverlaySheetState extends State<SudGameOverlaySheet> {
   Widget build(BuildContext context) {
     final liveUrl = 'https://sud.tech{SudConfig.appId}&mg_id=${widget.mgId}&room_id=${Uri.encodeComponent(widget.roomId)}&user_id=${AppState.userId}';
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         color: Color(0xFF0B1120),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -102,36 +128,77 @@ class _SudGameOverlaySheetState extends State<SudGameOverlaySheet> {
           Text('🎮 ${widget.gameName} • 🪙 ${AppState.coins}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 15)),
           IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.pop(context)),
         ]),
-        Text('Sud.Tech MGID: ${widget.mgId} • Room: ${widget.roomId}', style: const TextStyle(fontSize: 11, color: Colors.white60)),
-        const SizedBox(height: 12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.tealAccent.withOpacity(0.4))),
-          child: Text(_matchStatus, textAlign: TextAlign.center, style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold, fontSize: 13.5)),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(12)),
+          child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: <Widget>[
+            Text('You: $_playerScore', style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+            Text('Moves: $_movesLeft', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 14)),
+            Text('Rival: $_botScore', style: const TextStyle(color: Colors.pinkAccent, fontWeight: FontWeight.bold, fontSize: 14)),
+          ]),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 185,
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 9,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 1.55),
+            itemBuilder: (_, i) {
+              final isTarget = _inRound && i == _targetIndex;
+              final isDone = _revealed.contains(i);
+              return InkWell(
+                onTap: () => _tapTile(i),
+                borderRadius: BorderRadius.circular(12),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isTarget
+                          ? <Color>[Colors.amber, Colors.deepOrange]
+                          : isDone
+                              ? <Color>[const Color(0xFF0D9488), const Color(0xFF115E59)]
+                              : <Color>[const Color(0xFF1E293B), const Color(0xFF0F172A)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: isTarget ? Colors.white : Colors.amber.withOpacity(0.45), width: isTarget ? 2 : 1),
+                  ),
+                  child: Center(
+                    child: Text(
+                      isTarget ? '🎯 TAP!' : (isDone ? '💥 HIT' : '⚡'),
+                      style: TextStyle(fontSize: isTarget ? 15 : 18, fontWeight: FontWeight.w900, color: Colors.white),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(_status, textAlign: TextAlign.center, style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold, fontSize: 13)),
+        const SizedBox(height: 10),
         Wrap(spacing: 8, children: <int>[100, 500, 1000, 5000].map((b) => ChoiceChip(
           label: Text('🪙 $b'),
           selected: _bet == b,
           selectedColor: Colors.amber,
           labelStyle: TextStyle(color: _bet == b ? Colors.black : Colors.white, fontWeight: FontWeight.bold),
-          onSelected: (_) => setState(() => _bet = b),
+          onSelected: _inRound ? null : (_) => setState(() => _bet = b),
         )).toList()),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))),
-          onPressed: _playing ? null : _playMatch,
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 46), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))),
+          onPressed: _inRound ? null : _startRound,
           icon: const Icon(Icons.sports_esports),
-          label: Text(_playing ? 'Playing...' : 'Play Match (Bet 🪙 $_bet)', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          label: Text(_inRound ? 'Tap the Glowing Targets Above!' : 'Start Game (Bet 🪙 $_bet)', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
         ),
         TextButton.icon(
           onPressed: () {
             Clipboard.setData(ClipboardData(text: liveUrl));
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sud.Tech Live Room Game URL Copied!')));
           },
-          icon: const Icon(Icons.copy, size: 16, color: Colors.white70),
-          label: const Text('Copy Sud.Tech Web Arena Link', style: TextStyle(fontSize: 11, color: Colors.white70)),
+          icon: const Icon(Icons.copy, size: 15, color: Colors.white60),
+          label: const Text('Copy Sud.Tech Web Arena Link', style: TextStyle(fontSize: 11, color: Colors.white60)),
         ),
       ]),
     );
