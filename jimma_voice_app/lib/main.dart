@@ -7,6 +7,8 @@ import 'me_pages.dart';
 import 'task_settings_admin.dart';
 import 'sud_game_arena.dart';
 import 'voice_cloud_service.dart';
+import 'leaderboard_cloud_ui.dart';
+
 void main() => runApp(const EthioVoiceApp());
 class AppState {
   static bool isLoggedIn = false;
@@ -364,7 +366,7 @@ class _HomeTabState extends State<HomeTab> {
           ChoiceChip(label: const Text('30 Mics'), selected: micCount == 30, onSelected: (_) => setD(() => micCount = 30)),
         })),
       })),
-      actions: List<Widget>.of({
+      
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
         ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: () {
           if (c.text.trim().isNotEmpty && !AppState.hasProfanity(c.text)) {
@@ -383,7 +385,12 @@ class _HomeTabState extends State<HomeTab> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('ኢትዮ-ድምጽ • Ethio-Voice', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
-        actions: List<Widget>.of({
+        actions: List<Widget>.of({IconButton(
+  icon: const Icon(Icons.emoji_events, color: Colors.amber),
+  tooltip: 'Top Leaderboard',
+  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TopLeaderboardPage())),
+),
+
           IconButton(icon: const Icon(Icons.assignment_turned_in, color: Colors.tealAccent), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskCenterPage(onUpd: widget.onUpd)))),
           IconButton(icon: const Icon(Icons.add_circle, color: Colors.amber), onPressed: _createRoom),
         }),
