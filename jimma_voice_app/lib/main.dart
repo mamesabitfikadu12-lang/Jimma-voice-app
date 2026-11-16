@@ -880,7 +880,7 @@ RoomSeatSyncService.connect(rId);
             })),
           ),
         ])),
-      ),
+      
     );
   }
 }
