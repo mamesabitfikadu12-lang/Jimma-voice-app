@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -147,25 +148,27 @@ class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTi
     });
   }
 
+    final AudioPlayer _sfxPlayer = AudioPlayer();
+
   Future<void> _playTierSfx(String tier) async {
-    SystemSound.play(SystemSoundType.click);
-    if (tier == 'MEGA JACKPOT') {
-      HapticFeedback.heavyImpact();
-      await Future.delayed(const Duration(milliseconds: 80));
-      SystemSound.play(SystemSoundType.click);
-      HapticFeedback.heavyImpact();
-      await Future.delayed(const Duration(milliseconds: 80));
-      SystemSound.play(SystemSoundType.click);
-    } else if (tier == 'BIG WIN') {
-      HapticFeedback.heavyImpact();
-      await Future.delayed(const Duration(milliseconds: 90));
-      SystemSound.play(SystemSoundType.click);
-    } else if (tier == 'WIN') {
-      HapticFeedback.mediumImpact();
-    } else {
-      HapticFeedback.lightImpact();
-    }
+    try {
+      await _sfxPlayer.stop();
+      if (tier == 'MEGA JACKPOT') {
+        HapticFeedback.heavyImpact();
+        await _sfxPlayer.play(AssetSource('sounds/jackpot.wav'));
+      } else if (tier == 'BIG WIN') {
+        HapticFeedback.heavyImpact();
+        await _sfxPlayer.play(AssetSource('sounds/bigwin.wav'));
+      } else if (tier == 'WIN') {
+        HapticFeedback.mediumImpact();
+        await _sfxPlayer.play(AssetSource('sounds/win.wav'));
+      } else {
+        HapticFeedback.lightImpact();
+        await _sfxPlayer.play(AssetSource('sounds/spin.wav'));
+      }
+    } catch (_) {}
   }
+
 
   void _fillRandomGrid() {
     final syms = widget.game['syms'] as List<String>;
