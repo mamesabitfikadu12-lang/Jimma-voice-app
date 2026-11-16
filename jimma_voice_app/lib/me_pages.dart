@@ -656,6 +656,7 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
               })),
 
               ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
+              children: List<Widget>.of({
                 Text('My Points: 💎 ${AppState.points.toStringAsFixed(3)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.tealAccent)),
                 const SizedBox(height: 10),
                 TextField(controller: _exCustomCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Custom Points to Exchange (Min 10,000)'), onChanged: (_) => setState(() {})),
@@ -702,23 +703,31 @@ class PointsCashOutPage extends StatefulWidget {
 
 class _PointsCashOutPageState extends State<PointsCashOutPage> {
   final _pts = TextEditingController(text: '100000'), _acc = TextEditingController();
-  final _exPts = TextEditingController(text: '10000');
-  final _agId = TextEditingController(), _trPts = TextEditingController(text: '100000');
+  final _exMult = TextEditingController(text: '1');
+  final _agId = TextEditingController(), _trMult = TextEditingController(text: '1');
+  String _currency = '🇪🇹 Ethiopia';
   String _method = 'Telebirr';
   bool _agChecked = false;
   bool _hideFrozen = false;
 
-    void _openWa(String msg) {
+  void _openWa(String msg) {
     Clipboard.setData(ClipboardData(text: '+251919108311 • $msg'));
   }
-
 
   @override
   Widget build(BuildContext context) {
     final p = double.tryParse(_pts.text) ?? 0;
-    final payout = _method == 'USDT (TRC20)' ? '\$${(p / 10000).toStringAsFixed(2)} USDT' : 'Br ${((p / 10000) * 140).toStringAsFixed(1)}';
-    final trAmt = double.tryParse(_trPts.text) ?? 0;
-    final agReceive = (trAmt * 0.98).toStringAsFixed(0);
+    final etbVal = ((p / 10000) * 180).toStringAsFixed(0);
+    final usdVal = (p / 10000).toStringAsFixed(2);
+    final payoutLabel = _method == 'USDT (TRC20)' ? '\$$usdVal USDT' : 'ETB: $etbVal';
+
+    final exUnits = int.tryParse(_exMult.text) ?? 0;
+    final exPtsTotal = exUnits * 100000;
+    final exCoinsOut = (exPtsTotal * 0.9).toInt();
+
+    final trUnits = int.tryParse(_trMult.text) ?? 0;
+    final trPtsTotal = trUnits * 103000;
+    final agReceive = (trPtsTotal * 0.98).toStringAsFixed(0);
 
     return DefaultTabController(
       length: 3,
@@ -733,8 +742,8 @@ class _PointsCashOutPageState extends State<PointsCashOutPage> {
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
                 const Text('Points Balance', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87)),
                 InkWell(
-                  onTap: () => _openWa('Hello Ethio-Voice Official Payroll, please check my Points history (ID: ${AppState.userId}).'),
-                  child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)), child: const Text('Details', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF0D9488)))),
+                  onTap: () { _openWa('Points Details ID: ${AppState.userId}'); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Official Payroll Support Copied!'))); },
+                  child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)), child: const Text('Details', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF0D9488)))),
                 ),
               })),
               const SizedBox(height: 6),
@@ -755,83 +764,141 @@ class _PointsCashOutPageState extends State<PointsCashOutPage> {
           Expanded(
             child: TabBarView(children: List<Widget>.of({
               ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
-                const Text('Direct Platform Payroll Cash Out (10,000 Pts = 140 ETB)', style: TextStyle(fontSize: 12, color: Colors.amber)),
+                DropdownButtonFormField<String>(
+                  value: _currency,
+                  decoration: const InputDecoration(labelText: 'Currency Type'),
+                  items: List<String>.of({'🇪🇹 Ethiopia', '🌍 International (USDT)'}).map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                  onChanged: (v) => setState(() {
+                    _currency = v ?? '🇪🇹 Ethiopia';
+                    _method = _currency.contains('Ethiopia') ? 'Telebirr' : 'USDT (TRC20)';
+                  }),
+                ),
                 const SizedBox(height: 8),
-                DropdownButtonFormField<String>(value: _method, items: List<String>.of({'Telebirr', 'CBEBirr', 'CBE', 'Awash Bank', 'Dashen Bank', 'USDT (TRC20)'}).map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(), onChanged: (v) => setState(() => _method = v ?? 'Telebirr')),
-                TextField(controller: _pts, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Points to Sell (Min 100,000)'), onChanged: (_) => setState(() {})),
-                TextField(controller: _acc, decoration: InputDecoration(labelText: _method == 'USDT (TRC20)' ? 'TRC20 Wallet Address' : 'Your Phone or Account Number')),
-                const SizedBox(height: 14),
-                ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))), onPressed: () {
-                  if (p >= 100000 && AppState.points >= p && _acc.text.isNotEmpty) {
-                    final now = DateTime.now().toString().substring(0, 19);
-                    final orderId = '2026${DateTime.now().millisecondsSinceEpoch}';
-                    setState(() {
-                      AppState.points -= p;
-                      AppState.systemReceipts.insert(0, {'amount': payout, 'status': 'Done', 'orderId': orderId, 'applicant': AppState.userName, 'method': _method, 'appTime': now, 'notarizeTime': now, 'finishTime': now, 'agentWa': '251919108311'});
-                      AppState.officialNotices.insert(0, {'title': 'Withdrawal received', 'body': 'Direct Platform Payroll ($payout via $_method, Order: $orderId) submitted!', 'time': now});
-                    });
-                    widget.onUpd();
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('Cash Out ($payout) Sent! Check System Message!')));
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Min 100,000 Points & Account required!')));
-                  }
-                }, child: Text('Cash Out $payout', style: const TextStyle(fontWeight: FontWeight.bold))),
+                DropdownButtonFormField<String>(
+                  value: _method,
+                  decoration: const InputDecoration(labelText: 'Payment Method'),
+                  items: List<String>.of({'Telebirr', 'CBEBirr', 'CBE', 'Awash Bank', 'Dashen Bank', 'USDT (TRC20)'}).map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                  onChanged: (v) => setState(() => _method = v ?? 'Telebirr'),
+                ),
+                const SizedBox(height: 10),
+                const Text('Points amount for cashing out.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                Row(children: List<Widget>.of({
+                  Expanded(child: TextField(controller: _pts, keyboardType: TextInputType.number, decoration: const InputDecoration(prefixText: '💎 ', hintText: '100000'), onChanged: (_) => setState(() {}))),
+                  TextButton(
+                    onPressed: () {
+                      final maxMulti = (AppState.points ~/ 100000) * 100000;
+                      setState(() => _pts.text = maxMulti >= 100000 ? '$maxMulti' : '${AppState.points.toInt()}');
+                    },
+                    child: const Text('All', style: TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold, fontSize: 15)),
+                  ),
+                })),
+                const Text('Enter a multiple of 100000', style: TextStyle(color: Colors.redAccent, fontSize: 11.5)),
+                const SizedBox(height: 8),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
+                  Text(payoutLabel, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 14)),
+                  const Text('180ETB = 1\$ = 10000Points', style: TextStyle(fontSize: 11.5, color: Colors.white70)),
+                })),
+                const SizedBox(height: 8),
+                TextField(controller: _acc, decoration: InputDecoration(labelText: _method == 'USDT (TRC20)' ? 'Enter TRC20 Wallet Address' : 'Enter $_method Phone / Account Number')),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))),
+                  onPressed: () {
+                    if (p >= 100000 && p % 100000 == 0 && AppState.points >= p && _acc.text.isNotEmpty) {
+                      final now = DateTime.now().toString().substring(0, 19);
+                      final orderId = '2026${DateTime.now().millisecondsSinceEpoch}';
+                      setState(() {
+                        AppState.points -= p;
+                        AppState.systemReceipts.insert(0, {'amount': payoutLabel, 'status': 'Done', 'orderId': orderId, 'applicant': AppState.userName, 'method': _method, 'appTime': now, 'notarizeTime': now, 'finishTime': now, 'agentWa': '251919108311'});
+                        AppState.officialNotices.insert(0, {'title': 'Withdrawal received', 'body': 'Withdrawal ($payoutLabel via $_method, Order: $orderId) submitted!', 'time': now});
+                      });
+                      widget.onUpd();
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('Withdrawal ($payoutLabel) Submitted!')));
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Enter a multiple of 100,000 Points & Account!')));
+                    }
+                  },
+                  child: const Text('Withdraw', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
               })),
+
               ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
-                const Text('Exchange Points to Coins Instantly (10,000 Pts = 10,000 Coins)', style: TextStyle(fontSize: 12, color: Colors.amber)),
-                TextField(controller: _exPts, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Points to Exchange (Min 1,000)')),
-                const SizedBox(height: 14),
-                ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))), onPressed: () {
-                  final ex = double.tryParse(_exPts.text) ?? 0;
-                  if (ex >= 1000 && AppState.points >= ex) {
-                    setState(() { AppState.points -= ex; AppState.coins += ex.toInt(); });
-                    widget.onUpd();
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('Exchanged ${ex.toInt()} Points -> ${ex.toInt()} Coins!')));
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not enough Points (Min 1,000)!')));
-                  }
-                }, child: const Text('Exchange Now', style: const TextStyle(fontWeight: FontWeight.bold))),
+                const Text('Amount', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 4),
+                const Text('Exchange rate: 💎 10000 = 🪙 9000', style: TextStyle(fontSize: 12, color: Colors.amber)),
+                const SizedBox(height: 10),
+                Row(children: List<Widget>.of({
+                  Expanded(child: TextField(controller: _exMult, keyboardType: TextInputType.number, decoration: const InputDecoration(hintText: 'Enter Amount (1 = 100,000)'), onChanged: (_) => setState(() {}))),
+                  const Text('  ×100,000 💎', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.tealAccent)),
+                })),
+                const SizedBox(height: 10),
+                Text('🪙 $exCoinsOut Coins', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
+                const SizedBox(height: 18),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))),
+                  onPressed: () {
+                    if (exPtsTotal >= 100000 && AppState.points >= exPtsTotal) {
+                      setState(() { AppState.points -= exPtsTotal; AppState.coins += exCoinsOut; });
+                      widget.onUpd();
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('Exchanged $exPtsTotal Points -> $exCoinsOut Coins!')));
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Min 1 (100,000 Points) required!')));
+                    }
+                  },
+                  child: const Text('Exchange Points', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
               })),
+
               ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
                 const Text('User ID:', style: TextStyle(fontWeight: FontWeight.bold)),
                 Row(children: List<Widget>.of({
-                  Expanded(child: TextField(controller: _agId, keyboardType: TextInputType.number, decoration: const InputDecoration(hintText: 'Enter Agency User ID'), onChanged: (_) => setState(() => _agChecked = false))),
-                  TextButton(onPressed: () {
-                    if (_agId.text.trim().length >= 5 && _agId.text.trim() != AppState.userId) {
-                      setState(() => _agChecked = true);
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('Verified Agency ID: ${_agId.text.trim()}')));
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Enter valid Agency User ID!')));
-                    }
-                  }, child: Text(_agChecked ? 'Verified ✅' : 'Check', style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold))),
+                  Expanded(child: TextField(controller: _agId, keyboardType: TextInputType.number, decoration: const InputDecoration(hintText: 'Enter User ID'), onChanged: (_) => setState(() => _agChecked = false))),
+                  TextButton(
+                    onPressed: () {
+                      if (_agId.text.trim().length >= 5 && _agId.text.trim() != AppState.userId) {
+                        setState(() => _agChecked = true);
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('Verified Agency ID: ${_agId.text.trim()}')));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Enter valid Agency User ID!')));
+                      }
+                    },
+                    child: Text(_agChecked ? 'Verified ✅' : 'Check', style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold)),
+                  ),
                 })),
                 const SizedBox(height: 10),
                 const Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: <Widget>[
                   Text('Amount', style: TextStyle(fontWeight: FontWeight.bold)),
                   Text('Fee: 2%', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
                 ]),
-                TextField(controller: _trPts, keyboardType: TextInputType.number, decoration: const InputDecoration(hintText: 'Enter Amount (Min 100,000)'), onChanged: (_) => setState(() {})),
+                Row(children: List<Widget>.of({
+                  Expanded(child: TextField(controller: _trMult, keyboardType: TextInputType.number, decoration: const InputDecoration(hintText: '1'), onChanged: (_) => setState(() {}))),
+                  const Text('  ×103,000 💎', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.tealAccent)),
+                })),
                 const SizedBox(height: 8),
-                Text('The Agency will receive: 💎 $agReceive', style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold)),
+                Text('The Agency will receive 💎 $agReceive', style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 12),
-                const Text('1. Transfer fee: 2%. Minimum transfer >= 100,000 points.\n2. Click transfer button to transfer the corresponding points to your agents.\n3. After the transfer finished, it can\'t be cancelled or withdrawn.', style: TextStyle(fontSize: 11, color: Colors.white60)),
-                const SizedBox(height: 14),
-                ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))), onPressed: () {
-                  if (!_agChecked) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tap "Check" to verify Agency ID first!'))); return; }
-                  if (trAmt >= 100000 && AppState.points >= trAmt) {
-                    final now = DateTime.now().toString().substring(0, 19);
-                    final orderId = '2026${DateTime.now().millisecondsSinceEpoch}';
-                    setState(() {
-                      AppState.points -= trAmt;
-                      AppState.systemReceipts.insert(0, {'amount': '💎 $agReceive Pts', 'status': 'Done', 'orderId': orderId, 'applicant': '${AppState.userName} ➔ Agency ${_agId.text.trim()}', 'method': 'Agency Transfer (2% Fee)', 'appTime': now, 'notarizeTime': now, 'finishTime': now, 'agentWa': '251919108311'});
-                      AppState.officialNotices.insert(0, {'title': 'Agency Points Transfer', 'body': 'Transferred $agReceive Points (after 2% fee) to Agency ID ${_agId.text.trim()}.', 'time': now});
-                    });
-                    widget.onUpd();
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('Transferred $agReceive Points to Agency ${_agId.text.trim()}!')));
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Min 100,000 Points required!')));
-                  }
-                }, child: const Text('Transfer Points', style: TextStyle(fontWeight: FontWeight.bold))),
+                const Text('1. Transfer fee: 2%. Minimum transfer ≥ 100,000 points.\n2. Click transfer button to transfer the corresponding points to your agents.\n3. After the transfer finished, it can\'t be cancelled or withdrawn.', style: TextStyle(fontSize: 11.5, color: Colors.white60)),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))),
+                  onPressed: () {
+                    if (!_agChecked) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tap "Check" to verify Agency ID first!'))); return; }
+                    if (trPtsTotal >= 103000 && AppState.points >= trPtsTotal) {
+                      final now = DateTime.now().toString().substring(0, 19);
+                      final orderId = '2026${DateTime.now().millisecondsSinceEpoch}';
+                      setState(() {
+                        AppState.points -= trPtsTotal;
+                        AppState.systemReceipts.insert(0, {'amount': '💎 $agReceive Pts', 'status': 'Done', 'orderId': orderId, 'applicant': '${AppState.userName} ➔ Agency ${_agId.text.trim()}', 'method': 'Agency Transfer (2% Fee)', 'appTime': now, 'notarizeTime': now, 'finishTime': now, 'agentWa': '251919108311'});
+                        AppState.officialNotices.insert(0, {'title': 'Agency Points Transfer', 'body': 'Transferred $agReceive Points (after 2% fee) to Agency ID ${_agId.text.trim()}.', 'time': now});
+                      });
+                      widget.onUpd();
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('Transferred $agReceive Points to Agency ${_agId.text.trim()}!')));
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Min 1 (103,000 Points) required!')));
+                    }
+                  },
+                  child: const Text('Transfer Points', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
               })),
             })),
           ),
