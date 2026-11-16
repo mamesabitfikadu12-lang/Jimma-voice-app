@@ -1,1 +1,139 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
+import 'package:zego_express_engine/zego_express_engine.dart';
+import 'main.dart';
+
+class CloudSyncService {
+  static const String baseUrl = 'https://onrender.com';
+
+  static Future<Map<String, dynamic>> signUp(String name, String contact, String pass, String ref) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/auth/signup'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'name': name, 'contact': contact, 'pass': pass, 'ref': ref}),
+      ).timeout(const Duration(seconds: 12));
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    } catch (_) {
+      return {'ok': false, 'msg': 'Server waking up, try again in 5 seconds!'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> login(String contact, String pass) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'contact': contact, 'pass': pass}),
+      ).timeout(const Duration(seconds: 12));
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    } catch (_) {
+      return {'ok': false, 'msg': 'Server waking up, try again in 5 seconds!'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> sendOtp(String contact) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/auth/send-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'contact': contact}),
+      ).timeout(const Duration(seconds: 12));
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    } catch (_) {
+      return {'ok': false, 'msg': 'Server connection failed!'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> verifyOtp(String contact, String code, String newPass) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/auth/verify-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'contact': contact, 'code': code, 'newPass': newPass}),
+      ).timeout(const Duration(seconds: 12));
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    } catch (_) {
+      return {'ok': false, 'msg': 'Verification failed!'};
+    }
+  }
+
+  static Future<void> syncBalance() async {
+    final contact = AppState.userPhone.trim().toLowerCase();
+    if (contact.isEmpty) return;
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/api/user/sync'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'contact': contact,
+          'name': AppState.userName,
+          'coins': AppState.coins,
+          'points': AppState.points,
+          'vipLevel': AppState.vipLevel,
+          'hostLv': AppState.hostLv,
+          'wealthLv': AppState.wealthLv,
+        }),
+      );
+    } catch (_) {}
+  }
+}
+
+class ZegoVoiceService {
+  static const int appId = 1984681954;
+  static const String appSign = '9622d13c976d8545df95eb0baceb5c540087050f952ddbdb633b35d3199ea2f5';
+  static bool _initialized = false;
+  static String? _activeRoomId;
+
+  static Future<void> initEngine() async {
+    if (_initialized || kIsWeb) return;
+    try {
+      await Permission.microphone.request();
+      final profile = ZegoEngineProfile(appId, ZegoScenario.HighQualityChatroom, appSign: appSign);
+      await ZegoExpressEngine.createEngineWithProfile(profile);
+      ZegoExpressEngine.onRoomStreamUpdate = (String roomID, ZegoUpdateType updateType, List<ZegoStream> streamList, Map<String, dynamic> extendedData) {
+        for (final s in streamList) {
+          if (updateType == ZegoUpdateType.Add) {
+            ZegoExpressEngine.instance.startPlayingStream(s.streamID);
+          } else {
+            ZegoExpressEngine.instance.stopPlayingStream(s.streamID);
+          }
+        }
+      };
+      _initialized = true;
+    } catch (_) {}
+  }
+
+  static Future<void> joinRoom(String roomId) async {
+    if (kIsWeb) return;
+    await initEngine();
+    final cleanRoom = roomId.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    if (_activeRoomId != null && _activeRoomId != cleanRoom) {
+      await leaveRoom();
+    }
+    _activeRoomId = cleanRoom;
+    final user = ZegoUser(AppState.userId, AppState.userName);
+    await ZegoExpressEngine.instance.loginRoom(cleanRoom, user);
+    await ZegoExpressEngine.instance.muteMicrophone(true);
+  }
+
+  static Future<void> setMicOn(bool on) async {
+    if (kIsWeb || _activeRoomId == null) return;
+    await ZegoExpressEngine.instance.muteMicrophone(!on);
+    if (on) {
+      await ZegoExpressEngine.instance.startPublishingStream('${_activeRoomId}_${AppState.userId}');
+    } else {
+      await ZegoExpressEngine.instance.stopPublishingStream();
+    }
+  }
+
+  static Future<void> leaveRoom() async {
+    if (kIsWeb || _activeRoomId == null) return;
+    await ZegoExpressEngine.instance.stopPublishingStream();
+    await ZegoExpressEngine.instance.logoutRoom(_activeRoomId!);
+    _activeRoomId = null;
+  }
+}
 
