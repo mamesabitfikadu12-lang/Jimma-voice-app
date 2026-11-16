@@ -75,6 +75,7 @@ class EthioVoiceApp extends StatelessWidget {
   }
 }
 
+
 class AuthGatePage extends StatefulWidget {
   const AuthGatePage({super.key});
   @override
@@ -82,76 +83,172 @@ class AuthGatePage extends StatefulWidget {
 }
 
 class _AuthGatePageState extends State<AuthGatePage> {
-  bool _isSignUp = true;
+  bool _isSignUp = false;
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _refCtrl = TextEditingController();
+  bool _hidePass = true;
+
+  static final Map<String, Map<String, String>> _accounts = <String, Map<String, String>>{
+    'admin@ethiovoice.com': {'name': 'Mohammedsabit (Founder)', 'pass': '142730', 'uid': '1000001'},
+  };
 
   void _submit() {
-    final phone = _phoneCtrl.text.trim();
+    final phone = _phoneCtrl.text.trim().toLowerCase();
     final pass = _passCtrl.text.trim();
-    if (phone.length < 6 || pass.length < 4) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Enter valid Phone/Email & Password (4+ chars)!')));
+    if (phone.length < 5 || pass.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Enter valid Phone/Email & Password (min 6 chars)!')));
       return;
     }
-    if (_isSignUp && _nameCtrl.text.trim().isNotEmpty && !AppState.hasProfanity(_nameCtrl.text)) {
-      AppState.userName = _nameCtrl.text.trim();
+
+    if (_isSignUp) {
+      final name = _nameCtrl.text.trim();
+      if (name.isEmpty || AppState.hasProfanity(name)) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Enter a valid clean Name!')));
+        return;
+      }
+      if (_accounts.containsKey(phone)) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.orange, content: Text('Account already exists! Switch to Login or tap Forgot Password.')));
+        return;
+      }
+      final newUid = '${1000000 + _accounts.length + 1}';
+      _accounts[phone] = {'name': name, 'pass': pass, 'uid': newUid};
+      AppState.userName = name;
+      AppState.userId = newUid;
+      AppState.userPhone = phone;
+      if (_refCtrl.text.trim().length >= 5) {
+        AppState.coins += 500;
+        AppState.inviteClaimed = true;
+      }
+      AppState.isLoggedIn = true;
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
+    } else {
+      final acc = _accounts[phone];
+      if (acc == null || acc['pass'] != pass) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Wrong Email/Phone or Incorrect Password! Try again or tap Forgot Password.')));
+        return;
+      }
+      AppState.userName = acc['name']!;
+      AppState.userId = acc['uid']!;
+      AppState.userPhone = phone;
+      AppState.isLoggedIn = true;
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
     }
-    AppState.userPhone = phone;
-    if (_isSignUp && _refCtrl.text.trim().length >= 5) {
-      AppState.coins += 500;
-      AppState.inviteClaimed = true;
-    }
-    AppState.isLoggedIn = true;
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
+  }
+
+  void _openForgotPassword() {
+    final recCtrl = TextEditingController(text: _phoneCtrl.text.trim());
+    final otpCtrl = TextEditingController();
+    final newPassCtrl = TextEditingController();
+    String otpCode = '';
+    bool sent = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlg) => AlertDialog(
+          backgroundColor: const Color(0xFF0F172A),
+          title: const Text('🔐 Forgot Password / OTP Login', style: TextStyle(color: Colors.amber, fontSize: 15, fontWeight: FontWeight.bold)),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+              TextField(controller: recCtrl, decoration: const InputDecoration(labelText: 'Registered Email or Phone Number', prefixIcon: Icon(Icons.email, color: Colors.tealAccent))),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 42)),
+                onPressed: () {
+                  final key = recCtrl.text.trim().toLowerCase();
+                  if (!_accounts.containsKey(key)) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('No account found with this Email/Phone!')));
+                    return;
+                  }
+                  final code = '${100000 + (DateTime.now().millisecondsSinceEpoch % 899999)}';
+                  setDlg(() {
+                    otpCode = code;
+                    sent = true;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, duration: const Duration(seconds: 8), content: Text('Verification Code sent to $key: $code')));
+                },
+                icon: const Icon(Icons.send, size: 18),
+                label: Text(sent ? 'Resend Verification Code' : 'Send Verification Code'),
+              ),
+              if (sent) ...<Widget>[
+                const SizedBox(height: 8),
+                Text('Your 6-Digit Code: $otpCode', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 13)),
+                TextField(controller: otpCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Enter 6-Digit Code')),
+                TextField(controller: newPassCtrl, obscureText: true, decoration: const InputDecoration(labelText: 'New Password (optional for direct login)')),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 44)),
+                  onPressed: () {
+                    final key = recCtrl.text.trim().toLowerCase();
+                    if (otpCtrl.text.trim() != otpCode) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Invalid 6-Digit Verification Code!')));
+                      return;
+                    }
+                    final acc = _accounts[key]!;
+                    if (newPassCtrl.text.trim().length >= 6) {
+                      acc['pass'] = newPassCtrl.text.trim();
+                    }
+                    AppState.userName = acc['name']!;
+                    AppState.userId = acc['uid']!;
+                    AppState.userPhone = key;
+                    AppState.isLoggedIn = true;
+                    Navigator.pop(ctx);
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
+                  },
+                  child: const Text('Verify Code & Login Now', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ]),
+          ),
+          actions: <Widget>[
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close', style: TextStyle(color: Colors.white60))),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: <Color>[Color(0xFF064E3B), Color(0xFF0F172A), Color(0xFF090D16)])),
+        decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: <Color>[Color(0xFF064E3B), Color(0xFF090D16)])),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
-              child: Column(children: List<Widget>.of({
+              child: Column(children: <Widget>[
                 const CircleAvatar(radius: 42, backgroundColor: Colors.amber, child: Icon(Icons.graphic_eq, size: 46, color: Colors.black)),
                 const SizedBox(height: 12),
-                const Text('ኢትዮ-ድምጽ • Ethio-Voice', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.amber)),
-                const Text('Live Voice Rooms • Education • 24 HD Games', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                const Text('ኢትዮ-ድምጽ • Ethio-Voice', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white)),
+                const Text('Live Voice Rooms • Education • 36 HD Games', style: TextStyle(fontSize: 12, color: Colors.white70)),
                 const SizedBox(height: 22),
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber.withOpacity(0.5))),
-                  child: Column(children: List<Widget>.of({
-                    Row(children: List<Widget>.of({
-                      Expanded(child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: _isSignUp ? Colors.amber : Colors.white10, foregroundColor: _isSignUp ? Colors.black : Colors.white), onPressed: () => setState(() => _isSignUp = true), child: const Text('Sign Up', style: TextStyle(fontWeight: FontWeight.bold)))),
+                  child: Column(children: <Widget>[
+                    Row(children: <Widget>[
+                      Expanded(child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: _isSignUp ? Colors.amber : Colors.white12, foregroundColor: _isSignUp ? Colors.black : Colors.white), onPressed: () => setState(() => _isSignUp = true), child: const Text('Sign Up'))),
                       const SizedBox(width: 8),
-                      Expanded(child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: !_isSignUp ? Colors.tealAccent : Colors.white10, foregroundColor: !_isSignUp ? Colors.black : Colors.white), onPressed: () => setState(() => _isSignUp = false), child: const Text('Login', style: TextStyle(fontWeight: FontWeight.bold)))),
-                    })),
+                      Expanded(child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: !_isSignUp ? Colors.tealAccent : Colors.white12, foregroundColor: !_isSignUp ? Colors.black : Colors.white), onPressed: () => setState(() => _isSignUp = false), child: const Text('Login'))),
+                    ]),
                     const SizedBox(height: 14),
-                    if (_isSignUp) TextField(controller: _nameCtrl, decoration: const InputDecoration(prefixIcon: Icon(Icons.person, color: Colors.amber), labelText: 'Full Name / Nickname')),
-                    TextField(controller: _phoneCtrl, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(prefixIcon: Icon(Icons.phone_android, color: Colors.tealAccent), labelText: 'Phone Number or Email')),
-                    TextField(controller: _passCtrl, obscureText: true, decoration: const InputDecoration(prefixIcon: Icon(Icons.lock, color: Colors.amber), labelText: 'Password')),
-                    if (_isSignUp) TextField(controller: _refCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(prefixIcon: Icon(Icons.card_giftcard, color: Colors.pinkAccent), labelText: 'Invite Code (Optional +500 Coins)')),
-                    const SizedBox(height: 18),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))),
-                      onPressed: _submit,
-                      child: Text(_isSignUp ? 'Create Account & Enter' : 'Login to Ethio-Voice', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                    if (_isSignUp) TextField(controller: _nameCtrl, decoration: const InputDecoration(prefixIcon: Icon(Icons.person), labelText: 'Full Name / Nickname')),
+                    TextField(controller: _phoneCtrl, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(prefixIcon: Icon(Icons.alternate_email), labelText: 'Phone Number or Email')),
+                    TextField(
+                      controller: _passCtrl,
+                      obscureText: _hidePass,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.lock),
+                        labelText: 'Password (min 6 characters)',
+                        suffixIcon: IconButton(icon: Icon(_hidePass ? Icons.visibility : Icons.visibility_off), onPressed: () => setState(() => _hidePass = !_hidePass)),
+                      ),
                     ),
-                  })),
-                ),
-              })),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+                    if (_isSignUp) TextField(controller: _refCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(prefixIcon: Icon(Icons.card_giftcard, color: Colors.amber), labelText: 'Invitation Code (Optional +500 Coins)')),
+                    if (!_isSignUp)
+                      Align(
 
 
 class MainShell extends StatefulWidget {
