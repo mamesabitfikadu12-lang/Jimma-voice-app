@@ -75,7 +75,7 @@ class _MeTabState extends State<MeTab> {
     ));
   }
 
-  void _openAdmin() {
+    void _openAdmin() {
     final c = TextEditingController();
     showDialog(context: context, builder: (_) => AlertDialog(
       title: const Text('System Verification'),
@@ -83,7 +83,7 @@ class _MeTabState extends State<MeTab> {
       actions: List<Widget>.of({
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(onPressed: () {
-          if (c.text.trim() == '2730') {
+          if (c.text.trim() == '142730') {
             Navigator.pop(context);
             Navigator.push(context, MaterialPageRoute(builder: (_) => SuperAdminPanel(onUpd: () { setState(() {}); widget.onUpd(); })));
           }
@@ -91,6 +91,7 @@ class _MeTabState extends State<MeTab> {
       }),
     ));
   }
+
 
   Widget _badge(String text, Color c1, Color c2, IconData ic) {
     return Container(
