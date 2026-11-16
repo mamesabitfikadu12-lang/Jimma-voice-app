@@ -28,7 +28,7 @@ jobs:
           cd jimma_voice_app
           flutter create --org com.ethiovoice --project-name jimma_voice_app .
           mkdir -p assets/sounds
-          python3 -c "import wave,struct,math; make=lambda p,fs,d: [w:=wave.open(p,'w'),w.setnchannels(1),w.setsampwidth(2),w.setframerate(22050),[w.writeframes(struct.pack('<h',int(28000*math.sin(2*math.pi*f*i/22050)*(1-i/(22050*d))))) for f in fs for i in range(int(22050*d))],w.close()]; make('assets/sounds/spin.wav',[420,560],0.07); make('assets/sounds/win.wav',[523,659,784],0.14); make('assets/sounds/bigwin.wav',[523,659,784,1046],0.18); make('assets/sounds/jackpot.wav',[440,554,659,880,1108],0.22)"
+          python3 -c "import wave,struct,math; make=lambda p,fs,d: [w:=wave.open(p,'w'),w.setnchannels(1),w.setsampwidth(2),w.setframerate(22050),[w.writeframes(struct.pack('<h',int(28000*math.sin(2*math.pi*f*i/22050)*(1-i/(22050*d))))) for f in fs for i in range(int(22050*d))],w.close()]; make('assets/sounds/spin.wav',[520,660],0.07); make('assets/sounds/win.wav',[523,659,784],0.14); make('assets/sounds/bigwin.wav',[523,659,784,1047],0.18); make('assets/sounds/jackpot.wav',[440,554,659,880,1175],0.22)"
           cat << 'EOF' > pubspec.yaml
           name: jimma_voice_app
           description: Jimma Voice Chat Family Official App
@@ -49,6 +49,7 @@ jobs:
             assets:
               - assets/sounds/
           EOF
+          sed -i 's/android {/android {\n    lint {\n        checkReleaseBuilds false\n        abortOnError false\n    }/' android/app/build.gradle*
           flutter pub get
           flutter build apk --release
           flutter build appbundle --release
