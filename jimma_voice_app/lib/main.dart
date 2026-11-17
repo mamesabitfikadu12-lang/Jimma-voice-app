@@ -820,7 +820,7 @@ RoomSeatSyncService.connect(rId);
                       decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(10)),
                       child: Text(filteredLogs.elementAt(i)['text'] ?? '', style: const TextStyle(fontSize: 11.5, color: Colors.white)),
                     ),
-                  
+                  ),    
                 ),
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
