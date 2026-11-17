@@ -794,11 +794,10 @@ RoomSeatSyncService.connect(rId);
                       const SizedBox(height: 2),
                       Text(displayLabel, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 9.5, color: occupied ? Colors.amber : Colors.white70)),
                     })),
-
-           }),         
-                  );
-                },
-              ),
+                );
+              },
+            ),
+          ),
             ),
             Expanded(
               child: Row(children: List<Widget>.of({
