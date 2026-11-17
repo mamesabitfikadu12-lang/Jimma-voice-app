@@ -876,12 +876,13 @@ RoomSeatSyncService.connect(rId);
               IconButton(
                 icon: const Icon(Icons.grid_view_rounded, color: Colors.white70, size: 22),
                 onPressed: _openRoomTools,
-              ),
+                    ),
             })),
           ),
-        ),
+        })),
       ),
     ),
-   );
+  );
   }
-  }
+}
+
