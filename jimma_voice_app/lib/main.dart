@@ -879,7 +879,7 @@ RoomSeatSyncService.connect(rId);
               ),
             })),
           ),
-        })),
+        ),
       ),
     ),
    );
