@@ -366,7 +366,8 @@ class _HomeTabState extends State<HomeTab> {
           ChoiceChip(label: const Text('30 Mics'), selected: micCount == 30, onSelected: (_) => setD(() => micCount = 30)),
         })),
       })),
-      
+            actions: List<Widget>.of({
+
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
         ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black), onPressed: () {
           if (c.text.trim().isNotEmpty && !AppState.hasProfanity(c.text)) {
@@ -793,8 +794,8 @@ RoomSeatSyncService.connect(rId);
                       const SizedBox(height: 2),
                       Text(displayLabel, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 9.5, color: occupied ? Colors.amber : Colors.white70)),
                     })),
-);
-                    
+
+           }),         
                   );
                 },
               ),
