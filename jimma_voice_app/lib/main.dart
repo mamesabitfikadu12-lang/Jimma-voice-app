@@ -858,7 +858,7 @@ RoomSeatSyncService.connect(rId);
                   }
                 },
               ),
-              IconButton(
+                            IconButton(
                 icon: Icon(_muted ? Icons.mic_off : Icons.mic, color: _muted ? Colors.redAccent : Colors.white, size: 22),
                 onPressed: () {
                   setState(() => _muted = !_muted);
@@ -873,7 +873,7 @@ RoomSeatSyncService.connect(rId);
                 icon: const Icon(Icons.card_giftcard, color: Colors.amber, size: 22),
                 onPressed: _sendGiftSheet,
               ),
-                            IconButton(
+              IconButton(
                 icon: const Icon(Icons.grid_view_rounded, color: Colors.white70, size: 22),
                 onPressed: _openRoomTools,
               ),
