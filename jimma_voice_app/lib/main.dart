@@ -879,8 +879,9 @@ RoomSeatSyncService.connect(rId);
               ),
             })),
           ),
-        ),
-      
-    );
-  }    
-}
+        })),
+      ),
+    ),
+   );
+  }
+  }
