@@ -727,7 +727,7 @@ RoomSeatSyncService.connect(rId);
     final filteredLogs = _logFilter == 'All' ? _logs : _logs.where((l) => l['type'] == _logFilter).toList();
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: <Color>[Color(widget.room['c1'] as int), Color(widget.room['c2'] as int), const Color(0xFF090D16)])),
+        decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: <Color>[Color(widget.room['c1'] as int), const Color(0xFF0A0E17)])),
         child: SafeArea(
           child: Column(children: List<Widget>.of({
             Padding(
@@ -736,25 +736,25 @@ RoomSeatSyncService.connect(rId);
                 CircleAvatar(backgroundColor: Colors.amber, child: Text((widget.room['host'] as String).substring(0, 1), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold))),
                 const SizedBox(width: 8),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
-                  Text(widget.room['title'] as String, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  Text('ID:${AppState.userId} • $_micCount Seats Mode', style: const TextStyle(fontSize: 10, color: Colors.amber)),
+                  Text(widget.room['title'] as String, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('ID:${AppState.userId} • $_micCount Seats Mode', style: const TextStyle(fontSize: 10, color: Colors.white70)),
                 }))),
                 TextButton(
                   onPressed: () => setState(() => _micCount = is30 ? 9 : 30),
-                  child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(10)), child: Text(is30 ? '9 Mics' : '30 Mics', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black))),
+                  child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(12)), child: Text(is30 ? '9 Mics' : '30 Mics', style: const TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.bold))),
                 ),
                 IconButton(tooltip: 'Minimize Room & Do Tasks', icon: const Icon(Icons.picture_in_picture_alt, color: Colors.tealAccent), onPressed: _minimizeRoom),
-                IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () { AppState.floatingRoom = null; widget.onUpd(); Navigator.pop(context); }),
+                IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () { AppState.floatingRoom = null; Navigator.pop(context); }),
               })),
             ),
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(gradient: const LinearGradient(colors: <Color>[Color(0xFF1B4332), Color(0xFF7F4F24)]), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber)),
+              decoration: BoxDecoration(gradient: const LinearGradient(colors: <Color>[Color(0xFF1B4332), Color(0xFF7F4F24)]), borderRadius: BorderRadius.circular(10)),
               child: Row(children: List<Widget>.of({
-                Expanded(child: Text('🎰 ${AppState.lastBigWinner}', overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white))),
+                Expanded(child: Text('📣 ${AppState.lastBigWinner}', overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: Colors.amber, fontWeight: FontWeight.bold))),
                 const SizedBox(width: 6),
-                InkWell(onTap: _openQuickInRoomGame, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(10)), child: const Text('Play >', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black)))),
+                InkWell(onTap: _openQuickInRoomGame, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(8)), child: const Text('Join Game', style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)))),
               })),
             ),
             SizedBox(
@@ -762,9 +762,13 @@ RoomSeatSyncService.connect(rId);
               child: GridView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 itemCount: _micCount,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: is30 ? 6 : 3, crossAxisSpacing: 6, mainAxisSpacing: 6, childAspectRatio: is30 ? 0.85 : 1.18),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: is30 ? 6 : 4,
+                  crossAxisSpacing: 6,
+                  mainAxisSpacing: 6,
+                ),
                 itemBuilder: (_, i) {
-                                    final seatNum = i + 1;
+                  final seatNum = i + 1;
                   final isHost = seatNum == 1;
                   final isMine = _mySeat == seatNum;
                   final seatUser = RoomSeatSyncService.seats['$i'];
@@ -794,89 +798,92 @@ RoomSeatSyncService.connect(rId);
                       const SizedBox(height: 2),
                       Text(displayLabel, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 9.5, color: occupied ? Colors.amber : Colors.white70)),
                     })),
-                );
-              },
-            ),
-          ),
+                  );
+                },
+              ),
             ),
             Expanded(
               child: Row(children: List<Widget>.of({
-                Column(mainAxisAlignment: MainAxisAlignment.center, children: List<String>.of({'All', 'Room', 'Chat'}).map((f) => InkWell(
-                  onTap: () => setState(() => _logFilter = f),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                    decoration: BoxDecoration(color: _logFilter == f ? Colors.tealAccent : Colors.black45, borderRadius: BorderRadius.circular(8)),
-                    child: Text(f, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _logFilter == f ? Colors.black : Colors.white70)),
-                  ),
-                )).toList()),
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                    itemCount: filteredLogs.length,
-                    itemBuilder: (_, i) => Container(
-                      margin: const EdgeInsets.only(bottom: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(10)),
-                      child: Text(filteredLogs.elementAt(i)['text'] ?? '', style: const TextStyle(fontSize: 11.5, color: Colors.white)),
+                  child: Column(children: List<Widget>.of({
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: List<String>.of({'All', 'Room', 'Chat'}).map((f) => InkWell(
+                      onTap: () => setState(() => _logFilter = f),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(color: _logFilter == f ? Colors.tealAccent : Colors.black45, borderRadius: BorderRadius.circular(10)),
+                        child: Text(f, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _logFilter == f ? Colors.black : Colors.white70)),
+                      ),
+                    )).toList()),
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        itemCount: filteredLogs.length,
+                        itemBuilder: (_, i) => Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(10)),
+                          child: Text(filteredLogs.elementAt(i)['text'] ?? '', style: const TextStyle(fontSize: 11.5, color: Colors.white)),
+                        ),
+                      ),
                     ),
-                  ),    
+                  })),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: Column(mainAxisAlignment: MainAxisAlignment.end, children: List<Widget>.of({
                     InkWell(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskCenterPage(onUpd: () { setState(() {}); widget.onUpd(); }))),
-                      child: Container(padding: const EdgeInsets.all(7), decoration: BoxDecoration(color: Colors.teal.shade700, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.amber)), child: const Column(children: <Widget>[Icon(Icons.task_alt, color: Colors.amber, size: 20), Text('Task', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold))])),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskCenterPage(onUpd: () => setState(() {})))),
+                      child: Container(padding: const EdgeInsets.all(7), decoration: BoxDecoration(color: Colors.teal.shade800, shape: BoxShape.circle), child: const Icon(Icons.task_alt, color: Colors.white, size: 18)),
                     ),
                     const SizedBox(height: 8),
                     InkWell(
                       onTap: _openQuickInRoomGame,
-                      child: Container(padding: const EdgeInsets.all(7), decoration: BoxDecoration(color: Colors.purple.shade800, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.amber)), child: const Column(children: <Widget>[Text('🎰', style: TextStyle(fontSize: 16)), Text('Play', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold))])),
+                      child: Container(padding: const EdgeInsets.all(7), decoration: BoxDecoration(color: Colors.purple.shade800, shape: BoxShape.circle), child: const Icon(Icons.casino, color: Colors.amber, size: 18)),
                     ),
                     const SizedBox(height: 8),
                   })),
                 ),
               })),
             ),
-                      Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            color: Colors.black54,
-            child: Row(children: List<Widget>.of({
-              Expanded(
-                child: TextField(
-                  controller: _chatCtrl,
-                  decoration: const InputDecoration(hintText: 'Say Hello...', isDense: true),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              color: Colors.black54,
+              child: Row(children: List<Widget>.of({
+                Expanded(
+                  child: TextField(
+                    controller: _chatCtrl,
+                    decoration: const InputDecoration(hintText: 'Say Hello...', isDense: true),
+                  ),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.send, color: Colors.tealAccent, size: 20),
-                onPressed: () {
-                  if (_chatCtrl.text.trim().isNotEmpty && !AppState.hasProfanity(_chatCtrl.text)) {
-                    setState(() => _logs.add(<String, dynamic>{'type': 'chat', 'text': '💬 ${AppState.userName}: ${_chatCtrl.text.trim()}'}));
-                    _chatCtrl.clear();
-                  }
-                },
-              ),
-                            IconButton(
-                icon: Icon(_muted ? Icons.mic_off : Icons.mic, color: _muted ? Colors.redAccent : Colors.white, size: 22),
-                onPressed: () {
-                  setState(() => _muted = !_muted);
-                  ZegoVoiceService.setMicOn(!_muted);
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.sports_esports, color: Colors.purpleAccent, size: 22),
-                onPressed: _openQuickInRoomGame,
-              ),
-              IconButton(
-                icon: const Icon(Icons.card_giftcard, color: Colors.amber, size: 22),
-                onPressed: _sendGiftSheet,
-              ),
+                IconButton(
+                  icon: const Icon(Icons.send, color: Colors.tealAccent, size: 20),
+                  onPressed: () {
+                    if (_chatCtrl.text.trim().isNotEmpty && !AppState.hasProfanity(_chatCtrl.text)) {
+                      setState(() => _logs.add(<String, dynamic>{'type': 'chat', 'text': '💬 ${AppState.userName}: ${_chatCtrl.text.trim()}'}));
+                      _chatCtrl.clear();
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: Icon(_muted ? Icons.mic_off : Icons.mic, color: _muted ? Colors.redAccent : Colors.white, size: 22),
+                  onPressed: () {
+                    setState(() => _muted = !_muted);
+                    ZegoVoiceService.setMicOn(!_muted);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.sports_esports, color: Colors.purpleAccent, size: 22),
+                  onPressed: _openQuickInRoomGame,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.card_giftcard, color: Colors.amber, size: 22),
+                  onPressed: _sendGiftSheet,
+                ),
               IconButton(
                 icon: const Icon(Icons.grid_view_rounded, color: Colors.white70, size: 22),
                 onPressed: _openRoomTools,
-                    ),
+              ),
             })),
           ),
         })),
