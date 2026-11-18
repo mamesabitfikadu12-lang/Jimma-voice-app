@@ -232,31 +232,7 @@ class _ProGrowthHubSheetState extends State<ProGrowthHubSheet> with SingleTicker
             leading: CircleAvatar(backgroundColor: Colors.amber, child: Icon(it['icon'] as IconData, color: Colors.black)),
             title: Text(it['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('${it['type']} • ${it['price']} Coins'),
-            trailing: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: equipped ? Colors.teal : Colors.amber),
-              onPressed: () {
-                setState(() {
-                  if (it['type'] == 'Frame') {
-  Widget _buildVipStoreTab() {
-    final items = <Map<String, dynamic>>[
-      <String, dynamic>{'name': 'Golden Lion Frame', 'type': 'Frame', 'price': 500, 'icon': Icons.workspace_premium},
-      <String, dynamic>{'name': 'Abyssinia Crown Frame', 'type': 'Frame', 'price': 1200, 'icon': Icons.auto_awesome},
-      <String, dynamic>{'name': 'Royal Sports Car Entry', 'type': 'Entry', 'price': 2500, 'icon': Icons.directions_car},
-      <String, dynamic>{'name': 'Roaring Lion Entry', 'type': 'Entry', 'price': 5000, 'icon': Icons.local_fire_department},
-    ];
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: items.length,
-      itemBuilder: (_, i) {
-        final it = items[i];
-        final equipped = GrowthState.activeFrame == it['name'] || GrowthState.activeEntry == it['name'];
-        return Card(
-          color: Colors.white10,
-          child: ListTile(
-            leading: CircleAvatar(backgroundColor: Colors.amber, child: Icon(it['icon'] as IconData, color: Colors.black)),
-            title: Text(it['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('${it['type']} • ${it['price']} Coins'),
-            trailing: ElevatedButton(
+                        trailing: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: equipped ? Colors.teal : Colors.amber),
               onPressed: () {
                 setState(() {
@@ -367,3 +343,5 @@ class _ProGrowthHubSheetState extends State<ProGrowthHubSheet> with SingleTicker
   }
 }
 
+          
+           
