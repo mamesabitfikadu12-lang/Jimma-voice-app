@@ -237,4 +237,133 @@ class _ProGrowthHubSheetState extends State<ProGrowthHubSheet> with SingleTicker
               onPressed: () {
                 setState(() {
                   if (it['type'] == 'Frame') {
+  Widget _buildVipStoreTab() {
+    final items = <Map<String, dynamic>>[
+      <String, dynamic>{'name': 'Golden Lion Frame', 'type': 'Frame', 'price': 500, 'icon': Icons.workspace_premium},
+      <String, dynamic>{'name': 'Abyssinia Crown Frame', 'type': 'Frame', 'price': 1200, 'icon': Icons.auto_awesome},
+      <String, dynamic>{'name': 'Royal Sports Car Entry', 'type': 'Entry', 'price': 2500, 'icon': Icons.directions_car},
+      <String, dynamic>{'name': 'Roaring Lion Entry', 'type': 'Entry', 'price': 5000, 'icon': Icons.local_fire_department},
+    ];
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: items.length,
+      itemBuilder: (_, i) {
+        final it = items[i];
+        final equipped = GrowthState.activeFrame == it['name'] || GrowthState.activeEntry == it['name'];
+        return Card(
+          color: Colors.white10,
+          child: ListTile(
+            leading: CircleAvatar(backgroundColor: Colors.amber, child: Icon(it['icon'] as IconData, color: Colors.black)),
+            title: Text(it['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('${it['type']} • ${it['price']} Coins'),
+            trailing: ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: equipped ? Colors.teal : Colors.amber),
+              onPressed: () {
+                setState(() {
+                  if (it['type'] == 'Frame') {
+                    GrowthState.activeFrame = it['name'] as String;
+                  } else {
+                    GrowthState.activeEntry = it['name'] as String;
+                  }
+                });
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Equipped ${it['name']}!')));
+              },
+              child: Text(equipped ? 'Equipped' : 'Equip', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFollowDmTab() {
+    final friends = <String>['Selam (ID:10001)', 'Dawit (ID:10002)', 'Hana (ID:10003)'];
+    final msgs = GrowthState.dmChats[_selectedFriend] ?? <String>['Selam: Welcome to Ethio-Voice!'];
+    return Column(children: <Widget>[
+      SizedBox(
+        height: 48,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          children: friends.map((f) {
+            final isFollowing = GrowthState.followingIds.contains(f);
+            return Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: ChoiceChip(
+                label: Text('$f ${isFollowing ? "✓" : "+Follow"}'),
+                selected: _selectedFriend == f,
+                onSelected: (_) {
+                  setState(() {
+                    _selectedFriend = f;
+                    GrowthState.followingIds.add(f);
+                  });
+                },
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+      Expanded(
+        child: ListView.builder(
+          padding: const EdgeInsets.all(10),
+          itemCount: msgs.length,
+          itemBuilder: (_, i) => Container(
+            margin: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(10)),
+            child: Text(msgs[i]),
+          ),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(children: <Widget>[
+          Expanded(child: TextField(controller: _dmCtrl, decoration: const InputDecoration(hintText: 'Private message...', isDense: true))),
+          IconButton(
+            icon: const Icon(Icons.send, color: Colors.amber),
+            onPressed: () {
+              if (_dmCtrl.text.trim().isEmpty) return;
+              setState(() {
+                GrowthState.dmChats.putIfAbsent(_selectedFriend, () => <String>[]).add('${AppState.userName}: ${_dmCtrl.text.trim()}');
+                _dmCtrl.clear();
+              });
+            },
+          ),
+        ]),
+      ),
+    ]);
+  }
+
+  Widget _buildAgencyTab() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+        Card(
+          color: const Color(0xFF1B263B),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+              Text('🏢 Agency Code: ${GrowthState.agencyCode}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber)),
+              const SizedBox(height: 6),
+              Text('Active Hosts: ${GrowthState.agencyMembers} Hosts'),
+              Text('Weekly Agency Payroll: ${GrowthState.agencyCommissionEtb} ETB', style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold)),
+            ]),
+          ),
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, padding: const EdgeInsets.symmetric(vertical: 12)),
+            icon: const Icon(Icons.account_balance_wallet, color: Colors.black),
+            label: const Text('Request Weekly Agency Payout (Telebirr / Bank)', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Weekly Agency Payroll Request Sent to Admin!')));
+            },
+          ),
+        ),
+      ]),
+    );
+  }
+}
 
