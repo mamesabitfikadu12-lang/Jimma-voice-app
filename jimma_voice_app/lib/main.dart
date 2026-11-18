@@ -860,7 +860,7 @@ RoomSeatSyncService.connect(rId);
                   icon: const Icon(Icons.send, color: Colors.tealAccent, size: 20),
                   onPressed: () {
                     if (_chatCtrl.text.trim().isNotEmpty && !AppState.hasProfanity(_chatCtrl.text)) {
-                      setState(() => _logs.add(<String, dynamic>{'type': 'chat', 'text': '💬 ${AppState.userName}: ${_chatCtrl.text.trim()}'}));
+                      setState(() => _logs.add(<String, String>{'type': 'chat', 'text': '💬 ${AppState.userName}: ${_chatCtrl.text.trim()}'}));
                       _chatCtrl.clear();
                     }
                   },
@@ -882,7 +882,7 @@ RoomSeatSyncService.connect(rId);
                 ),
               IconButton(
                 icon: const Icon(Icons.grid_view_rounded, color: Colors.white70, size: 22),
-                onPressed: _openRoomTools,
+                onPressed: _openBasicTools,
               ),
             })),
           ),
