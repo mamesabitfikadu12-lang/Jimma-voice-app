@@ -8,6 +8,7 @@ import 'task_settings_admin.dart';
 import 'sud_game_arena.dart';
 import 'voice_cloud_service.dart';
 import 'leaderboard_cloud_ui.dart';
+import 'pro_growth_features.dart';
 
 void main() => runApp(const EthioVoiceApp());
 class AppState {
@@ -743,6 +744,17 @@ RoomSeatSyncService.connect(rId);
                   onPressed: () => setState(() => _micCount = is30 ? 9 : 30),
                   child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(12)), child: Text(is30 ? '9 Mics' : '30 Mics', style: const TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.bold))),
                 ),
+                IconButton(
+  tooltip: 'Pro Growth Hub',
+  icon: const Icon(Icons.rocket_launch, color: Colors.amber),
+  onPressed: () => showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => ProGrowthHubSheet(roomTitle: widget.room['title'] as String, onChanged: () => setState(() {})),
+  ),
+),
+
                 IconButton(tooltip: 'Minimize Room & Do Tasks', icon: const Icon(Icons.picture_in_picture_alt, color: Colors.tealAccent), onPressed: _minimizeRoom),
                 IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () { AppState.floatingRoom = null; Navigator.pop(context); }),
               })),
