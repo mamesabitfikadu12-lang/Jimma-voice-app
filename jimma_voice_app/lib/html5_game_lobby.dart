@@ -168,3 +168,62 @@ class _Html5GameLobbyPageState extends State<Html5GameLobbyPage> {
                   selected: active,
                   onSelected: (_) => setState(() => _selectedCat = cat),
                 ),
+            },
+          ),
+        ),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(10),
+            itemCount: visible.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 10,
+              childAspectRatio: 0.82,
+            ),
+            itemBuilder: (_, i) {
+              final g = visible[i];
+              final isNew = g['tag'] == 'NEW';
+              return InkWell(
+                onTap: () => _launchHtml5Game(g),
+                child: Column(children: <Widget>[
+                  Expanded(
+                    child: Stack(children: <Widget>[
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: <Color>[Color(g['color'] as int), Colors.black87],
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                        ),
+                        child: Icon(g['icon'] as IconData, size: 42, color: Colors.amber),
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isNew ? Colors.greenAccent.shade700 : Colors.redAccent,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(g['tag'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white)),
+                        ),
+                      ),
+                    ]),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(g['title'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                ]),
+              );
+            },
+          ),
+        ),
+      ]),
+    );
+  }
+}
