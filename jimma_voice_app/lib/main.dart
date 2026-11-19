@@ -9,6 +9,7 @@ import 'sud_game_arena.dart';
 import 'voice_cloud_service.dart';
 import 'leaderboard_cloud_ui.dart';
 import 'pro_growth_features.dart';
+import 'html5_game_lobby.dart';
 
 void main() => runApp(const EthioVoiceApp());
 class AppState {
@@ -886,7 +887,8 @@ RoomSeatSyncService.connect(rId);
                 ),
                 IconButton(
                   icon: const Icon(Icons.sports_esports, color: Colors.purpleAccent, size: 22),
-                  onPressed: _openQuickInRoomGame,
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => Html5GameLobbyPage(onBalanceChanged: () => setState(() {})))),
+
                 ),
                 IconButton(
                   icon: const Icon(Icons.card_giftcard, color: Colors.amber, size: 22),
