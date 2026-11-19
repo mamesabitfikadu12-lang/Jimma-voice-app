@@ -204,7 +204,8 @@ class _ContactCenterPageState extends State<ContactCenterPage> {
   final _refCtrl = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    final inviteLink = 'https://github.io{AppState.userId}';
+ final inviteLink = 'https://google.com{AppState.userId}';
+
     return Scaffold(
       appBar: AppBar(title: const Text('Invite Friends & Support')),
       body: ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
