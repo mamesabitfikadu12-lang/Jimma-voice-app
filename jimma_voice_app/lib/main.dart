@@ -286,7 +286,7 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     final pages = List<Widget>.of({
       HomeTab(onUpd: _refresh),
-      GamesTab(onUpd: _refresh),
+     Html5GameLobbyPage(onBalanceChanged: _refresh),
       MomentsTab(onUpd: _refresh),
       MessagesTab(onUpd: _refresh),
       MeTab(onUpd: _refresh),
@@ -392,6 +392,16 @@ class _HomeTabState extends State<HomeTab> {
   icon: const Icon(Icons.emoji_events, color: Colors.amber),
   tooltip: 'Top Leaderboard',
   onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TopLeaderboardPage())),
+),
+IconButton(
+  icon: const Icon(Icons.rocket_launch, color: Colors.amber),
+  tooltip: 'VIP Store, Agency & DM',
+  onPressed: () => showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => ProGrowthHubSheet(roomTitle: 'Ethio-Voice', onChanged: widget.onUpd),
+  ),
 ),
 
           IconButton(icon: const Icon(Icons.assignment_turned_in, color: Colors.tealAccent), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskCenterPage(onUpd: widget.onUpd)))),
