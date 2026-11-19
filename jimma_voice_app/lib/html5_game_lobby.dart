@@ -16,15 +16,39 @@ class _Html5GameLobbyPageState extends State<Html5GameLobbyPage> {
     <String, dynamic>{'title': 'Ocean Hunt', 'cat': 'Fishing', 'tag': 'HOT', 'color': 0xFF6A1B9A, 'icon': Icons.tsunami},
     <String, dynamic>{'title': 'Jungle Hunt', 'cat': 'Hot', 'tag': 'HOT', 'color': 0xFF2E7D32, 'icon': Icons.forest},
     <String, dynamic>{'title': 'Royal Battle', 'cat': 'Multi Player', 'tag': 'HOT', 'color': 0xFFC62828, 'icon': Icons.emoji_events},
-    <String, dynamic>{'title': 'Super Ace', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFFAD1457, 'icon': Icons.style},
-    <String, dynamic>{'title': 'Chicken Road', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFEF6C00, 'icon': Icons.directions_run},
-    <String, dynamic>{'title': 'Fishing Tycoon', 'cat': 'Fishing', 'tag': 'HOT', 'color': 0xFF0277BD, 'icon': Icons.sailing},
-    <String, dynamic>{'title': 'Gates Of Olympus', 'cat': 'Slot', 'tag': 'NEW', 'color': 0xFF4527A0, 'icon': Icons.bolt},
-    <String, dynamic>{'title': 'Fortune Rabbit', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFD84315, 'icon': Icons.cruelty_free},
-    <String, dynamic>{'title': 'Ludo King Arena', 'cat': 'Multi Player', 'tag': 'HOT', 'color': 0xFF1565C0, 'icon': Icons.casino},
+    <String, dynamic>{'title': 'Ocean Hunt II', 'cat': 'Fishing', 'tag': 'NEW', 'color': 0xFF1565C0, 'icon': Icons.waves},
+    <String, dynamic>{'title': 'Jungle Delight', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFF388E3C, 'icon': Icons.pets},
+    <String, dynamic>{'title': 'Garo Gems III', 'cat': 'Slot', 'tag': 'NEW', 'color': 0xFFF57F17, 'icon': Icons.diamond},
+    <String, dynamic>{'title': 'Garo Gems II', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFFE65100, 'icon': Icons.auto_awesome},
+    <String, dynamic>{'title': 'Garo Gems I', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFFD84315, 'icon': Icons.stars},
     <String, dynamic>{'title': 'Fruit Party', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFF558B2F, 'icon': Icons.local_florist},
-    <String, dynamic>{'title': 'Boxing Star', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFB71C1C, 'icon': Icons.sports_mma},
+    <String, dynamic>{'title': 'Fishing Tycoon', 'cat': 'Fishing', 'tag': 'HOT', 'color': 0xFF0277BD, 'icon': Icons.sailing},
+    <String, dynamic>{'title': 'The Monkey King', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFFB71C1C, 'icon': Icons.whatshot},
+    <String, dynamic>{'title': 'Blaze Of Fortune', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFFF8F00, 'icon': Icons.local_fire_department},
+    <String, dynamic>{'title': 'Bonanza Banana', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFF9E9D24, 'icon': Icons.eco},
+    <String, dynamic>{'title': 'Lucky Piggy', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFAD1457, 'icon': Icons.savings},
+    <String, dynamic>{'title': 'Fortune Rabbit', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFC2185B, 'icon': Icons.cruelty_free},
+    <String, dynamic>{'title': 'Storm Joker', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFF4A148C, 'icon': Icons.theater_comedy},
+    <String, dynamic>{'title': 'Gates Of Olympus', 'cat': 'Slot', 'tag': 'NEW', 'color': 0xFF4527A0, 'icon': Icons.bolt},
+    <String, dynamic>{'title': 'Starlight Princess', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFF283593, 'icon': Icons.auto_fix_high},
+    <String, dynamic>{'title': 'Gems Sky', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFF6A1B9A, 'icon': Icons.castle},
+    <String, dynamic>{'title': 'Scratch Boxing', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFB71C1C, 'icon': Icons.sports_mma},
+    <String, dynamic>{'title': 'Money Coming', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFF1B5E20, 'icon': Icons.monetization_on},
+    <String, dynamic>{'title': 'Super Ace', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFF880E4F, 'icon': Icons.style},
+    <String, dynamic>{'title': 'Aztec Magic Bonanza', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFF4E342E, 'icon': Icons.account_balance},
+    <String, dynamic>{'title': 'Chicken Road', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFEF6C00, 'icon': Icons.directions_run},
+    <String, dynamic>{'title': 'CosmoX', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFF0D47A1, 'icon': Icons.rocket_launch},
+    <String, dynamic>{'title': 'Kraken III', 'cat': 'Fishing', 'tag': 'HOT', 'color': 0xFF004D40, 'icon': Icons.water},
+    <String, dynamic>{'title': 'Fishing Star', 'cat': 'Fishing', 'tag': 'HOT', 'color': 0xFF01579B, 'icon': Icons.anchor},
     <String, dynamic>{'title': 'Teen Patti', 'cat': 'Multi Player', 'tag': 'HOT', 'color': 0xFF00695C, 'icon': Icons.style},
+    <String, dynamic>{'title': 'Magic Slot', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFF311B92, 'icon': Icons.flare},
+    <String, dynamic>{'title': 'Crazy Gems', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFFBF360C, 'icon': Icons.hexagon},
+    <String, dynamic>{'title': 'Sphinx Legend', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFFE65100, 'icon': Icons.temple_hindu},
+    <String, dynamic>{'title': 'Ludo King', 'cat': 'Multi Player', 'tag': 'HOT', 'color': 0xFF1565C0, 'icon': Icons.casino},
+    <String, dynamic>{'title': 'Roulette', 'cat': 'Multi Player', 'tag': 'HOT', 'color': 0xFF2E7D32, 'icon': Icons.motion_photos_on},
+    <String, dynamic>{'title': 'Mahjong Ways', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFF827717, 'icon': Icons.grid_on},
+    <String, dynamic>{'title': 'Bounty Football', 'cat': 'Multi Player', 'tag': 'NEW', 'color': 0xFF1B5E20, 'icon': Icons.sports_soccer},
+    <String, dynamic>{'title': 'Deep Sea', 'cat': 'Fishing', 'tag': 'HOT', 'color': 0xFF006064, 'icon': Icons.scuba_diving},
   ];
 
   void _launchHtml5Game(Map<String, dynamic> game) {
@@ -144,63 +168,3 @@ class _Html5GameLobbyPageState extends State<Html5GameLobbyPage> {
                   selected: active,
                   onSelected: (_) => setState(() => _selectedCat = cat),
                 ),
-              );
-            },
-          ),
-        ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(10),
-            itemCount: visible.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 10,
-              childAspectRatio: 0.82,
-            ),
-            itemBuilder: (_, i) {
-              final g = visible[i];
-              final isNew = g['tag'] == 'NEW';
-              return InkWell(
-                onTap: () => _launchHtml5Game(g),
-                child: Column(children: <Widget>[
-                  Expanded(
-                    child: Stack(children: <Widget>[
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: <Color>[Color(g['color'] as int), Colors.black87],
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.amber.withOpacity(0.5)),
-                        ),
-                        child: Icon(g['icon'] as IconData, size: 42, color: Colors.amber),
-                      ),
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: isNew ? Colors.greenAccent.shade700 : Colors.redAccent,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(g['tag'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white)),
-                        ),
-                      ),
-                    ]),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(g['title'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                ]),
-              );
-            },
-          ),
-        ),
-      ]),
-    );
-  }
-}
