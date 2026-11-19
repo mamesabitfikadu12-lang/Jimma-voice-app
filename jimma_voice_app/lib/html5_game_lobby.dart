@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'main.dart';
-import 'compliance_server_guard.dart';
 
 class Html5GameLobbyPage extends StatefulWidget {
   final VoidCallback onBalanceChanged;
@@ -14,18 +13,18 @@ class _Html5GameLobbyPageState extends State<Html5GameLobbyPage> {
   String _selectedCat = 'Hot';
 
   final List<Map<String, dynamic>> _games = <Map<String, dynamic>>[
-    <String, dynamic>{'title': 'Ocean Hunt', 'cat': 'Fishing', 'tag': 'HOT', 'color': 0xFF6A1B9A, 'icon': Icons.tsunami, 'url': 'https://html5games.com'},
-    <String, dynamic>{'title': 'Jungle Hunt', 'cat': 'Hot', 'tag': 'HOT', 'color': 0xFF2E7D32, 'icon': Icons.forest, 'url': 'https://html5games.com'},
-    <String, dynamic>{'title': 'Royal Battle', 'cat': 'Multi Player', 'tag': 'HOT', 'color': 0xFFC62828, 'icon': Icons.emoji_events, 'url': 'https://html5games.com'},
-    <String, dynamic>{'title': 'Super Ace', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFFAD1457, 'icon': Icons.style, 'url': 'https://html5games.com'},
-    <String, dynamic>{'title': 'Chicken Road', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFEF6C00, 'icon': Icons.directions_run, 'url': 'https://html5games.com'},
-    <String, dynamic>{'title': 'Fishing Tycoon', 'cat': 'Fishing', 'tag': 'HOT', 'color': 0xFF0277BD, 'icon': Icons.sailing, 'url': 'https://html5games.com'},
-    <String, dynamic>{'title': 'Gates Of Olympus', 'cat': 'Slot', 'tag': 'NEW', 'color': 0xFF4527A0, 'icon': Icons.bolt, 'url': 'https://html5games.com'},
-    <String, dynamic>{'title': 'Fortune Rabbit', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFD84315, 'icon': Icons.cruelty_free, 'url': 'https://html5games.com'},
-    <String, dynamic>{'title': 'Ludo King Arena', 'cat': 'Multi Player', 'tag': 'HOT', 'color': 0xFF1565C0, 'icon': Icons.casino, 'url': 'https://html5games.com'},
-    <String, dynamic>{'title': 'Fruit Party', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFF558B2F, 'icon': Icons.local_florist, 'url': 'https://html5games.com'},
-    <String, dynamic>{'title': 'Boxing Star', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFB71C1C, 'icon': Icons.sports_mma, 'url': 'https://html5games.com'},
-    <String, dynamic>{'title': 'Teen Patti', 'cat': 'Multi Player', 'tag': 'HOT', 'color': 0xFF00695C, 'icon': Icons.playing_cards, 'url': 'https://html5games.com'},
+    <String, dynamic>{'title': 'Ocean Hunt', 'cat': 'Fishing', 'tag': 'HOT', 'color': 0xFF6A1B9A, 'icon': Icons.tsunami},
+    <String, dynamic>{'title': 'Jungle Hunt', 'cat': 'Hot', 'tag': 'HOT', 'color': 0xFF2E7D32, 'icon': Icons.forest},
+    <String, dynamic>{'title': 'Royal Battle', 'cat': 'Multi Player', 'tag': 'HOT', 'color': 0xFFC62828, 'icon': Icons.emoji_events},
+    <String, dynamic>{'title': 'Super Ace', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFFAD1457, 'icon': Icons.style},
+    <String, dynamic>{'title': 'Chicken Road', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFEF6C00, 'icon': Icons.directions_run},
+    <String, dynamic>{'title': 'Fishing Tycoon', 'cat': 'Fishing', 'tag': 'HOT', 'color': 0xFF0277BD, 'icon': Icons.sailing},
+    <String, dynamic>{'title': 'Gates Of Olympus', 'cat': 'Slot', 'tag': 'NEW', 'color': 0xFF4527A0, 'icon': Icons.bolt},
+    <String, dynamic>{'title': 'Fortune Rabbit', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFD84315, 'icon': Icons.cruelty_free},
+    <String, dynamic>{'title': 'Ludo King Arena', 'cat': 'Multi Player', 'tag': 'HOT', 'color': 0xFF1565C0, 'icon': Icons.casino},
+    <String, dynamic>{'title': 'Fruit Party', 'cat': 'Slot', 'tag': 'HOT', 'color': 0xFF558B2F, 'icon': Icons.local_florist},
+    <String, dynamic>{'title': 'Boxing Star', 'cat': 'Latest', 'tag': 'NEW', 'color': 0xFFB71C1C, 'icon': Icons.sports_mma},
+    <String, dynamic>{'title': 'Teen Patti', 'cat': 'Multi Player', 'tag': 'HOT', 'color': 0xFF00695C, 'icon': Icons.style},
   ];
 
   void _launchHtml5Game(Map<String, dynamic> game) {
@@ -49,7 +48,7 @@ class _Html5GameLobbyPageState extends State<Html5GameLobbyPage> {
               const SizedBox(height: 12),
               Wrap(
                 spacing: 6,
-                children: <int>[100, 500, 1000].map((amt) => ChoiceChip(
+                children: <int>.map((amt) => ChoiceChip(
                   label: Text('$amt Coins'),
                   selected: bet == amt,
                   onSelected: (_) => setD(() => bet = amt),
@@ -74,7 +73,7 @@ class _Html5GameLobbyPageState extends State<Html5GameLobbyPage> {
                     }
                   });
                   widget.onBalanceChanged();
-                  setD(() => statusMsg = won ? '🎉 YOU WON +${bet * 2} Virtual Coins!' : 'Try again! -${bet} Coins');
+                  setD(() => statusMsg = won ? '🎉 YOU WON +${bet * 2} Virtual Coins!' : 'Try again! -$bet Coins');
                 },
                 child: const Text('Play Round', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
               ),
@@ -108,7 +107,25 @@ class _Html5GameLobbyPageState extends State<Html5GameLobbyPage> {
         ],
       ),
       body: Column(children: <Widget>[
-        ComplianceAndServerGuard.playStoreComplianceBanner(),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.amber.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.amber.withOpacity(0.5)),
+          ),
+          child: const Row(children: <Widget>[
+            Icon(Icons.verified_user, color: Colors.amber, size: 18),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Entertainment Only: In-app Coins & Points are virtual items for voice room gifts and casual games.',
+                style: TextStyle(fontSize: 11, color: Colors.white70),
+              ),
+            ),
+          ]),
+        ),
         SizedBox(
           height: 46,
           child: ListView.builder(
@@ -187,4 +204,3 @@ class _Html5GameLobbyPageState extends State<Html5GameLobbyPage> {
     );
   }
 }
-
