@@ -10,6 +10,7 @@ import 'voice_cloud_service.dart';
 import 'leaderboard_cloud_ui.dart';
 import 'pro_growth_features.dart';
 import 'html5_game_lobby.dart';
+import 'usdt_global_cashout.dart';
 
 void main() => runApp(const EthioVoiceApp());
 class AppState {
@@ -402,6 +403,11 @@ IconButton(
     backgroundColor: Colors.transparent,
     builder: (_) => ProGrowthHubSheet(roomTitle: 'Ethio-Voice', onChanged: widget.onUpd),
   ),
+),
+IconButton(
+  icon: const Icon(Icons.currency_exchange, color: Colors.tealAccent),
+  tooltip: 'Global USDT & Agency Payout',
+  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => UsdtGlobalCashoutPage(onUpdated: widget.onUpd))),
 ),
 
           IconButton(icon: const Icon(Icons.assignment_turned_in, color: Colors.tealAccent), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskCenterPage(onUpd: widget.onUpd)))),
