@@ -72,7 +72,7 @@ class _Html5GameLobbyPageState extends State<Html5GameLobbyPage> {
               const SizedBox(height: 12),
               Wrap(
                 spacing: 6,
-                children: <int>.map((amt) => ChoiceChip(
+                children: List<int>.of(<int>{50, 100, 500, 1000}).map((amt) => ChoiceChip(
                   label: Text('$amt Coins'),
                   selected: bet == amt,
                   onSelected: (_) => setD(() => bet = amt),
@@ -168,6 +168,7 @@ class _Html5GameLobbyPageState extends State<Html5GameLobbyPage> {
                   selected: active,
                   onSelected: (_) => setState(() => _selectedCat = cat),
                 ),
+              );
             },
           ),
         ),
