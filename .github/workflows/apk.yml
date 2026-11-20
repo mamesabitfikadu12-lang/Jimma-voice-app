@@ -7,6 +7,9 @@ on:
       - master
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -82,9 +85,9 @@ jobs:
           zip -d build/app/outputs/bundle/release/app-release.aab "META-INF/*" || true
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ../voice_et_release.jks -storepass VoiceET2026 -keypass VoiceET2026 build/app/outputs/bundle/release/app-release.aab voiceet
 
-      - name: Upload Play Store AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: ethio-voice-playstore-release
-          retention-days: 1
-          path: jimma_voice_app/build/app/outputs/bundle/release/app-release.aab
+      - name: Publish Play Store AAB to GitHub Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete v3.0.1 -y || true
+          gh release create v3.0.1 jimma_voice_app/build/app/outputs/bundle/release/app-release.aab --title "Voice Chat ET v3.0.1 (Version 4)" --notes "Play Store Release AAB"
