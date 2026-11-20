@@ -95,11 +95,15 @@ class _AuthGatePageState extends State<AuthGatePage> {
   final _refCtrl = TextEditingController();
   bool _hidePass = true;
 
-  void _applyUser(Map<String, dynamic> u) {
+    void _applyUser(Map<String, dynamic> u) {
+    final String rawUid = (u['uid'] ?? '').toString();
+    final String freshUid = (rawUid.isEmpty || rawUid == '1000001' || rawUid == '1000002')
+        ? '${Random().nextInt(8999999) + 1000000}'
+        : rawUid;
     AppState.userName = (u['name'] ?? 'User').toString();
-    AppState.userId = (u['uid'] ?? '1000002').toString();
+    AppState.userId = freshUid;
     AppState.userPhone = (u['contact'] ?? '').toString();
-    AppState.coins = (u['coins'] as num?)?.toInt() ?? 1000;
+    AppState.coins = (u['coins'] as num?)?.toInt() ?? 0;
     AppState.points = (u['points'] as num?)?.toDouble() ?? 0.0;
     AppState.vipLevel = (u['vipLevel'] as num?)?.toInt() ?? 0;
     AppState.hostLv = (u['hostLv'] as num?)?.toInt() ?? 1;
@@ -108,6 +112,7 @@ class _AuthGatePageState extends State<AuthGatePage> {
     AppState.isCoinSeller = u['isCoinSeller'] == true;
     AppState.isLoggedIn = true;
   }
+
 
   Future<void> _submit() async {
     final phone = _phoneCtrl.text.trim().toLowerCase();
