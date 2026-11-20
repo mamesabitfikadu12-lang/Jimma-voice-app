@@ -29,13 +29,14 @@ jobs:
         run: |
           cd jimma_voice_app
           flutter create --org com.jimmavoice --project-name app .
+          for d in android/app/src/main/res/mipmap-*; do cp ../voice_et_icon_512.png "$d/ic_launcher.png" 2>/dev/null || true; done
           mkdir -p assets/sounds
-          python3 -c 'import wave,struct,math; make=lambda p,fs,d: (w:=wave.open(p,"w"),w.setnchannels(1),w.setsampwidth(2),w.setframerate(22050),w.writeframes(b"".join(struct.pack("<h",int(16000*math.sin(2*math.pi*fs[int(i*len(fs)/(22050*d))]*i/22050)*(1-i/(22050*d)))) for i in range(int(22050*d)))),w.close()); make("assets/sounds/coin.wav",[988,1319],0.18); make("assets/sounds/gift.wav",[523,659,784,1047],0.42); make("assets/sounds/win.wav",[523,659,784,1047,1319],0.55); make("assets/sounds/notify.wav",[880],0.12)'
+          python3 -c 'import wave,struct,math; make=lambda p,fs,d: (w:=wave.open(p,"w"),w.setnchannels(1),w.setsampwidth(2),w.setframerate(22050),w.writeframes(b"".join(struct.pack("<h",int(16000*math.sin(2*math.pi*fs[int(i*len(fs)/(22050*d))]*i/22050)*(1-i/(22050*d)))) for i in range(int(22050*d)))),w.close()); make("assets/sounds/coin.wav",,0.18); make("assets/sounds/gift.wav",,0.42); make("assets/sounds/win.wav",,0.55); make("assets/sounds/notify.wav",,0.12)'
           cat << 'EOF' > pubspec.yaml
           name: jimma_voice_app
           description: Voice Chat ET Official App
           publish_to: 'none'
-          version: 3.0.0+3
+          version: 3.0.1+4
           environment:
             sdk: '>=3.4.0 <4.0.0'
           dependencies:
