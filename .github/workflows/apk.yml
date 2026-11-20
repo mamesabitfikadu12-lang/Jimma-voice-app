@@ -1,4 +1,4 @@
-name: Build Ethio-Voice Android APK & Play Store AAB
+name: Build Ethio Voice Android APK & Play Store AAB
 
 on:
   push:
@@ -28,12 +28,12 @@ jobs:
       - name: Configure App Name, ZegoVoice, Audio Assets & Build
         run: |
           cd jimma_voice_app
-          flutter create --org com.ethiovoice --project-name jimma_voice_app .
+          flutter create --org com.jimmavoice --project-name app .
           mkdir -p assets/sounds
-          python3 -c 'import wave,struct,math; make=lambda p,fs,d: (w:=wave.open(p,"w"),w.setnchannels(1),w.setsampwidth(2),w.setframerate(22050),tuple(w.writeframes(struct.pack("<h",int(28000*math.sin(2*math.pi*f*i/22050)*(1-i/(22050*d))))) for f in fs for i in range(int(22050*d))),w.close()); make("assets/sounds/spin.wav",(520,680,840),0.07); make("assets/sounds/win.wav",(523,659,784,1047),0.14); make("assets/sounds/bigwin.wav",(440,554,659,880,1108),0.18); make("assets/sounds/jackpot.wav",(523,659,784,1047,1318,1568),0.22)'
+          python3 -c 'import wave,struct,math; make=lambda p,fs,d: (w:=wave.open(p,"w"),w.setnchannels(1),w.setsampwidth(2),w.setframerate(22050),w.writeframes(b"".join(struct.pack("<h",int(16000*math.sin(2*math.pi*fs[int(i*len(fs)/(22050*d))]*i/22050)*(1-i/(22050*d)))) for i in range(int(22050*d)))),w.close()); make("assets/sounds/coin.wav",[988,1319],0.18); make("assets/sounds/gift.wav",[523,659,784,1047],0.42); make("assets/sounds/win.wav",[523,659,784,1047,1319],0.55); make("assets/sounds/notify.wav",[880],0.12)'
           cat << 'EOF' > pubspec.yaml
           name: jimma_voice_app
-          description: Jimma Voice Chat Family Official App
+          description: Voice Chat ET Official App
           publish_to: 'none'
           version: 3.0.0+3
           environment:
@@ -53,12 +53,15 @@ jobs:
             assets:
               - assets/sounds/
           EOF
-          sed -i 's/<application/<uses-permission android:name="android.permission.RECORD_AUDIO" \/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" \/>\n    <uses-permission android:name="android.permission.INTERNET" \/>\n    <application/' android/app/src/main/AndroidManifest.xml
+          sed -i 's/android:label="[^"]*"/android:label="Voice Chat ET"/' android/app/src/main/AndroidManifest.xml
+          sed -i 's/<application/<uses-permission android:name="android.permission.RECORD_AUDIO" \/>\n    <uses-permission android:name="android.permission.INTERNET" \/>\n    <application/' android/app/src/main/AndroidManifest.xml
           sed -i 's/android {/android {\n    lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }/' android/app/build.gradle.kts
           flutter pub get
-          find ~/.pub-cache -name "build.gradle" -exec sed -i 's/compileSdkVersion 31/compileSdkVersion 35/g; s/compileSdk 31/compileSdk 35/g' {} +
+          find ~/.pub-cache -name "build.gradle" -exec sed -i 's/compileSdkVersion 31/compileSdkVersion 35/g; s/compileSdk = 31/compileSdk = 35/g' {} + || true
           flutter build apk --release
           flutter build appbundle --release
+          zip -d build/app/outputs/bundle/release/app-release.aab "META-INF/*" || true
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ../voice_et_release.jks -storepass VoiceET2026 -keypass VoiceET2026 build/app/outputs/bundle/release/app-release.aab voiceet
 
       - name: Upload APK & Play Store AAB
         uses: actions/upload-artifact@v4
