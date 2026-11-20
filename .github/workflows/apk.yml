@@ -78,15 +78,13 @@ jobs:
           sed -i 's/android {/android {\n    lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }/' android/app/build.gradle.kts
           flutter pub get
           find ~/.pub-cache -name "build.gradle" -exec sed -i 's/compileSdkVersion 31/compileSdkVersion 35/g; s/compileSdk = 31/compileSdk = 35/g' {} + || true
-          flutter build apk --release
           flutter build appbundle --release
           zip -d build/app/outputs/bundle/release/app-release.aab "META-INF/*" || true
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ../voice_et_release.jks -storepass VoiceET2026 -keypass VoiceET2026 build/app/outputs/bundle/release/app-release.aab voiceet
 
-      - name: Upload APK & Play Store AAB
+      - name: Upload Play Store AAB
         uses: actions/upload-artifact@v4
         with:
           name: ethio-voice-playstore-release
-          path: |
-            jimma_voice_app/build/app/outputs/flutter-apk/app-release.apk
-            jimma_voice_app/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 1
+          path: jimma_voice_app/build/app/outputs/bundle/release/app-release.aab
