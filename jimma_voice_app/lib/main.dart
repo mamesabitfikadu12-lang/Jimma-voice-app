@@ -95,7 +95,7 @@ class _AuthGatePageState extends State<AuthGatePage> {
   final _refCtrl = TextEditingController();
   bool _hidePass = true;
 
-    void _applyUser(Map<String, dynamic> u) {
+      void _applyUser(Map<String, dynamic> u) {
     final String rawUid = (u['uid'] ?? '').toString();
     final String freshUid = (rawUid.isEmpty || rawUid == '1000001' || rawUid == '1000002')
         ? '${Random().nextInt(8999999) + 1000000}'
@@ -112,7 +112,6 @@ class _AuthGatePageState extends State<AuthGatePage> {
     AppState.isCoinSeller = u['isCoinSeller'] == true;
     AppState.isLoggedIn = true;
   }
-
 
   Future<void> _submit() async {
     final phone = _phoneCtrl.text.trim().toLowerCase();
