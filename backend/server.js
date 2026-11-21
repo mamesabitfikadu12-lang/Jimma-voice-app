@@ -69,41 +69,6 @@ function calculateCoinsFromUsdt(paidUsdt) {
 
 const insecureAgent = new https.Agent({ rejectUnauthorized: false });
 
-async function verifyTelebirrReceipt(txId, expectedEtb) {
-  const cleanId = txId.trim().toUpperCase();
-  const url = `https://ethiotelecom.et{cleanId}`;
-  const res = await axios.get(url, { timeout: 15000, httpsAgent: insecureAgent });
-  const html = String(res.data || '');
-
-  if (!html.includes('919108311') && !html.toUpperCase().includes(ACCOUNTS.ownerName)) {
-    throw new Error('This receipt was not sent to Telebirr +251919108311.');
-  }
-
-  const dateMatch =
-    html.match(/(\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}:\d{2})/) ||
-    html.match(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
-  if (dateMatch) {
-    const rawDate = dateMatch[1];
-    let ts = Date.parse(rawDate);
-    if (Number.isNaN(ts) && /^\d{2}-\d{2}-\d{4}/.test(rawDate)) {
-      const [dPart, tPart] = rawDate.split(/\s+/);
-      const [dd, mm, yyyy] = dPart.split('-');
-      ts = Date.parse(`${yyyy}-${mm}-${dd}T${tPart}+03:00`);
-    }
-    ensureWithin24Hours(ts);
-  }
-
-  const amountMatch =
-    html.match(/([0-9,]+\.[0-9]{2})\s*Birr/i) ||
-    html.match(/Settled Amount[\s\S]{0,120}?([0-9,]+\.[0-9]{2})/i);
-  const paidAmount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : expectedEtb;
-
-  if (paidAmount < expectedEtb - 2) {
-    throw new Error(`Paid amount (${paidAmount} ETB) is less than the package price (${expectedEtb} ETB).`);
-  }
-  return paidAmount;
-}
-
 async function verifyCbeReceipt(txId, expectedEtb) {
   const cleanId = txId.trim().toUpperCase();
   const fullId = cleanId.endsWith('60937') ? cleanId : `${cleanId}60937`;
@@ -121,7 +86,7 @@ async function verifyCbeReceipt(txId, expectedEtb) {
 
   const cbeDate = text.match(/(\d{1,2}\/\d{1,2}\/\d{4},?\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)?)/);
   if (cbeDate) {
-    ensureWithin24Hours(Date.parse(cbeDate[1]));
+    ensureWithin24Hours(Date.parse(cbeDate));
   }
 
   return expectedEtb;
@@ -165,8 +130,8 @@ async function verifyUsdtTrc20Tx(txHash, expectedUsdt) {
 app.get('/', (req, res) => {
   res.json({
     status: 'Voice Chat ET Secure Automatic Verifier Active',
-    autoMethods: ['Telebirr', 'CBE', 'USDT (TRC20)'],
-    manualApprovalMethods: ['Awash Bank', 'Dashen Bank']
+    autoMethods: ['CBE', 'USDT (TRC20)'],
+    manualApprovalMethods: ['Telebirr', 'Awash Bank', 'Dashen Bank']
   });
 });
 
@@ -199,19 +164,15 @@ app.post('/api/verify-payment', async (req, res) => {
       const paidUsdt = await verifyUsdtTrc20Tx(transactionId, Number(expectedUsdt) || 0);
       if (!coinsToCredit) coinsToCredit = calculateCoinsFromUsdt(paidUsdt);
       summaryText = `${paidUsdt.toFixed(2)} USDT (TRC20)`;
-    } else if (m.includes('telebirr')) {
-      const paidEtb = await verifyTelebirrReceipt(transactionId, Number(expectedEtb) || 150);
-      if (!coinsToCredit) coinsToCredit = calculateCoinsFromEtb(paidEtb);
-      summaryText = `${paidEtb} ETB (Telebirr)`;
     } else if (m.includes('cbe')) {
       const paidEtb = await verifyCbeReceipt(transactionId, Number(expectedEtb) || 150);
       if (!coinsToCredit) coinsToCredit = calculateCoinsFromEtb(paidEtb);
       summaryText = `${paidEtb} ETB (CBE)`;
-    } else if (m.includes('awash') || m.includes('dashen')) {
+    } else if (m.includes('telebirr') || m.includes('awash') || m.includes('dashen')) {
       return res.status(403).json({
         success: false,
         requiresManualApproval: true,
-        message: 'Awash and Dashen Bank payments require Admin approval. Please send your receipt on Telegram (+251919108311).'
+        message: 'Telebirr, Awash, and Dashen payments require Admin approval. Please send your receipt on Telegram (+251919108311) with your User ID.'
       });
     } else {
       return res.status(400).json({ success: false, message: 'Please select a valid payment method.' });
