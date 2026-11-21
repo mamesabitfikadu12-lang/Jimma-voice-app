@@ -51,7 +51,7 @@ function ensureWithin24Hours(parsedDateMs) {
   if (!parsedDateMs || Number.isNaN(parsedDateMs)) return;
   const age = Date.now() - parsedDateMs;
   if (age > MAX_RECEIPT_AGE_MS) {
-    throw new Error('Nagaheen kun sa’aatii 24 ol waan tureef hin fudhatamne! Nagahee haaraa galchi.');
+    throw new Error('This receipt is older than 24 hours. Please enter a recent Transaction ID.');
   }
 }
 
@@ -76,10 +76,12 @@ async function verifyTelebirrReceipt(txId, expectedEtb) {
   const html = String(res.data || '');
 
   if (!html.includes('919108311') && !html.toUpperCase().includes(ACCOUNTS.ownerName)) {
-    throw new Error('Nagaheen kun gara Telebirr +251919108311 hin ergamne.');
+    throw new Error('This receipt was not sent to Telebirr +251919108311.');
   }
 
-  const dateMatch = html.match(/(\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}:\d{2})/) || html.match(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
+  const dateMatch =
+    html.match(/(\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}:\d{2})/) ||
+    html.match(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
   if (dateMatch) {
     const rawDate = dateMatch[1];
     let ts = Date.parse(rawDate);
@@ -97,7 +99,7 @@ async function verifyTelebirrReceipt(txId, expectedEtb) {
   const paidAmount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : expectedEtb;
 
   if (paidAmount < expectedEtb - 2) {
-    throw new Error(`Qarshiin kaffalame (${paidAmount} ETB) gatii paakeejii (${expectedEtb} ETB) gadi.`);
+    throw new Error(`Paid amount (${paidAmount} ETB) is less than the package price (${expectedEtb} ETB).`);
   }
   return paidAmount;
 }
@@ -114,7 +116,7 @@ async function verifyCbeReceipt(txId, expectedEtb) {
 
   const text = Buffer.from(res.data).toString('latin1').toUpperCase();
   if (!text.includes('60937') && !text.includes(ACCOUNTS.ownerName)) {
-    throw new Error('Nagaheen CBE kun gara herrega 1000273060937 hin ergamne.');
+    throw new Error('This CBE receipt was not sent to account 1000273060937.');
   }
 
   const cbeDate = text.match(/(\d{1,2}\/\d{1,2}\/\d{4},?\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)?)/);
@@ -132,7 +134,7 @@ async function verifyUsdtTrc20Tx(txHash, expectedUsdt) {
   const data = res.data || {};
 
   if (!data.confirmed && data.contractRet !== 'SUCCESS') {
-    throw new Error('Kaffaltiin USDT kun TRON network irratti hin mirkanoofne (Pending).');
+    throw new Error('This USDT transaction is not yet confirmed on the TRON network.');
   }
 
   if (data.timestamp) {
@@ -147,14 +149,14 @@ async function verifyUsdtTrc20Tx(txHash, expectedUsdt) {
   );
 
   if (!validTransfer) {
-    throw new Error(`USDT kun gara teessoo ${ACCOUNTS.usdtTrc20} (TRC20) hin ergamne.`);
+    throw new Error(`USDT was not sent to ${ACCOUNTS.usdtTrc20} (TRC20).`);
   }
 
   const decimals = Number(validTransfer.decimals || 6);
   const paidUsdt = Number(validTransfer.amount_str || 0) / Math.pow(10, decimals);
 
   if (expectedUsdt && paidUsdt < expectedUsdt - 0.1) {
-    throw new Error(`Hangi USDT ergame (${paidUsdt} USDT) gatii paakeejii (${expectedUsdt} USDT) gadi.`);
+    throw new Error(`Sent amount (${paidUsdt} USDT) is less than the package price (${expectedUsdt} USDT).`);
   }
 
   return paidUsdt;
@@ -174,7 +176,7 @@ app.post('/api/verify-payment', async (req, res) => {
   if (!userId || !method || !transactionId) {
     return res.status(400).json({
       success: false,
-      message: 'User ID, Baankii/USDT fi Transaction ID (TxID) guuti.'
+      message: 'Please enter User ID, Payment Method, and Transaction ID (TxID).'
     });
   }
 
@@ -184,7 +186,7 @@ app.post('/api/verify-payment', async (req, res) => {
   if (usedTx[txKey]) {
     return res.status(409).json({
       success: false,
-      message: 'Transaction ID / TxID kun kanaan dura fayyadamameera! Nagahee haaraa galchi.'
+      message: 'This Transaction ID / TxID has already been used. Please enter a new receipt.'
     });
   }
 
@@ -209,10 +211,10 @@ app.post('/api/verify-payment', async (req, res) => {
       return res.status(403).json({
         success: false,
         requiresManualApproval: true,
-        message: 'Kaffaltiin Awash fi Dashen Bank mirkaneessaa Admin barbaachisa — nagahee keessan Telegram (+251919108311) irratti ergaa.'
+        message: 'Awash and Dashen Bank payments require Admin approval. Please send your receipt on Telegram (+251919108311).'
       });
     } else {
-      return res.status(400).json({ success: false, message: 'Kaffaltii sirrii filadhu.' });
+      return res.status(400).json({ success: false, message: 'Please select a valid payment method.' });
     }
 
     usedTx[txKey] = {
@@ -228,12 +230,12 @@ app.post('/api/verify-payment', async (req, res) => {
     return res.json({
       success: true,
       coinsAdded: coinsToCredit,
-      message: `Kaffaltiin (${summaryText}) mirkanaa'eera! Kooyiniin ${coinsToCredit} ofumaan siif dabaleera.`
+      message: `Payment (${summaryText}) verified! ${coinsToCredit} coins have been added to your account.`
     });
   } catch (err) {
     return res.status(400).json({
       success: false,
-      message: err.message || 'Nagahee mirkaneessuun hin danda’amne. Lakkoofsa Transaction ID / TxID sirriitti ilaali.'
+      message: err.message || 'Verification failed. Please check your Transaction ID / TxID and try again.'
     });
   }
 });
