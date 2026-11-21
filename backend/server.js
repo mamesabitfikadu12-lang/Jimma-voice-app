@@ -45,6 +45,16 @@ const PACKAGES = [
   { coins: 500000, etb: 60000, usdt: 400.0 }
 ];
 
+const MAX_RECEIPT_AGE_MS = 24 * 60 * 60 * 1000;
+
+function ensureWithin24Hours(parsedDateMs) {
+  if (!parsedDateMs || Number.isNaN(parsedDateMs)) return;
+  const age = Date.now() - parsedDateMs;
+  if (age > MAX_RECEIPT_AGE_MS) {
+    throw new Error('Nagaheen kun sa’aatii 24 ol waan tureef hin fudhatamne! Nagahee haaraa galchi.');
+  }
+}
+
 function calculateCoinsFromEtb(paidEtb) {
   const matched = PACKAGES.find(p => Math.abs(paidEtb - p.etb) <= 5);
   if (matched) return matched.coins;
@@ -67,6 +77,18 @@ async function verifyTelebirrReceipt(txId, expectedEtb) {
 
   if (!html.includes('919108311') && !html.toUpperCase().includes(ACCOUNTS.ownerName)) {
     throw new Error('Nagaheen kun gara Telebirr +251919108311 hin ergamne.');
+  }
+
+  const dateMatch = html.match(/(\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}:\d{2})/) || html.match(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
+  if (dateMatch) {
+    const rawDate = dateMatch[1];
+    let ts = Date.parse(rawDate);
+    if (Number.isNaN(ts) && /^\d{2}-\d{2}-\d{4}/.test(rawDate)) {
+      const [dPart, tPart] = rawDate.split(/\s+/);
+      const [dd, mm, yyyy] = dPart.split('-');
+      ts = Date.parse(`${yyyy}-${mm}-${dd}T${tPart}+03:00`);
+    }
+    ensureWithin24Hours(ts);
   }
 
   const amountMatch =
@@ -94,6 +116,12 @@ async function verifyCbeReceipt(txId, expectedEtb) {
   if (!text.includes('60937') && !text.includes(ACCOUNTS.ownerName)) {
     throw new Error('Nagaheen CBE kun gara herrega 1000273060937 hin ergamne.');
   }
+
+  const cbeDate = text.match(/(\d{1,2}\/\d{1,2}\/\d{4},?\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)?)/);
+  if (cbeDate) {
+    ensureWithin24Hours(Date.parse(cbeDate[1]));
+  }
+
   return expectedEtb;
 }
 
@@ -105,6 +133,10 @@ async function verifyUsdtTrc20Tx(txHash, expectedUsdt) {
 
   if (!data.confirmed && data.contractRet !== 'SUCCESS') {
     throw new Error('Kaffaltiin USDT kun TRON network irratti hin mirkanoofne (Pending).');
+  }
+
+  if (data.timestamp) {
+    ensureWithin24Hours(Number(data.timestamp));
   }
 
   const transfers = data.trc20TransferInfo || [];
@@ -130,8 +162,9 @@ async function verifyUsdtTrc20Tx(txHash, expectedUsdt) {
 
 app.get('/', (req, res) => {
   res.json({
-    status: 'Voice Chat ET Automatic Payment Verifier Active',
-    accounts: ACCOUNTS
+    status: 'Voice Chat ET Secure Automatic Verifier Active',
+    autoMethods: ['Telebirr', 'CBE', 'USDT (TRC20)'],
+    manualApprovalMethods: ['Awash Bank', 'Dashen Bank']
   });
 });
 
@@ -173,12 +206,11 @@ app.post('/api/verify-payment', async (req, res) => {
       if (!coinsToCredit) coinsToCredit = calculateCoinsFromEtb(paidEtb);
       summaryText = `${paidEtb} ETB (CBE)`;
     } else if (m.includes('awash') || m.includes('dashen')) {
-      if (transactionId.trim().length < 6) {
-        return res.status(400).json({ success: false, message: 'Transaction ID sirrii galchi.' });
-      }
-      const paidEtb = Number(expectedEtb) || 150;
-      if (!coinsToCredit) coinsToCredit = calculateCoinsFromEtb(paidEtb);
-      summaryText = `${paidEtb} ETB (${method})`;
+      return res.status(403).json({
+        success: false,
+        requiresManualApproval: true,
+        message: 'Kaffaltiin Awash fi Dashen Bank mirkaneessaa Admin barbaachisa — nagahee keessan Telegram (+251919108311) irratti ergaa.'
+      });
     } else {
       return res.status(400).json({ success: false, message: 'Kaffaltii sirrii filadhu.' });
     }
@@ -207,5 +239,4 @@ app.post('/api/verify-payment', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Voice Chat ET Verifier running on port ${PORT}`));
-
+app.listen(PORT, () => console.log(`Voice Chat ET Secure Verifier running on port ${PORT}`));
