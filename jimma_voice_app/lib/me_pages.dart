@@ -602,58 +602,99 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
                     trailing: IconButton(icon: const Icon(Icons.copy, color: Colors.tealAccent), onPressed: () { Clipboard.setData(ClipboardData(text: _localBanks[_payMethod] ?? '')); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account / Address Copied!'))); }),
                   ),
                 ),
-                if (isCrypto) ...<Widget>[
-                  TextField(controller: _sellerHashCtrl, decoration: const InputDecoration(labelText: 'TronScan 64-char TxID Hash (Instant Auto-Release)')),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48)),
-                    onPressed: _verifyingUsdt ? null : () async {
-                      if (customCoins < 100000) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Min 100,000 Coins (\$10) required!'))); return; }
-                      setState(() => _verifyingUsdt = true);
-                      final ok = await TronVerifyHelper.verifyUsdtAuto(_sellerHashCtrl.text, usdNeeded);
-                      setState(() => _verifyingUsdt = false);
-                      if (ok) {
-                        setState(() { AppState.coins += customCoins; AppState.isCoinSeller = true; _sellerHashCtrl.clear(); });
-                        widget.onUpd();
-                        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('TronScan Confirmed! +$customCoins Coins Released Automatically!')));
-                      } else {
-                        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('USDT not found on TronScan or already used!')));
-                      }
-                    },
-                    child: Text(_verifyingUsdt ? 'Verifying on TronScan...' : 'Auto-Verify USDT & Release $customCoins Coins', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ] else ...<Widget>[
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final XFile? f = await _picker.pickImage(source: ImageSource.gallery);
-                      if (f != null) setState(() => _sellerProof = f.path);
-                    },
-                    icon: const Icon(Icons.upload_file, color: Colors.amber),
-                    label: Text(_sellerProof == null ? 'Upload ETB Bank Screenshot (Required)' : 'Screenshot Attached ✅'),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48)),
-                    onPressed: () {
-                      if (customCoins < 10000 || _sellerProof == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('Min 10,000 Coins (180 ETB) & Bank Screenshot required!')));
+                            TextField(
+              controller: _sellerHashCtrl,
+              decoration: InputDecoration(
+                labelText: isCrypto
+                    ? 'TronScan 64-char TxID / Hash'
+                    : 'Transaction ID / Ref (Telebirr / CBE / Bank)',
+                prefixIcon: const Icon(Icons.receipt_long, color: Colors.tealAccent),
+              ),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.tealAccent,
+                foregroundColor: Colors.black,
+                minimumSize: const Size(double.infinity, 48),
+              ),
+              onPressed: _verifyingUsdt
+                  ? null
+                  : () async {
+                      final tx = _sellerHashCtrl.text.trim();
+                      if (tx.length < 5) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            backgroundColor: Colors.red,
+                            content: Text('Maaloo Transaction ID / TxID sirrii galchi.'),
+                          ),
+                        );
                         return;
                       }
-                      AppState.pendingRecharges.insert(0, {
-                        'uid': AppState.userId,
-                        'name': '${AppState.userName} (Agency/Seller)',
-                        'coins': '$customCoins',
-                        'paid': '$customPrice ($_payMethod)',
-                        'proof': _sellerProof!,
-                        'time': DateTime.now().toString().substring(0, 19),
-                      });
-                      setState(() { _sellerProof = null; AppState.isCoinSeller = true; });
-                      widget.onUpd();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.green, content: Text('ETB Receipt sent! Admin will confirm receipt & release Coins.')));
+                      setState(() => _verifyingUsdt = true);
+                      try {
+                        final res = await http
+                            .post(
+                              Uri.parse('https://onrender.com'),
+                              headers: {'Content-Type': 'application/json'},
+                              body: jsonEncode({
+                                'userId': AppState.userId,
+                                'method': _payMethod,
+                                'transactionId': tx,
+                                'expectedEtb': ((customCoins / 10000) * 180).round(),
+                                'expectedUsdt': usdNeeded,
+                                'requestedCoins': customCoins,
+                              }),
+                            )
+                            .timeout(const Duration(seconds: 45));
+                        final data = jsonDecode(res.body);
+                        if (mounted) setState(() => _verifyingUsdt = false);
+                        if (res.statusCode == 200 && data['success'] == true) {
+                          final int added = (data['coinsAdded'] as num?)?.toInt() ?? customCoins;
+                          setState(() {
+                            AppState.coins += added;
+                            AppState.isCoinSeller = true;
+                            _sellerHashCtrl.clear();
+                          });
+                          widget.onUpd();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                backgroundColor: Colors.green,
+                                content: Text(data['message'] ?? 'Kaffaltiin mirkanaa’eera! +$added Coins'),
+                              ),
+                            );
+                          }
+                        } else {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                backgroundColor: Colors.red,
+                                content: Text(data['message'] ?? 'Nagaheen hin mirkanoofne.'),
+                              ),
+                            );
+                          }
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          setState(() => _verifyingUsdt = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              backgroundColor: Colors.orange,
+                              content: Text('Serveriin ka’aa jira, sekondii 15 booda irra deebi’ii tuqi.'),
+                            ),
+                          );
+                        }
+                      }
                     },
-                    child: Text('Submit ETB Screenshot ($customCoins Coins • $customPrice)', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ],
+              child: Text(
+                _verifyingUsdt
+                    ? 'Mirkaneessaa jira (Verifying)...'
+                    : 'Auto-Verify & Get $customCoins Coins',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+
               })),
 
               ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
