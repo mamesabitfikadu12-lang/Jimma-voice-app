@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'main.dart';
 
 class GamesTab extends StatefulWidget {
@@ -16,9 +17,15 @@ class GamesTab extends StatefulWidget {
 
 class _GamesTabState extends State<GamesTab> {
   String _cat = 'Hot';
-  final _cats = const ['Latest', 'Hot', 'Slot', 'Fishing', 'Multi Player'];
+    final _cats = const ['3D Real', 'Hot', 'Latest', 'Slot', 'Fishing', 'Multi Player'];
 
-  final List<Map<String, dynamic>> _games = const [
+  final List<Map<String, dynamic>> _games = const [    
+    {'name': '3D Pool 8-Ball', 'cat': '3D Real', 'tag': '3D', 'mode': 'web3d', 'url': 'https://famobi.com', 'c1': 0xFF0284C7, 'c2': 0xFF0F172A, 'ic': '🎱', 'sub': '🏆', 'syms': ['WILD', 'SCATTER', '🎱', '🏆']},
+    {'name': '3D Car Racing', 'cat': '3D Real', 'tag': '3D', 'mode': 'web3d', 'url': 'https://famobi.com', 'c1': 0xFFDC2626, 'c2': 0xFF1E293B, 'ic': '🏎️', 'sub': '🔥', 'syms': ['WILD', 'SCATTER', '🏎️', '🔥']},
+    {'name': '3D Ludo Club', 'cat': '3D Real', 'tag': '3D', 'mode': 'web3d', 'url': 'https://famobi.com', 'c1': 0xFF16A34A, 'c2': 0xFF1E3A8A, 'ic': '🎲', 'sub': '👑', 'syms': ['WILD', 'SCATTER', '🎲', '👑']},
+    {'name': '3D Fruit Ninja', 'cat': '3D Real', 'tag': '3D', 'mode': 'web3d', 'url': 'https://famobi.com', 'c1': 0xFFEA580C, 'c2': 0xFF7E22CE, 'ic': '🍉', 'sub': '⚔️', 'syms': ['WILD', 'SCATTER', '🍉', '⚔️']},
+    {'name': '3D Archery', 'cat': '3D Real', 'tag': '3D', 'mode': 'web3d', 'url': 'https://famobi.com', 'c1': 0xFFD97706, 'c2': 0xFF065F46, 'ic': '🏹', 'sub': '🎯', 'syms': ['WILD', 'SCATTER', '🏹', '🎯']},
+    {'name': '3D Table Tennis', 'cat': '3D Real', 'tag': '3D', 'mode': 'web3d', 'url': 'https://famobi.com', 'c1': 0xFF2563EB, 'c2': 0xFF0F172A, 'ic': '🏓', 'sub': '🥇', 'syms': ['WILD', 'SCATTER', '🏓', '🥇']},         
     {'name': 'Jungle Hunt', 'cat': 'Hot', 'tag': 'HOT', 'mode': 'jungle', 'c1': 0xFFF59E0B, 'c2': 0xFF15803D, 'ic': '🦍', 'sub': '🦁', 'syms': ['WILD', 'SCATTER', '🦍', '🦁', '🐊', '🦏', 'A', 'K', 'Q']},
     {'name': 'Ocean Hunt', 'cat': 'Fishing', 'tag': 'HOT', 'mode': 'ocean', 'c1': 0xFF7E22CE, 'c2': 0xFF0284C7, 'ic': '🦈', 'sub': '🐙', 'syms': ['WILD', 'SCATTER', '🦈', '🐡', '🐙', '🐢', '🦪', 'K', '10']},
     {'name': 'Royal Battle', 'cat': 'Multi Player', 'tag': 'HOT', 'mode': 'battle', 'c1': 0xFFDC2626, 'c2': 0xFF1D4ED8, 'ic': '👑', 'sub': '⚔️', 'syms': ['WILD', 'SCATTER', '♠️', '♥️', '♦️', '♣️', 'A', 'K', 'Q']},
@@ -45,7 +52,14 @@ class _GamesTabState extends State<GamesTab> {
     {'name': 'Teen Patti', 'cat': 'Multi Player', 'tag': 'HOT', 'mode': 'battle', 'c1': 0xFF0F766E, 'c2': 0xFFBE123C, 'ic': '🂡', 'sub': '💎', 'syms': ['WILD', 'SCATTER', '🂡', '🂱', '🃁', '👑', '💎', '🪙']},
   ];
 
-  void _openFullGame(Map<String, dynamic> g) {
+    void _openFullGame(Map<String, dynamic> g) {
+    if (g['mode'] == 'web3d') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => Real3DWebGameScreen(title: g['name'] as String, url: g['url'] as String)),
+      );
+      return;
+    }
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -945,4 +959,49 @@ class _ChatTabState extends State<ChatTab> {
   const MessagesTab({super.key, required super.onUpd});
 }
 
+}
+class Real3DWebGameScreen extends StatefulWidget {
+  final String title;
+  final String url;
+  const Real3DWebGameScreen({super.key, required this.title, required this.url});
+  @override
+  State<Real3DWebGameScreen> createState() => _Real3DWebGameScreenState();
+}
+
+class _Real3DWebGameScreenState extends State<Real3DWebGameScreen> {
+  late final WebViewController _webCtrl;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _webCtrl = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0xFF050811))
+      ..setNavigationDelegate(
+        NavigationDelegate(onPageFinished: (_) { if (mounted) setState(() => _loading = false); }),
+      )
+      ..loadRequest(Uri.parse(widget.url));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF050811),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0B2923),
+        title: Text('🎮 ${widget.title} (3D)'),
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: () => _webCtrl.reload()),
+        ],
+      ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _webCtrl),
+          if (_loading)
+            const Center(child: CircularProgressIndicator(color: Colors.amber)),
+        ],
+      ),
+    );
+  }
 }
