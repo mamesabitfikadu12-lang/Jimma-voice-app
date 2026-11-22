@@ -51,6 +51,7 @@ async function sbUpdate(table, query, patch) {
 }
 
 function mapUserOut(u) {
+    if (Array.isArray(u)) u = u.at(0) || {};
   return {
     uid: u.uid,
     name: u.name,
