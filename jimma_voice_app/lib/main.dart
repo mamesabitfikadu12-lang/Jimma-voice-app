@@ -11,8 +11,23 @@ import 'leaderboard_cloud_ui.dart';
 import 'pro_growth_features.dart';
 import 'html5_game_lobby.dart';
 import 'usdt_global_cashout.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(const EthioVoiceApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  if (prefs.getBool('logged_in') == true) {
+    AppState.isLoggedIn = true;
+    AppState.userName = prefs.getString('user_name') ?? AppState.userName;
+    AppState.userId = prefs.getString('user_id') ?? AppState.userId;
+    AppState.userPhone = prefs.getString('user_phone') ?? '';
+    AppState.coins = prefs.getInt('coins') ?? 0;
+    AppState.points = prefs.getDouble('points') ?? 0.0;
+    AppState.vipLevel = prefs.getInt('vip_level') ?? 0;
+  }
+  runApp(const EthioVoiceApp());
+}
+
 class AppState {
   static bool isLoggedIn = false;
   static String userName = 'Ethio_User_${Random().nextInt(900) + 100}';
@@ -70,7 +85,7 @@ class EthioVoiceApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'ኢትዮ-ድምጽ • Ethio-Voice',
+      title: 'Voice Chat ET',
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF0B1120),
         appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF0F172A), elevation: 0),
@@ -111,6 +126,16 @@ class _AuthGatePageState extends State<AuthGatePage> {
     AppState.isAgency = u['isAgency'] == true;
     AppState.isCoinSeller = u['isCoinSeller'] == true;
     AppState.isLoggedIn = true;
+     SharedPreferences.getInstance().then((p) {
+      p.setBool('logged_in', true);
+      p.setString('user_name', AppState.userName);
+      p.setString('user_id', AppState.userId);
+      p.setString('user_phone', AppState.userPhone);
+      p.setInt('coins', AppState.coins);
+      p.setDouble('points', AppState.points);
+      p.setInt('vip_level', AppState.vipLevel);
+    });
+
   }
 
   Future<void> _submit() async {
@@ -224,7 +249,7 @@ class _AuthGatePageState extends State<AuthGatePage> {
               child: Column(children: <Widget>[
                 const CircleAvatar(radius: 42, backgroundColor: Colors.amber, child: Icon(Icons.graphic_eq, size: 46, color: Colors.black)),
                 const SizedBox(height: 12),
-                const Text('ኢትዮ-ድምጽ • Ethio-Voice', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white)),
+            	  const Text('Voice Chat ET', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white)),
                 const Text('Live Voice Rooms • Cloud Sync • 36 HD Games', style: TextStyle(fontSize: 12, color: Colors.white70)),
                 const SizedBox(height: 22),
                 Container(
