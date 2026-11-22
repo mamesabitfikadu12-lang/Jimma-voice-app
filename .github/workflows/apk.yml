@@ -72,6 +72,8 @@ jobs:
             zego_express_engine: ^3.18.0
             permission_handler: ^11.3.1
             shared_preferences: ^2.3.2
+            webview_flutter: ^4.10.0
+
           flutter:
             uses-material-design: true
             assets:
