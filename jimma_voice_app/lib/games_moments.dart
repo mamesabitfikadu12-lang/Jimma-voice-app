@@ -706,7 +706,7 @@ class _MomentsTabState extends State<MomentsTab> {
                       'user': AppState.userName,
                       'tag': tag,
                       'text': c.text.trim(),
-                      'likes': 1,
+                      'likes': '1',
                       'img': imgPath ?? '',
                     });
                     setState(() {});
@@ -768,7 +768,7 @@ class _MomentsTabState extends State<MomentsTab> {
                         ),
                         if ((m['text'] ?? '').toString().isNotEmpty) ...[
                           const SizedBox(height: 8),
-                          Text(m['text']),
+                          Text((m['text'] ?? '').toString()),
                         ],
                         if (img.toString().isNotEmpty && !kIsWeb) ...[
                           const SizedBox(height: 8),
@@ -781,7 +781,8 @@ class _MomentsTabState extends State<MomentsTab> {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.favorite, color: Colors.redAccent),
-                              onPressed: () => setState(() => m['likes'] = (m['likes'] ?? 0) + 1),
+                              onPressed: () => setState(() => m['likes'] = '${(int.tryParse((m['likes'] ?? '0').toString()) ?? 0) + 1}'),
+
                             ),
                             Text('${m['likes'] ?? 0}'),
                           ],
@@ -873,7 +874,7 @@ class _ChatTabState extends State<ChatTab> {
                               if (m['type'] == 'image' && !kIsWeb)
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
-                                  child: Image.file(File(m['content']), width: 150, height: 120, fit: BoxFit.cover),
+                                  child:Image.file(File((m['content'] ?? '').toString()), width: 150, height: 120, fit: BoxFit.cover),
                                 )
                               else
                                 Text(m['content'] ?? ''),
@@ -940,5 +941,8 @@ class _ChatTabState extends State<ChatTab> {
         ),
       ),
     );
-  }
+  }class MessagesTab extends ChatTab {
+  const MessagesTab({super.key, required super.onUpd});
+}
+
 }
