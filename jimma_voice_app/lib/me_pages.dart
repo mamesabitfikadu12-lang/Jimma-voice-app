@@ -1,40 +1,35 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
-import 'task_settings_admin.dart';
 import 'main.dart';
+import 'games_moments.dart';
+import 'task_settings_admin.dart';
 
 class TronVerifyHelper {
-  static const String wallet = 'TVdr3JdbDZhXjfSGsUB9azNAnTbkHbUNcE';
-  static final Set<String> usedHashes = <String>{};
+  static const String wallet = 'TYdr3JdbDzhxjfsGeU3yazNAmTbkHBuNcE';
+  static const String usdtContract = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
 
-  static Future<bool> verifyUsdtAuto(String txHash, double expectedUsd) async {
-    final h = txHash.trim();
-    if (!RegExp(r'^[A-Fa-f0-9]{64}$').hasMatch(h)) return false;
-    if (usedHashes.contains(h.toLowerCase())) return false;
+  static Future<double?> fetchUsdtReceived(String txHash) async {
+    final clean = txHash.trim();
+    if (clean.length < 20) return null;
     try {
-      final res = await http.get(Uri.parse('https://tronscanapi.com')).timeout(const Duration(seconds: 10));
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final confirmed = data['confirmed'] == true;
-        final trc20 = data['trc20TransferInfo'] as List?;
-        if (confirmed && trc20 != null && trc20.isNotEmpty) {
-          final info = trc20.first;
-          final receiver = info['to_address']?.toString() ?? '';
-          final rawAmt = double.tryParse(info['amount_str']?.toString() ?? '0') ?? 0;
-          final usdtSent = rawAmt / 1000000.0;
-          if (receiver == wallet && usdtSent >= (expectedUsd - 0.5)) {
-            usedHashes.add(h.toLowerCase());
-            return true;
-          }
+      final url = Uri.parse('https://tronscanapi.com');
+      final res = await http.get(url).timeout(const Duration(seconds: 12));
+      if (res.statusCode != 200) return null;
+      final data = jsonDecode(res.body);
+      if (data['confirmed'] != true && data['contractRet'] != 'SUCCESS') return null;
+      final list = data['trc20TransferInfo'] as List?;
+      if (list == null) return null;
+      for (final item in list) {
+        if (item['to_address'] == wallet && item['contract_address'] == usdtContract) {
+          final raw = double.tryParse('${item['amount_str']}') ?? 0;
+          final dec = (item['decimals'] as num?)?.toInt() ?? 6;
+          return raw / 1000000.0;
         }
       }
     } catch (_) {}
-    return false;
+    return null;
   }
 }
 
@@ -46,387 +41,324 @@ class MeTab extends StatefulWidget {
 }
 
 class _MeTabState extends State<MeTab> {
-  String? _avatarPath;
-  final _picker = ImagePicker();
-
-  Future<void> _pickAvatar() async {
-    final XFile? f = await _picker.pickImage(source: ImageSource.gallery);
-    if (f != null) {
-      setState(() => _avatarPath = f.path);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile Photo Updated!')));
-    }
+  void _go(Widget page) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => page)).then((_) {
+      if (mounted) {
+        setState(() {});
+        widget.onUpd();
+      }
+    });
   }
 
-  void _editName() {
-    final c = TextEditingController(text: AppState.userName);
-    showDialog(context: context, builder: (_) => AlertDialog(
-      title: const Text('Edit Username'),
-      content: TextField(controller: c, decoration: const InputDecoration(labelText: 'Your Name')),
-      actions: List<Widget>.of({
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        ElevatedButton(onPressed: () {
-          if (c.text.trim().isNotEmpty && !AppState.hasProfanity(c.text)) {
-            setState(() => AppState.userName = c.text.trim());
-            widget.onUpd();
-            Navigator.pop(context);
-          }
-        }, child: const Text('Save')),
+  void _openWallet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (_) => _WalletSheet(onUpd: () {
+        setState(() {});
+        widget.onUpd();
       }),
-    ));
-  }
-
-    void _openAdmin() {
-    final c = TextEditingController();
-    showDialog(context: context, builder: (_) => AlertDialog(
-      title: const Text('System Verification'),
-      content: TextField(controller: c, obscureText: true, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Security Passcode')),
-      actions: List<Widget>.of({
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        ElevatedButton(onPressed: () {
-          if (c.text.trim() == '142730') {
-            Navigator.pop(context);
-            Navigator.push(context, MaterialPageRoute(builder: (_) => SuperAdminPanel(onUpd: () { setState(() {}); widget.onUpd(); })));
-          }
-        }, child: const Text('Verify')),
-      }),
-    ));
-  }
-
-
-  Widget _badge(String text, Color c1, Color c2, IconData ic) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(gradient: LinearGradient(colors: <Color>[c1, c2]), borderRadius: BorderRadius.circular(12)),
-      child: Row(mainAxisSize: MainAxisSize.min, children: List<Widget>.of({
-        Icon(ic, size: 12, color: Colors.white),
-        const SizedBox(width: 4),
-        Text(text, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
-      })),
     );
   }
 
-  Widget _gridBtn(IconData ic, Color col, String label, VoidCallback onTap) {
+  void _editProfile() {
+    final nameCtrl = TextEditingController(text: AppState.username);
+    final bioCtrl = TextEditingController(text: AppState.bio);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title: const Text('Edit Profile'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Username')),
+            const SizedBox(height: 10),
+            TextField(controller: bioCtrl, decoration: const InputDecoration(labelText: 'Bio')),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                if (nameCtrl.text.trim().isNotEmpty) AppState.username = nameCtrl.text.trim();
+                AppState.bio = bioCtrl.text.trim();
+              });
+              widget.onUpd();
+              Navigator.pop(ctx);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _gridBtn(IconData icon, Color color, String label, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: List<Widget>.of({
-        CircleAvatar(radius: 20, backgroundColor: col.withOpacity(0.18), child: Icon(ic, color: col, size: 22)),
-        const SizedBox(height: 6),
-        Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500)),
-      })),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 26),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    void go(Widget p) => Navigator.push(context, MaterialPageRoute(builder: (_) => p));
-    void upd() { setState(() {}); widget.onUpd(); }
-
     return Scaffold(
-      appBar: AppBar(title: const Text('ኢትዮ-ድምጽ • My Profile')),
-      body: ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
-        GestureDetector(
-          onLongPress: _openAdmin,
-          child: Container(
+      appBar: AppBar(
+        title: const Text('Me'),
+        actions: [
+          IconButton(icon: const Icon(Icons.edit), onPressed: _editProfile),
+          IconButton(icon: const Icon(Icons.settings), onPressed: () => _go(AppSettingsPage())),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(14),
+        children: [
+          Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: <Color>[Color(0xFF064E3B), Color(0xFF1E1B4B), Color(0xFF0F172A)]),
+              gradient: const LinearGradient(colors: [Color(0xFF1E293B), Color(0xFF0F172A)]),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.amber, width: 1.5),
+              border: Border.all(color: Colors.tealAccent.withOpacity(0.35)),
             ),
-            child: Column(children: List<Widget>.of({
-              GestureDetector(
-                onTap: _pickAvatar,
-                child: Stack(children: List<Widget>.of({
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: <Color>[Colors.amber, Colors.tealAccent])),
-                    child: CircleAvatar(radius: 36, backgroundColor: const Color(0xFF1E293B), backgroundImage: (_avatarPath != null && !kIsWeb) ? FileImage(File(_avatarPath!)) : null, child: _avatarPath == null ? const Icon(Icons.person, size: 40, color: Colors.amber) : null),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 32,
+                  backgroundColor: Colors.tealAccent,
+                  child: Text(
+                    AppState.username.isNotEmpty ? AppState.username[0].toUpperCase() : 'U',
+                    style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black),
                   ),
-                  const Positioned(bottom: 0, right: 0, child: CircleAvatar(radius: 12, backgroundColor: Colors.tealAccent, child: Icon(Icons.camera_alt, size: 14, color: Colors.black))),
-                })),
-              ),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: _editName,
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List<Widget>.of({
-                  Text(AppState.userName, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(width: 6),
-                  const Icon(Icons.edit, size: 16, color: Colors.amber),
-                })),
-              ),
-              const SizedBox(height: 4),
-              InkWell(
-                onTap: () { Clipboard.setData(ClipboardData(text: AppState.userId)); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Copied ID: ${AppState.userId}'))); },
-                child: Text('ID: ${AppState.userId} 📋', style: const TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(height: 8),
-              Wrap(spacing: 6, runSpacing: 6, alignment: WrapAlignment.center, children: List<Widget>.of({
-                _badge('VIP ${AppState.vipLevel}', const Color(0xFF059669), const Color(0xFF10B981), Icons.workspace_premium),
-                if (AppState.isCoinSeller) _badge('COIN SELLER', const Color(0xFFD97706), const Color(0xFFF59E0B), Icons.monetization_on),
-                if (AppState.isAgency) _badge('AGENCY', const Color(0xFFDC2626), const Color(0xFFF43F5E), Icons.verified),
-              })),
-              const SizedBox(height: 12),
-              Row(children: List<Widget>.of({
-                Expanded(child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(color: Colors.purple.withOpacity(0.22), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.purpleAccent.withOpacity(0.5))),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
-                    const Text('🎙️ Host Level', style: TextStyle(fontSize: 11, color: Colors.white70)),
-                    Text('${AppState.hostLv}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
-                  })),
-                )),
-                const SizedBox(width: 8),
-                Expanded(child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(color: Colors.cyan.withOpacity(0.22), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.cyanAccent.withOpacity(0.5))),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: List<Widget>.of({
-                    const Text('💎 Wealth Lv', style: TextStyle(fontSize: 11, color: Colors.white70)),
-                    Text('${AppState.wealthLv}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
-                  })),
-                )),
-              })),
-              const Divider(height: 20),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: List<Widget>.of({
-                InkWell(
-                  onTap: () => go(UserRechargePage(onUpd: upd)),
-                  child: Column(children: List<Widget>.of({const Text('My Coins', style: TextStyle(fontSize: 12, color: Colors.white70)), Text('🪙 ${AppState.coins}', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Colors.amber))})),
                 ),
-                InkWell(
-                  onTap: () => go(PointsCashOutPage(onUpd: upd)),
-                  child: Column(children: List<Widget>.of({const Text('My Points ➔ Sell', style: TextStyle(fontSize: 12, color: Colors.tealAccent)), Text('💎 ${AppState.points.toStringAsFixed(2)}', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Colors.tealAccent))})),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              AppState.username,
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (AppState.vipLevel > 0) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.amber,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'VIP ${AppState.vipLevel}',
+                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      InkWell(
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(text: AppState.userId));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('User ID copied!')),
+                          );
+                        },
+                        child: Text(
+                          'ID: ${AppState.userId} 📋',
+                          style: const TextStyle(fontSize: 12, color: Colors.tealAccent),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        AppState.bio.isEmpty ? 'Welcome to Voice Chat ET!' : AppState.bio,
+                        style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      ),
+                    ],
+                  ),
                 ),
-              })),
-            })),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Card(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), child: Padding(padding: const EdgeInsets.all(12), child: GridView.count(
-          crossAxisCount: 4, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-          children: List<Widget>.of({
-            _gridBtn(Icons.account_balance_wallet, Colors.amber, 'Recharge', () => go(UserRechargePage(onUpd: upd))),
-            _gridBtn(Icons.storefront, Colors.pinkAccent, 'Store', () => go(StorePage(onUpd: upd))),
-            _gridBtn(Icons.card_giftcard, Colors.redAccent, 'Invite', () => go(ContactCenterPage())),
-            _gridBtn(Icons.backpack, Colors.lightBlue, 'Backpack', () => go(StorePage(onUpd: upd))),
-            _gridBtn(Icons.payments, Colors.tealAccent, 'Cash Out', () => go(PointsCashOutPage(onUpd: upd))),
-            _gridBtn(Icons.stars, Colors.purpleAccent, 'VIP Club', () => go(VipClubPage(onUpd: upd))),
-            _gridBtn(Icons.task_alt, Colors.greenAccent, 'Tasks', () => go(TaskCenterPage(onUpd: upd))),
-            _gridBtn(Icons.workspace_premium, Colors.orange, 'Badges', () => go(VipClubPage(onUpd: upd))),
-          }),
-        ))),
-        const SizedBox(height: 12),
-        Card(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), child: Padding(padding: const EdgeInsets.all(12), child: GridView.count(
-          crossAxisCount: 4, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-          children: List<Widget>.of({
-            _gridBtn(Icons.mic, Colors.cyan, 'Host Center', () => go(HostCenterPage(onUpd: upd))),
-            _gridBtn(Icons.business_center, Colors.teal, 'Agency', () => go(AgencyCenterPage(onUpd: upd))),
-            _gridBtn(Icons.monetization_on, Colors.greenAccent, 'Coin Seller', () => go(CoinSellerPage(onUpd: upd))),
-            _gridBtn(Icons.headset_mic, Colors.blueAccent, 'Support', () => go(ContactCenterPage())),
-            _gridBtn(Icons.policy, Colors.amber, 'Policies', () => go(const AppSettingsPage())),
-            _gridBtn(Icons.settings, Colors.white70, 'Settings', () => go(const AppSettingsPage())),
-          }),
-        ))),
-      })),
-    );
-  }
-}
-
-class HostCenterPage extends StatelessWidget {
-  final VoidCallback onUpd;
-  const HostCenterPage({super.key, required this.onUpd});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Host Center')),
-      body: ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
-        Card(child: ListTile(leading: const Icon(Icons.payments, color: Colors.tealAccent), title: Text('Points: ${AppState.points.toStringAsFixed(2)}'), subtitle: const Text('Host Share: 70% • Agency: 12%-16%'))),
-        const Card(child: ListTile(leading: Icon(Icons.timer, color: Colors.amber), title: Text('Live Room Duration'), subtitle: Text('0h 45m Active Today'))),
-      })),
-    );
-  }
-}
-
-class UserRechargePage extends StatefulWidget {
-  final VoidCallback onUpd;
-  const UserRechargePage({super.key, required this.onUpd});
-  @override
-  State<UserRechargePage> createState() => _UserRechargePageState();
-}
-
-class _UserRechargePageState extends State<UserRechargePage> {
-  final _idCtrl = TextEditingController(text: AppState.userId);
-  final _hashCtrl = TextEditingController();
-  bool _confirmed = true, _verifying = false;
-  String _region = 'All country';
-  String _method = 'USDT (TRC20)';
-  int _selectedPkg = 0;
-
-  final _pkgs = List<Map<String, dynamic>>.of({
-    {'coins': 70000, 'usd': 10.0},
-    {'coins': 210000, 'usd': 30.0},
-    {'coins': 350000, 'usd': 50.0},
-  });
-
-  Future<void> _autoVerifyUsdt() async {
-    final uid = _idCtrl.text.trim();
-    final pkg = _pkgs.elementAt(_selectedPkg);
-    final coins = pkg['coins'] as int;
-    final usd = pkg['usd'] as double;
-    if (!_confirmed || uid.isEmpty) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Confirm User ID first!'))); return; }
-    setState(() => _verifying = true);
-    final ok = await TronVerifyHelper.verifyUsdtAuto(_hashCtrl.text, usd);
-    setState(() => _verifying = false);
-    if (ok) {
-      if (uid == AppState.userId) {
-        AppState.coins += coins;
-        AppState.wealthLv += (coins ~/ 10000);
-      }
-      AppState.officialNotices.insert(0, {'title': 'USDT Recharge Verified!', 'body': 'TronScan confirmed \$$usd USDT! +$coins Coins released automatically.', 'time': DateTime.now().toString().substring(0, 19)});
-      _hashCtrl.clear();
-      widget.onUpd();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('TronScan Verified! +$coins Coins Released Automatically!')));
-    } else {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text('USDT not received on TronScan or already used! Paste valid 64-char TxID Hash.')));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final pkg = _pkgs.elementAt(_selectedPkg);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Recharge')),
-      body: ListView(padding: const EdgeInsets.all(14), children: List<Widget>.of({
-        const Text('User ID', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
-        Row(children: List<Widget>.of({
-          Expanded(child: TextField(controller: _idCtrl, decoration: const InputDecoration(hintText: 'Enter User ID'), onChanged: (_) => setState(() => _confirmed = false))),
-          TextButton(onPressed: () => setState(() => _confirmed = _idCtrl.text.trim().isNotEmpty), child: Text(_confirmed ? 'Confirmed ✅' : 'Confirm', style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold))),
-        })),
-        const SizedBox(height: 10),
-        const Text('Country/Region', style: TextStyle(fontWeight: FontWeight.bold)),
-        DropdownButtonFormField<String>(value: _region, items: List<String>.of({'All country', 'Ethiopia', 'Middle East', 'USA / Europe'}).map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(), onChanged: (v) => setState(() => _region = v ?? 'All country')),
-        const SizedBox(height: 12),
-        InkWell(
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OnlineAgencyServicePage())),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            decoration: BoxDecoration(color: Colors.amber.withOpacity(0.18), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.amber)),
-            child: const Row(children: <Widget>[
-              Icon(Icons.percent, color: Colors.amber),
-              SizedBox(width: 8),
-              Expanded(child: Text('Official Agency Recharge (Telebirr, CBE, Awash, Dashen)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5))),
-              Text('20% off >', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-            ]),
-          ),
-        ),
-        const SizedBox(height: 14),
-        const Text('Direct USDT / Binance Recharge (Auto-Release)', style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Wrap(spacing: 8, children: List<String>.of({'USDT (TRC20)', 'Binance Pay'}).map((m) => ChoiceChip(label: Text(m), selected: _method == m, selectedColor: Colors.tealAccent, labelStyle: TextStyle(color: _method == m ? Colors.black : Colors.white), onSelected: (_) => setState(() => _method = m))).toList()),
-        const SizedBox(height: 12),
-        Row(children: List.generate(_pkgs.length, (i) {
-          final p = _pkgs.elementAt(i);
-          final sel = _selectedPkg == i;
-          return Expanded(
-            child: InkWell(
-              onTap: () => setState(() => _selectedPkg = i),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(color: sel ? Colors.amber.withOpacity(0.22) : const Color(0xFF1E293B), borderRadius: BorderRadius.circular(14), border: Border.all(color: sel ? Colors.amber : Colors.white12, width: sel ? 2 : 1)),
-                child: Column(children: List<Widget>.of({
-                  const Text('🪙', style: TextStyle(fontSize: 22)),
-                  const SizedBox(height: 4),
-                  Text('${p['coins']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text('\$${(p['usd'] as double).toInt()}', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-                })),
-              ),
+              ],
             ),
-          );
-        })),
-        const SizedBox(height: 12),
-        Card(
-          color: const Color(0xFF1E293B),
-          child: ListTile(
-            title: Text('Copy $_method Address (Send \$${(pkg['usd'] as double).toInt()} USDT)', style: const TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.bold)),
-            subtitle: const Text(TronVerifyHelper.wallet, style: TextStyle(fontSize: 11)),
-            trailing: IconButton(icon: const Icon(Icons.copy, color: Colors.tealAccent), onPressed: () { Clipboard.setData(const ClipboardData(text: TronVerifyHelper.wallet)); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('TRC20 Address Copied!'))); }),
           ),
-        ),
-        TextField(controller: _hashCtrl, decoration: const InputDecoration(labelText: 'Paste 64-char TronScan TxID Hash (Auto-Verify)')),
-        const SizedBox(height: 10),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48)),
-          onPressed: _verifying ? null : _autoVerifyUsdt,
-          child: Text(_verifying ? 'Checking TronScan Blockchain...' : 'Verify USDT & Release ${pkg['coins']} Coins Now', style: const TextStyle(fontWeight: FontWeight.bold)),
-        ),
-      })),
-    );
-  }
-}
-
-class OnlineAgencyServicePage extends StatelessWidget {
-  const OnlineAgencyServicePage({super.key});
-
-  void _openWa(String phone, String msg) {
-    Clipboard.setData(ClipboardData(text: '+$phone • $msg'));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final sellers = List<Map<String, String>>.of({
-      {'name': 'Ethio-Voice Official Agency', 'id': '1000001', 'sales': 'Recent 30-Day Coin Sales 1B+', 'banks': 'Telebirr • CBE • Awash • Dashen • Coop', 'wa': '251919108311'},
-      {'name': 'Jimma Star Coin Agency', 'id': '1539458', 'sales': 'Recent 30-Day Coin Sales 500M+', 'banks': 'Telebirr • CBE • Awash • Dashen', 'wa': '251919108311'},
-      {'name': 'Finfinnee VIP Seller', 'id': '3399425', 'sales': 'Recent 30-Day Coin Sales 100M+', 'banks': 'Telebirr • CBEBirr • CBE', 'wa': '251919108311'},
-    });
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Online Service (Official Agencies)')),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: sellers.length,
-        itemBuilder: (_, i) {
-          final s = sellers.elementAt(i);
-          return Card(
-            color: const Color(0xFF1E293B),
-            margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.amber.withOpacity(0.4))),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List<Widget>.of({
-                  Row(children: List<Widget>.of({
-                    const CircleAvatar(radius: 24, backgroundColor: Colors.amber, child: Icon(Icons.verified, color: Colors.black)),
-                    const SizedBox(width: 10),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: List<Widget>.of({
-                      Row(children: List<Widget>.of({
-                        Flexible(child: Text(s['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
-                        const SizedBox(width: 6),
-                        Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(8)), child: const Text('Senior Seller', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black))),
-                      })),
-                      Text('ID: ${s['id']}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                    }))),
-                  })),
-                  const SizedBox(height: 8),
-                  Text(s['sales']!, style: const TextStyle(fontSize: 11, color: Colors.amber)),
-                  Text('Payment Method: ${s['banks']}', style: const TextStyle(fontSize: 11.5, color: Colors.tealAccent)),
-                  const SizedBox(height: 10),
-                  Row(children: List<Widget>.of({
-                    Expanded(child: ElevatedButton.icon(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF25D366), foregroundColor: Colors.white), onPressed: () { _openWa(s['wa']!, 'Hello ${s['name']}, I want to buy Ethio-Voice Coins for my ID: ${AppState.userId}'); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Copied WhatsApp: +${s['wa']}'))); }, icon: const Icon(Icons.chat, size: 18), label: const Text('WhatsApp'))),
-                    const SizedBox(width: 10),
-                    Expanded(child: ElevatedButton.icon(style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black), onPressed: () { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Opened Free Chat with ${s['name']} (ID: ${s['id']})'))); }, icon: const Icon(Icons.message, size: 18), label: const Text('Chat'))),
-                  })),
-                }),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: _openWallet,
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E293B),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('My Coins', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                        const SizedBox(height: 4),
+                        Text(
+                          '🪙 ${AppState.coins}',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-          );
-        },
+              const SizedBox(width: 10),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _go(PointsCashOutPage(onUpd: widget.onUpd)),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E293B),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('My Diamonds', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                        const SizedBox(height: 4),
+                        Text(
+                          '💎 ${AppState.points.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1.25,
+            children: [
+              _gridBtn(Icons.monetization_on, Colors.amber, 'Coin Seller', () => _go(CoinSellerPage(onUpd: widget.onUpd))),
+              _gridBtn(Icons.storefront, Colors.tealAccent, 'Store', () => _go(StorePage(onUpd: widget.onUpd))),
+              _gridBtn(Icons.workspace_premium, Colors.orangeAccent, 'VIP Club', () => _go(VipClubPage(onUpd: widget.onUpd))),
+              _gridBtn(Icons.account_balance_wallet, Colors.cyanAccent, 'Cash Out', () => _go(PointsCashOutPage(onUpd: widget.onUpd))),
+              _gridBtn(Icons.policy, Colors.amber, 'Policies', () => _go(AppSettingsPage())),
+              _gridBtn(Icons.settings, Colors.white70, 'Settings', () => _go(AppSettingsPage())),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
- class CoinSellerPage extends StatefulWidget {
+class _WalletSheet extends StatefulWidget {
+  final VoidCallback onUpd;
+  const _WalletSheet({required this.onUpd});
+  @override
+  State<_WalletSheet> createState() => _WalletSheetState();
+}
+
+class _WalletSheetState extends State<_WalletSheet> {
+  final _hashCtrl = TextEditingController();
+  bool _loading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Quick USDT (TRC20) Recharge', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text('Wallet: ${TronVerifyHelper.wallet}', style: const TextStyle(fontSize: 11.5, color: Colors.tealAccent)),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _hashCtrl,
+            decoration: const InputDecoration(labelText: 'TronScan TxID / Hash'),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.tealAccent,
+              foregroundColor: Colors.black,
+              minimumSize: const Size(double.infinity, 46),
+            ),
+            onPressed: _loading
+                ? null
+                : () async {
+                    setState(() => _loading = true);
+                    final usdt = await TronVerifyHelper.fetchUsdtReceived(_hashCtrl.text);
+                    if (mounted) setState(() => _loading = false);
+                    if (usdt != null && usdt > 0) {
+                      final coins = (usdt * 10000).round();
+                      setState(() => AppState.coins += coins);
+                      widget.onUpd();
+                      if (mounted) Navigator.pop(context);
+                    } else if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(backgroundColor: Colors.red, content: Text('Invalid or unconfirmed USDT hash.')),
+                      );
+                    }
+                  },
+            child: Text(_loading ? 'Checking...' : 'Verify USDT Recharge'),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => CoinSellerPage(onUpd: widget.onUpd)));
+            },
+            child: const Text('Open CBE & Official Coin Seller ->', style: TextStyle(color: Colors.amber)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+class CoinSellerPage extends StatefulWidget {
   final VoidCallback onUpd;
   const CoinSellerPage({super.key, required this.onUpd});
   @override
@@ -646,7 +578,7 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
                                   : '10000';
                         }),
                       ),
-                            const SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -826,7 +758,7 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
                               },
                         child: Text(
                           _verifyingUsdt
-                                     ? 'Verifying Payment...'
+                              ? 'Verifying Payment...'
                               : 'Auto-Verify & Get $customCoins Coins',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
@@ -897,7 +829,6 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
     );
   }
 }
-
 class StorePage extends StatefulWidget {
   final VoidCallback onUpd;
   const StorePage({super.key, required this.onUpd});
@@ -906,6 +837,8 @@ class StorePage extends StatefulWidget {
 }
 
 class _StorePageState extends State<StorePage> {
+  final Set<String> _owned = {};
+  String _equipped = '';
   final _items = const [
     {'id': 'f_gold', 'name': 'Golden Crown Frame', 'cat': 'Frame', 'price': 5000, 'icon': '👑'},
     {'id': 'f_fire', 'name': 'Phoenix Fire Frame', 'cat': 'Frame', 'price': 12000, 'icon': '🔥'},
@@ -926,7 +859,7 @@ class _StorePageState extends State<StorePage> {
             padding: const EdgeInsets.all(14),
             color: const Color(0xFF1E293B),
             child: Text(
-              'My Coins: 🪙 ${AppState.coins} • Owned Items: ${AppState.ownedItems.length}',
+              'My Coins: 🪙 ${AppState.coins}',
               style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber),
             ),
           ),
@@ -937,8 +870,8 @@ class _StorePageState extends State<StorePage> {
               itemBuilder: (_, i) {
                 final it = _items[i];
                 final id = it['id'] as String;
-                final owned = AppState.ownedItems.contains(id);
-                final equipped = AppState.equippedFrame == id || AppState.equippedVehicle == id;
+                final owned = _owned.contains(id);
+                final equipped = _equipped == id;
                 return Card(
                   color: const Color(0xFF1E293B),
                   child: ListTile(
@@ -961,16 +894,10 @@ class _StorePageState extends State<StorePage> {
                           }
                           setState(() {
                             AppState.coins -= price;
-                            AppState.ownedItems.add(id);
+                            _owned.add(id);
                           });
                         }
-                        setState(() {
-                          if (it['cat'] == 'Frame') {
-                            AppState.equippedFrame = id;
-                          } else {
-                            AppState.equippedVehicle = id;
-                          }
-                        });
+                        setState(() => _equipped = id);
                         widget.onUpd();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(backgroundColor: Colors.green, content: Text('${it['name']} equipped!')),
@@ -987,9 +914,7 @@ class _StorePageState extends State<StorePage> {
       ),
     );
   }
-}
-
-class PointsCashOutPage extends StatefulWidget {
+}class PointsCashOutPage extends StatefulWidget {
   final VoidCallback onUpd;
   const PointsCashOutPage({super.key, required this.onUpd});
   @override
@@ -1053,7 +978,7 @@ class _PointsCashOutPageState extends State<PointsCashOutPage> {
           Text('Estimated Payout: $etb ETB', style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           ElevatedButton(
-                  style: ElevatedButton.styleFrom(
+            style: ElevatedButton.styleFrom(
               backgroundColor: Colors.tealAccent,
               foregroundColor: Colors.black,
               minimumSize: const Size(double.infinity, 48),
@@ -1148,10 +1073,4 @@ class _VipClubPageState extends State<VipClubPage> {
     );
   }
 }
-
-                            
-                      
-                  
-    
-  
 
