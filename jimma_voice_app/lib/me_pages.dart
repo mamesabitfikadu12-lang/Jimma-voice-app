@@ -1068,3 +1068,32 @@ class _VipClubPageState extends State<VipClubPage> {
     );
   }
 }
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Settings & Policies')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: const [
+          ListTile(
+            leading: Icon(Icons.privacy_tip, color: Colors.tealAccent),
+            title: Text('Privacy Policy'),
+            subtitle: Text('Your account, voice rooms, and transactions are encrypted and secure.'),
+          ),
+          ListTile(
+            leading: Icon(Icons.gavel, color: Colors.amber),
+            title: Text('Terms of Service'),
+            subtitle: Text('Respect community rules. Coins are non-refundable once credited.'),
+          ),
+          ListTile(
+            leading: Icon(Icons.support_agent, color: Colors.cyanAccent),
+            title: Text('Official Support'),
+            subtitle: Text('Telegram & WhatsApp: +251919108311'),
+          ),
+        ],
+      ),
+    );
+  }
+}
