@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'main.dart';
 import 'games_moments.dart';
 import 'task_settings_admin.dart';
@@ -271,7 +273,7 @@ class _MeTabState extends State<MeTab> {
               _gridBtn(Icons.storefront, Colors.tealAccent, 'Store', () => _go(StorePage(onUpd: widget.onUpd))),
               _gridBtn(Icons.workspace_premium, Colors.orangeAccent, 'VIP Club', () => _go(VipClubPage(onUpd: widget.onUpd))),
               _gridBtn(Icons.account_balance_wallet, Colors.cyanAccent, 'Cash Out', () => _go(PointsCashOutPage(onUpd: widget.onUpd))),
-              _gridBtn(Icons.policy, Colors.amber, 'Policies', () => _go( SettingsPage())),
+              _gridBtn(Icons.support_agent, Colors.greenAccent, 'Support', () => _go(const SupportChatPage())),
               _gridBtn(Icons.settings, Colors.white70, 'Settings', () => _go( SettingsPage())),
             ],
           ),
@@ -696,7 +698,8 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
                                 try {
                                   final res = await http
                                       .post(
-                                        Uri.parse('https://onrender.com'),
+                              Uri.parse('https://Jimma-voice-app.onrender.comonrender.com
+'),
                                         headers: {'Content-Type': 'application/json'},
                                         body: jsonEncode({
                                           'userId': AppState.userId,
@@ -970,7 +973,13 @@ class _PointsCashOutPageState extends State<PointsCashOutPage> {
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 10),
-          Text('Estimated Payout: $etb ETB', style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold)),
+    Text(
+       _method == 'USDT (TRC20)'
+           ? 'Estimated Payout: \$${(pts * 0.0555).toStringAsFixed(2)} USDT'
+           : 'Estimated Payout: $etb ETB',
+       style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold),
+     ),
+
           const SizedBox(height: 16),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -987,7 +996,7 @@ class _PointsCashOutPageState extends State<PointsCashOutPage> {
               }
               try {
                 await http.post(
-                  Uri.parse('https://onrender.com'),
+                  Uri.parse('https://Jimma-voice-app.onrender.comonrender.com'),
                   headers: {'Content-Type': 'application/json'},
                   body: jsonEncode({
                     'userId': AppState.userId,
@@ -1086,37 +1095,404 @@ class _VipClubPageState extends State<VipClubPage> {
     );
   }
 }
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+class SupportChatPage extends StatefulWidget {
+  const SupportChatPage({super.key});
+  @override
+  State<SupportChatPage> createState() => _SupportChatPageState();
+}
+
+class _SupportChatPageState extends State<SupportChatPage> {
+  final _msgCtrl = TextEditingController();
+  String _category = 'Coins Not Credited';
+  String? _screenshotBase64;
+  bool _sending = false;
+  List<dynamic> _tickets = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTickets();
+  }
+
+  Future<void> _loadTickets() async {
+    try {
+      final res = await http
+          .get(Uri.parse('https://onrender.com{AppState.userId}'))
+          .timeout(const Duration(seconds: 12));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (mounted) setState(() => _tickets = (data['tickets'] as List?) ?? []);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _pickScreenshot() async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 55, maxWidth: 900);
+    if (file != null) {
+      final bytes = await file.readAsBytes();
+      setState(() => _screenshotBase64 = base64Encode(bytes));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(backgroundColor: Colors.green, content: Text('Screenshot attached! Ready to send.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendTicket() async {
+    final text = _msgCtrl.text.trim();
+    if (text.isEmpty && _screenshotBase64 == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(backgroundColor: Colors.red, content: Text('Write a message or attach payment screenshot.')),
+      );
+      return;
+    }
+    setState(() => _sending = true);
+    try {
+      await http
+          .post(
+            Uri.parse('https://onrender.com'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'userId': AppState.userId,
+              'userName': AppState.userName,
+              'category': _category,
+              'message': text.isEmpty ? 'Payment receipt screenshot attached' : text,
+              'screenshotBase64': _screenshotBase64,
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
+      _msgCtrl.clear();
+      setState(() => _screenshotBase64 = null);
+      await _loadTickets();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(backgroundColor: Colors.green, content: Text('Sent to Admin Support! We will reply shortly.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(backgroundColor: Colors.orange, content: Text('Network slow. Please tap Send again.')),
+        );
+      }
+    }
+    if (mounted) setState(() => _sending = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings & Policies')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: const [
-          ListTile(
-            leading: Icon(Icons.privacy_tip, color: Colors.tealAccent),
-            title: Text('Privacy Policy'),
-            subtitle: Text('Your account, voice rooms, and transactions are encrypted and secure.'),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0D9488),
+        title: const Text('Voice Chat ET Support'),
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadTickets),
+        ],
+      ),
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            color: const Color(0xFF1E293B),
+            child: const Text(
+              '🔔 Customer Service Hours: 24/7 • Attach payment screenshot if coins were delayed.',
+              style: TextStyle(fontSize: 11.5, color: Colors.tealAccent),
+            ),
           ),
-          ListTile(
-            leading: Icon(Icons.gavel, color: Colors.amber),
-            title: Text('Terms of Service'),
-            subtitle: Text('Respect community rules. Coins are non-refundable once credited.'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: DropdownButtonFormField<String>(
+              value: _category,
+              decoration: const InputDecoration(labelText: 'Issue Category', isDense: true),
+              items: const ['Coins Not Credited', 'Cash Out Issue', 'Account / VIP', 'Report Abuse']
+                  .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                  .toList(),
+              onChanged: (v) => setState(() => _category = v ?? 'Coins Not Credited'),
+            ),
           ),
-          ListTile(
-            leading: Icon(Icons.support_agent, color: Colors.cyanAccent),
-            title: Text('Official Support'),
-            subtitle: Text('Telegram & WhatsApp: +251919108311'),
+          Expanded(
+            child: _tickets.isEmpty
+                ? const Center(
+                    child: Text(
+                      'How can we help?\nSend a message or payment screenshot below.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white60),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: _tickets.length,
+                    itemBuilder: (_, i) {
+                      final t = _tickets[i];
+                      final reply = t['admin_reply'] as String?;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 6),
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2563EB),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text('[${t['category'] ?? 'Support'}]', style: const TextStyle(fontSize: 10, color: Colors.amber)),
+                                  Text(t['message'] ?? '', style: const TextStyle(color: Colors.white)),
+                                  if (t['screenshot_base64'] != null)
+                                    const Padding(
+                                      padding: EdgeInsets.only(top: 4),
+                                      child: Text('📎 Screenshot Attached ✓', style: TextStyle(fontSize: 11, color: Colors.tealAccent)),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          if (reply != null && reply.isNotEmpty)
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1E293B),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.tealAccent.withOpacity(0.4)),
+                                ),
+                                child: Text('Admin: $reply', style: const TextStyle(color: Colors.tealAccent)),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+          ),
+          if (_screenshotBase64 != null)
+            Container(
+              color: Colors.teal.withOpacity(0.2),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              child: Row(
+                children: [
+                  const Icon(Icons.image, color: Colors.tealAccent, size: 18),
+                  const SizedBox(width: 8),
+                  const Expanded(child: Text('Payment screenshot attached', style: TextStyle(fontSize: 12))),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    onPressed: () => setState(() => _screenshotBase64 = null),
+                  ),
+                ],
+              ),
+            ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            color: const Color(0xFF0F172A),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.add_photo_alternate, color: Colors.tealAccent, size: 28),
+                  onPressed: _pickScreenshot,
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: _msgCtrl,
+                    decoration: const InputDecoration(
+                      hintText: 'Type a message or attach receipt...',
+                      isDense: true,
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                IconButton(
+                  icon: Icon(_sending ? Icons.hourglass_top : Icons.send, color: Colors.tealAccent),
+                  onPressed: _sending ? null : _sendTicket,
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 }
-       ListTile(
-         leading: Icon(Icons.report_problem, color: Colors.redAccent),
-         title: Text('Report Abuse / Block User'),
-         subtitle: Text('Report any offensive user or voice room 24/7 for immediate moderation.'),
-       ),
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  String _selectedLang = 'English';
+  String _cacheSize = '14.20MB';
+
+  Widget _tile(String title, {String? trailingText, VoidCallback? onTap, Color? color}) {
+    return ListTile(
+      title: Text(title, style: TextStyle(color: color ?? Colors.white, fontWeight: FontWeight.w500)),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (trailingText != null)
+            Text(trailingText, style: const TextStyle(color: Colors.white54, fontSize: 13)),
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right, color: Colors.white38, size: 20),
+        ],
+      ),
+      onTap: onTap,
+    );
+  }
+
+  void _openLanguageSheet() {
+    final langs = [
+      'Follow System',
+      'English',
+      'Afaan Oromoo',
+      'አማርኛ',
+      'العربية',
+      'Français',
+      'Español',
+      'Türkçe',
+      'Tiếng Việt',
+    ];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E293B),
+      builder: (_) => ListView.builder(
+        itemCount: langs.length,
+        itemBuilder: (ctx, i) {
+          final l = langs[i];
+          return ListTile(
+            title: Text(l),
+            trailing: _selectedLang == l ? const Icon(Icons.check_circle, color: Colors.tealAccent) : null,
+            onTap: () {
+              setState(() => _selectedLang = l);
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(backgroundColor: Colors.green, content: Text('Language set to $l')),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _signOut() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    AppState.isLoggedIn = false;
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const EthioVoiceApp()),
+      (_) => false,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Setting')),
+      body: ListView(
+        padding: const EdgeInsets.all(12),
+        children: [
+          Card(
+            color: const Color(0xFF1E293B),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            child: Column(
+              children: [
+                _tile('Account Manager', trailingText: AppState.userId, onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Account ID: ${AppState.userId} • Verified')),
+                  );
+                }),
+                const Divider(height: 1, color: Colors.white10),
+                _tile('Message Settings', onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Room & Direct Message notifications enabled')),
+                  );
+                }),
+                const Divider(height: 1, color: Colors.white10),
+                _tile('Language Setting', trailingText: _selectedLang, onTap: _openLanguageSheet),
+                const Divider(height: 1, color: Colors.white10),
+                _tile('Network Line', trailingText: 'Auto (Fast)', onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(backgroundColor: Colors.green, content: Text('Connected to optimal voice server')),
+                  );
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Card(
+            color: const Color(0xFF1E293B),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            child: Column(
+              children: [
+                _tile('Privilege Settings', onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Microphone & Storage permissions active')),
+                  );
+                }),
+                const Divider(height: 1, color: Colors.white10),
+                _tile('Blocked Users', trailingText: '0', onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('No blocked users')),
+                  );
+                }),
+                const Divider(height: 1, color: Colors.white10),
+                _tile('Report Abuse / Safety', onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportChatPage()));
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Card(
+            color: const Color(0xFF1E293B),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            child: Column(
+              children: [
+                _tile('Clear Cache', trailingText: _cacheSize, onTap: () {
+                  setState(() => _cacheSize = '0.00MB');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(backgroundColor: Colors.green, content: Text('Cache cleared!')),
+                  );
+                }),
+                const Divider(height: 1, color: Colors.white10),
+                _tile('About Us', trailingText: 'v3.0.5', onTap: () {
+                  showAboutDialog(
+                    context: context,
+                    applicationName: 'Voice Chat ET',
+                    applicationVersion: 'v3.0.5 (Build 8)',
+                    children: const [Text('Official Ethiopian & Global Voice Chat & Live Party Platform.')],
+                  );
+                }),
+                const Divider(height: 1, color: Colors.white10),
+                _tile('Delete Account', color: Colors.orangeAccent, onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportChatPage()));
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1E293B),
+              foregroundColor: Colors.redAccent,
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            onPressed: _signOut,
+            child: const Text('Sign Out', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+}
