@@ -364,6 +364,57 @@ app.post('/api/verify-payment', async (req, res) => {
     });
   }
 });
+// ==================== SUPPORT TICKETS & SCREENSHOTS ====================
+
+app.post('/api/support', async (req, res) => {
+  try {
+    const { userId, userName, category, message, screenshotBase64 } = req.body || {};
+    if (!message && !screenshotBase64) {
+      return res.status(400).json({ ok: false, msg: 'Please write a message or attach a screenshot.' });
+    }
+    await sbInsert('support_tickets', {
+      user_id: String(userId || 'Guest'),
+      user_name: String(userName || 'User'),
+      category: String(category || 'Payment / Coins'),
+      message: String(message || 'Payment screenshot attached'),
+      screenshot_base64: screenshotBase64 ? String(screenshotBase64) : null,
+      status: 'open'
+    });
+    return res.json({ ok: true, msg: 'Ticket & screenshot sent to Admin support!' });
+  } catch (e) {
+    return res.status(500).json({ ok: false, msg: 'Could not send support message. Try again.' });
+  }
+});
+
+app.get('/api/support/:userId', async (req, res) => {
+  try {
+    const uid = encodeURIComponent(req.params.userId);
+    const tickets = await sbSelect('support_tickets', `?user_id=eq.${uid}&order=created_at.asc&limit=50`);
+    return res.json({ ok: true, tickets });
+  } catch (e) {
+    return res.json({ ok: true, tickets: [] });
+  }
+});
+
+app.get('/api/admin/support', async (req, res) => {
+  try {
+    const tickets = await sbSelect('support_tickets', '?order=created_at.desc&limit=50');
+    return res.json({ ok: true, tickets });
+  } catch (e) {
+    return res.json({ ok: true, tickets: [] });
+  }
+});
+
+app.post('/api/admin/support/reply', async (req, res) => {
+  try {
+    const { id, reply } = req.body || {};
+    if (!id || !reply) return res.status(400).json({ ok: false });
+    await sbUpdate('support_tickets', `?id=eq.${Number(id)}`, { admin_reply: String(reply), status: 'answered' });
+    return res.json({ ok: true });
+  } catch (e) {
+    return res.status(500).json({ ok: false });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Voice Chat ET Supabase Server running on port ${PORT}`));
