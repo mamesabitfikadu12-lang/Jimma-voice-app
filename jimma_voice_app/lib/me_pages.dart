@@ -646,7 +646,509 @@ class _CoinSellerPageState extends State<CoinSellerPage> {
                                   : '10000';
                         }),
                       ),
-                   
+                            const SizedBox(height: 10),
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: tiers.length,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
+                          childAspectRatio: 2.3,
+                        ),
+                        itemBuilder: (_, i) {
+                          final t = tiers.elementAt(i);
+                          final sel = _selectedTier == i;
+                          final priceLabel = isCrypto ? '\$${t['usd']} USD' : '${t['etb']} ETB';
+                          return InkWell(
+                            onTap: () => setState(() {
+                              _selectedTier = i;
+                              _customCoinsCtrl.text = '${t['coins']}';
+                            }),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: sel ? Colors.amber.withOpacity(0.22) : const Color(0xFF1E293B),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: sel ? Colors.amber : Colors.white12),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if ((t['tag'] as String).isNotEmpty)
+                                    Text(
+                                      t['tag'] as String,
+                                      style: const TextStyle(fontSize: 9, color: Colors.amber),
+                                    ),
+                                  Text(
+                                    '🪙 ${t['coins']}',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  ),
+                                  Text(
+                                    priceLabel,
+                                    style: const TextStyle(
+                                      color: Colors.tealAccent,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _customCoinsCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: isCrypto
+                              ? 'Custom Coins (Min 100,000 = \$10)'
+                              : 'Custom Coins (Min 10,000 = 180 ETB)',
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: 10),
+                      Card(
+                        color: const Color(0xFF1E293B),
+                        child: ListTile(
+                          title: Text(
+                            '$_payMethod • Pay: $customPrice',
+                            style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            _localBanks[_payMethod] ?? '',
+                            style: const TextStyle(fontSize: 11.5),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.copy, color: Colors.tealAccent),
+                            onPressed: () {
+                              Clipboard.setData(ClipboardData(text: _localBanks[_payMethod] ?? ''));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  backgroundColor: Colors.green,
+                                  content: Text('Account / Wallet address copied!'),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _sellerHashCtrl,
+                        decoration: InputDecoration(
+                          labelText: isCrypto
+                              ? 'TronScan 64-char TxID / Hash'
+                              : 'CBE Transaction ID / Ref (e.g. FT26...)',
+                          prefixIcon: const Icon(Icons.receipt_long, color: Colors.tealAccent),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.tealAccent,
+                          foregroundColor: Colors.black,
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                        onPressed: _verifyingUsdt
+                            ? null
+                            : () async {
+                                final tx = _sellerHashCtrl.text.trim();
+                                if (tx.length < 5) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      backgroundColor: Colors.red,
+                                      content: Text('Please enter a valid CBE Transaction ID or USDT TxID.'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                setState(() => _verifyingUsdt = true);
+                                try {
+                                  final res = await http
+                                      .post(
+                                        Uri.parse('https://onrender.com'),
+                                        headers: {'Content-Type': 'application/json'},
+                                        body: jsonEncode({
+                                          'userId': AppState.userId,
+                                          'method': _payMethod,
+                                          'transactionId': tx,
+                                          'expectedEtb': ((customCoins / 10000) * 180).round(),
+                                          'expectedUsdt': usdNeeded,
+                                          'requestedCoins': customCoins,
+                                        }),
+                                      )
+                                      .timeout(const Duration(seconds: 45));
+                                  final data = jsonDecode(res.body);
+                                  if (mounted) setState(() => _verifyingUsdt = false);
+                                  if (res.statusCode == 200 && data['success'] == true) {
+                                    final int added = (data['coinsAdded'] as num?)?.toInt() ?? customCoins;
+                                    setState(() {
+                                      AppState.coins += added;
+                                      AppState.isCoinSeller = true;
+                                      _sellerHashCtrl.clear();
+                                    });
+                                    widget.onUpd();
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          backgroundColor: Colors.green,
+                                          content: Text(data['message'] ?? 'Payment verified! +$added Coins'),
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          backgroundColor: Colors.red,
+                                          content: Text(
+                                              data['message'] ?? 'Verification failed. Check your Transaction ID.'),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    setState(() => _verifyingUsdt = false);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        backgroundColor: Colors.orange,
+                                        content: Text(
+                                            'Network slow. Please wait 10 seconds and tap Auto-Verify again.'),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                        child: Text(
+                          _verifyingUsdt
+                                     ? 'Verifying Payment...'
+                              : 'Auto-Verify & Get $customCoins Coins',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  ListView(
+                    padding: const EdgeInsets.all(14),
+                    children: [
+                      Text(
+                        'My Points: 💎 ${AppState.points.toStringAsFixed(3)}',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _exCustomCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'Custom Coins to Exchange (Min 1,000,000)'),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Exchange Rate ($_sellerLevel): ${(_exchangeRate * 100).toStringAsFixed(0)}%',
+                        style: const TextStyle(color: Colors.amber),
+                      ),
+                      const SizedBox(height: 14),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.tealAccent,
+                          foregroundColor: Colors.black,
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                        onPressed: () {
+                          final exCoins = int.tryParse(_exCustomCtrl.text) ?? 0;
+                          final reqPts = exCoins / 10000.0;
+                          if (exCoins < 1000000 || AppState.points < reqPts) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                backgroundColor: Colors.red,
+                                content: Text('Minimum 1,000,000 coins & sufficient points required.'),
+                              ),
+                            );
+                            return;
+                          }
+                          final finalCoins = (exCoins * _exchangeRate).round();
+                          setState(() {
+                            AppState.points -= reqPts;
+                            AppState.coins += finalCoins;
+                          });
+                          widget.onUpd();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: Colors.green,
+                              content: Text('Exchanged for $finalCoins Coins!'),
+                            ),
+                          );
+                        },
+                        child: const Text('Exchange Now', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class StorePage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const StorePage({super.key, required this.onUpd});
+  @override
+  State<StorePage> createState() => _StorePageState();
+}
+
+class _StorePageState extends State<StorePage> {
+  final _items = const [
+    {'id': 'f_gold', 'name': 'Golden Crown Frame', 'cat': 'Frame', 'price': 5000, 'icon': '👑'},
+    {'id': 'f_fire', 'name': 'Phoenix Fire Frame', 'cat': 'Frame', 'price': 12000, 'icon': '🔥'},
+    {'id': 'f_neon', 'name': 'Cyber Neon Frame', 'cat': 'Frame', 'price': 8000, 'icon': '💠'},
+    {'id': 'v_lambo', 'name': 'Sports Car Entry', 'cat': 'Vehicle', 'price': 25000, 'icon': '🏎️'},
+    {'id': 'v_jet', 'name': 'Private Jet Entry', 'cat': 'Vehicle', 'price': 60000, 'icon': '✈️'},
+    {'id': 'v_lion', 'name': 'Golden Lion Entry', 'cat': 'Vehicle', 'price': 45000, 'icon': '🦁'},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Store & Backpack')),
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            color: const Color(0xFF1E293B),
+            child: Text(
+              'My Coins: 🪙 ${AppState.coins} • Owned Items: ${AppState.ownedItems.length}',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _items.length,
+              itemBuilder: (_, i) {
+                final it = _items[i];
+                final id = it['id'] as String;
+                final owned = AppState.ownedItems.contains(id);
+                final equipped = AppState.equippedFrame == id || AppState.equippedVehicle == id;
+                return Card(
+                  color: const Color(0xFF1E293B),
+                  child: ListTile(
+                    leading: Text(it['icon'] as String, style: const TextStyle(fontSize: 30)),
+                    title: Text(it['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('${it['cat']} • 🪙 ${it['price']} Coins'),
+                    trailing: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: equipped ? Colors.green : (owned ? Colors.amber : Colors.tealAccent),
+                        foregroundColor: Colors.black,
+                      ),
+                      onPressed: () {
+                        if (!owned) {
+                          final price = it['price'] as int;
+                          if (AppState.coins < price) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(backgroundColor: Colors.red, content: Text('Not enough coins!')),
+                            );
+                            return;
+                          }
+                          setState(() {
+                            AppState.coins -= price;
+                            AppState.ownedItems.add(id);
+                          });
+                        }
+                        setState(() {
+                          if (it['cat'] == 'Frame') {
+                            AppState.equippedFrame = id;
+                          } else {
+                            AppState.equippedVehicle = id;
+                          }
+                        });
+                        widget.onUpd();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(backgroundColor: Colors.green, content: Text('${it['name']} equipped!')),
+                        );
+                      },
+                      child: Text(equipped ? 'Equipped' : (owned ? 'Equip' : 'Buy')),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PointsCashOutPage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const PointsCashOutPage({super.key, required this.onUpd});
+  @override
+  State<PointsCashOutPage> createState() => _PointsCashOutPageState();
+}
+
+class _PointsCashOutPageState extends State<PointsCashOutPage> {
+  final _amtCtrl = TextEditingController(text: '100');
+  final _accCtrl = TextEditingController();
+  String _method = 'Telebirr';
+
+  @override
+  Widget build(BuildContext context) {
+    final pts = double.tryParse(_amtCtrl.text) ?? 0;
+    final etb = (pts * 10).toStringAsFixed(0);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Points Cash Out')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E293B),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Available Diamonds / Points', style: TextStyle(color: Colors.white70)),
+                Text(
+                  '💎 ${AppState.points.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                ),
+                const Text('Rate: 100 Points = 1,000 ETB', style: TextStyle(fontSize: 12, color: Colors.amber)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          DropdownButtonFormField<String>(
+            value: _method,
+            decoration: const InputDecoration(labelText: 'Withdrawal Method'),
+            items: const ['Telebirr', 'CBE', 'USDT (TRC20)']
+                .map((m) => DropdownMenuItem(value: m, child: Text(m)))
+                .toList(),
+            onChanged: (v) => setState(() => _method = v ?? 'Telebirr'),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _accCtrl,
+            decoration: const InputDecoration(labelText: 'Account Number / Wallet Address'),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _amtCtrl,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Points to Withdraw (Min 100)'),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 10),
+          Text('Estimated Payout: $etb ETB', style: const TextStyle(color: Colors.tealAccent, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.tealAccent,
+              foregroundColor: Colors.black,
+              minimumSize: const Size(double.infinity, 48),
+            ),
+            onPressed: () {
+              if (pts < 100 || AppState.points < pts || _accCtrl.text.trim().length < 5) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(backgroundColor: Colors.red, content: Text('Check minimum 100 points & account details.')),
+                );
+                return;
+              }
+              setState(() => AppState.points -= pts);
+              widget.onUpd();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(backgroundColor: Colors.green, content: Text('Withdrawal request submitted!')),
+              );
+            },
+            child: const Text('Request Cash Out', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class VipClubPage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const VipClubPage({super.key, required this.onUpd});
+  @override
+  State<VipClubPage> createState() => _VipClubPageState();
+}
+
+class _VipClubPageState extends State<VipClubPage> {
+  final _levels = const [
+    {'lvl': 1, 'name': 'VIP 1 Bronze', 'cost': 10000, 'perk': 'Bronze Badge + Chat Color'},
+    {'lvl': 2, 'name': 'VIP 2 Silver', 'cost': 30000, 'perk': 'Silver Badge + Entry Banner'},
+    {'lvl': 3, 'name': 'VIP 3 Gold', 'cost': 80000, 'perk': 'Gold Crown + Room Priority'},
+    {'lvl': 4, 'name': 'VIP 4 Diamond', 'cost': 200000, 'perk': 'Diamond Aura + Kick Protection'},
+    {'lvl': 5, 'name': 'VIP 5 Emperor', 'cost': 500000, 'perk': 'Emperor Title + All Vehicles'},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('VIP Club & Badges')),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(14),
+        itemCount: _levels.length,
+        itemBuilder: (_, i) {
+          final v = _levels[i];
+          final lvl = v['lvl'] as int;
+          final active = AppState.vipLevel >= lvl;
+          return Card(
+            color: const Color(0xFF1E293B),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.amber,
+                child: Text('V$lvl', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+              ),
+              title: Text(v['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text('${v['perk']} • 🪙 ${v['cost']} Coins'),
+              trailing: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: active ? Colors.green : Colors.amber,
+                  foregroundColor: Colors.black,
+                ),
+                onPressed: active
+                    ? null
+                    : () {
+                        final cost = v['cost'] as int;
+                        if (AppState.coins < cost) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(backgroundColor: Colors.red, content: Text('Not enough coins for VIP!')),
+                          );
+                          return;
+                        }
+                        setState(() {
+                          AppState.coins -= cost;
+                          AppState.vipLevel = lvl;
+                        });
+                        widget.onUpd();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(backgroundColor: Colors.green, content: Text('Activated ${v['name']}!')),
+                        );
+                      },
+                child: Text(active ? 'Active' : 'Activate'),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
                             
                       
                   
