@@ -959,8 +959,6 @@ class _ChatTabState extends State<ChatTab> {
   class MessagesTab extends ChatTab {
   const MessagesTab({super.key, required super.onUpd});
 }
-
-}
 class Real3DWebGameScreen extends StatefulWidget {
   final String title;
   final String url;
