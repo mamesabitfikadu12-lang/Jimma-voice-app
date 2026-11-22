@@ -154,7 +154,7 @@ class _MeTabState extends State<MeTab> {
                   radius: 32,
                   backgroundColor: Colors.tealAccent,
                   child: Text(
-                    AppState.username.isNotEmpty ? AppState.username[0].toUpperCase() : 'U',
+                    AppState.userName.isNotEmpty ? AppState.userName[0].toUpperCase() : 'U',
                     style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black),
                   ),
                 ),
@@ -167,7 +167,7 @@ class _MeTabState extends State<MeTab> {
                         children: [
                           Flexible(
                             child: Text(
-                              AppState.username,
+                              AppState.userName,
                               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -203,7 +203,7 @@ class _MeTabState extends State<MeTab> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        AppState.bio.isEmpty ? 'Welcome to Voice Chat ET!' : AppState.bio,
+                         'Welcome to Voice Chat ET!' : AppState.bio,
                         style: const TextStyle(fontSize: 12, color: Colors.white70),
                       ),
                     ],
