@@ -144,9 +144,6 @@ app.post('/api/auth/login', async (req, res) => {
     } catch (err) {
     return res.status(500).json({ ok: false, msg: `DB Error: ${err.response?.data?.message || err.message}` });
   }
-
-    return res.status(500).json({ ok: false, msg: 'Server connection error. Please try again.' });
-  }
 });
 
 app.post('/api/auth/request-otp', async (req, res) => {
