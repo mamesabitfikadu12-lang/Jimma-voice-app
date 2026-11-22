@@ -2,185 +2,249 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const https = require('https');
-const fs = require('fs');
-const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-const TX_DB_FILE = path.join(__dirname, 'used_transactions.json');
-const USERS_DB_FILE = path.join(__dirname, 'users_db.json');
+const SUPABASE_URL = 'https://supabase.co';
+const SUPABASE_KEY = 'sb_publishable_M1d5TY-ak6_pSUDiJo38RQ_A46yTGct';
 
-function readJson(file, fallback) {
-  try {
-    if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
-  } catch (e) {}
-  return fallback;
+const sbHeaders = {
+  apikey: SUPABASE_KEY,
+  Authorization: `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json',
+  Prefer: 'return=representation'
+};
+
+async function sbSelect(table, query = '') {
+  const res = await axios.get(`${SUPABASE_URL}/rest/v1/${table}${query}`, { headers: sbHeaders, timeout: 12000 });
+  return res.data || [];
 }
 
-function writeJson(file, data) {
-  try {
-    fs.writeFileSync(file, JSON.stringify(data, null, 2));
-  } catch (e) {}
+async function sbInsert(table, payload) {
+  const res = await axios.post(`${SUPABASE_URL}/rest/v1/${table}`, payload, { headers: sbHeaders, timeout: 12000 });
+  return res.data || [];
 }
 
-function getDefaultUsers() {
+async function sbUpdate(table, query, payload) {
+  const res = await axios.patch(`${SUPABASE_URL}/rest/v1/${table}${query}`, payload, { headers: sbHeaders, timeout: 12000 });
+  return res.data || [];
+}
+
+function mapUserOut(u) {
   return {
-    'admin@ethiovoice.com': {
-      uid: '1000001',
-      name: 'Mohammedsabit (Founder)',
-      contact: 'admin@ethiovoice.com',
-      pass: '142730',
-      coins: 500000,
-      points: 250000.0,
-      vipLevel: 19,
-      hostLv: 15,
-      wealthLv: 20,
-      isAgency: true,
-      isCoinSeller: true,
-      totalGifted: 120000,
-      totalReceived: 95000
+    uid: u.uid,
+    name: u.name,
+    contact: u.contact,
+    coins: Number(u.coins || 0),
+    points: Number(u.points || 0),
+    vipLevel: Number(u.vip_level || 0),
+    hostLv: Number(u.host_lv || 1),
+    wealthLv: Number(u.wealth_lv || 1),
+    isAgency: Boolean(u.is_agency),
+    isCoinSeller: Boolean(u.is_coin_seller),
+    totalGifted: Number(u.total_gifted || 0),
+    totalReceived: Number(u.total_received || 0)
+  };
+}
+
+async function ensureFounder() {
+  try {
+    const existing = await sbSelect('users', '?contact=eq.admin%40ethiovoice.com');
+    if (existing.length === 0) {
+      await sbInsert('users', {
+        contact: 'admin@ethiovoice.com',
+        uid: '1000001',
+        name: 'Mohammedsabit (Founder)',
+        pass: '142730',
+        coins: 500000,
+        points: 250000.0,
+        vip_level: 19,
+        host_lv: 15,
+        wealth_lv: 20,
+        is_agency: true,
+        is_coin_seller: true,
+        total_gifted: 120000,
+        total_received: 95000
+      });
     }
-  };
+  } catch (e) {}
 }
 
-function loadUsers() {
-  const users = readJson(USERS_DB_FILE, null);
-  if (!users || Object.keys(users).length === 0) {
-    const initial = getDefaultUsers();
-    writeJson(USERS_DB_FILE, initial);
-    return initial;
+// ==================== AUTH & SYNC ROUTES (SUPABASE) ====================
+
+app.post('/api/auth/signup', async (req, res) => {
+  try {
+    const { name, contact, pass, ref } = req.body || {};
+    const cleanContact = String(contact || '').trim().toLowerCase();
+    const cleanName = String(name || '').trim();
+    const cleanPass = String(pass || '').trim();
+
+    if (cleanContact.length < 5 || cleanPass.length < 6 || cleanName.length < 2) {
+      return res.status(400).json({ ok: false, msg: 'Enter valid name, phone/email, and 6+ char password.' });
+    }
+
+    const existing = await sbSelect('users', `?contact=eq.${encodeURIComponent(cleanContact)}`);
+    if (existing.length > 0) {
+      return res.status(409).json({ ok: false, msg: 'Account already registered. Please tap Login.' });
+    }
+
+    const uid = String(100000 + Math.floor(Math.random() * 8999999));
+    const inserted = await sbInsert('users', {
+      contact: cleanContact,
+      uid,
+      name: cleanName,
+      pass: cleanPass,
+      coins: String(ref || '').trim().length >= 5 ? 1500 : 1000,
+      points: 0.0,
+      vip_level: 0,
+      host_lv: 1,
+      wealth_lv: 1,
+      is_agency: false,
+      is_coin_seller: false,
+      total_gifted: 0,
+      total_received: 0
+    });
+
+    return res.json({ ok: true, user: mapUserOut(inserted[0]) });
+  } catch (e) {
+    return res.status(500).json({ ok: false, msg: 'Database busy. Please tap Sign Up again.' });
   }
-  return users;
-}
-
-// ==================== AUTH & SYNC ROUTES ====================
-
-app.post('/api/auth/signup', (req, res) => {
-  const { name, contact, pass, ref } = req.body || {};
-  const cleanContact = String(contact || '').trim().toLowerCase();
-  const cleanName = String(name || '').trim();
-  const cleanPass = String(pass || '').trim();
-
-  if (cleanContact.length < 5 || cleanPass.length < 6 || cleanName.length < 2) {
-    return res.status(400).json({ ok: false, msg: 'Enter valid name, phone/email, and 6+ char password.' });
-  }
-
-  const users = loadUsers();
-  if (users[cleanContact]) {
-    return res.status(409).json({ ok: false, msg: 'Account already registered. Please tap Login.' });
-  }
-
-  const uid = String(1000002 + Object.keys(users).length + Math.floor(Math.random() * 900));
-  const newUser = {
-    uid,
-    name: cleanName,
-    contact: cleanContact,
-    pass: cleanPass,
-    coins: String(ref || '').trim().length >= 5 ? 1500 : 1000,
-    points: 0.0,
-    vipLevel: 0,
-    hostLv: 1,
-    wealthLv: 1,
-    isAgency: false,
-    isCoinSeller: false,
-    totalGifted: 0,
-    totalReceived: 0
-  };
-
-  users[cleanContact] = newUser;
-  writeJson(USERS_DB_FILE, users);
-
-  const { pass: _, ...safeUser } = newUser;
-  return res.json({ ok: true, user: safeUser });
 });
 
-app.post('/api/auth/login', (req, res) => {
-  const { contact, pass } = req.body || {};
-  const cleanContact = String(contact || '').trim().toLowerCase();
-  const cleanPass = String(pass || '').trim();
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    await ensureFounder();
+    const { contact, pass } = req.body || {};
+    const cleanContact = String(contact || '').trim().toLowerCase();
+    const cleanPass = String(pass || '').trim();
 
-  const users = loadUsers();
-  const user = users[cleanContact];
+    const rows = await sbSelect('users', `?contact=eq.${encodeURIComponent(cleanContact)}`);
+    if (rows.length === 0) {
+      return res.status(404).json({ ok: false, msg: 'Account not found. Please Sign Up first.' });
+    }
+    const user = rows[0];
+    if (user.pass !== cleanPass) {
+      return res.status(401).json({ ok: false, msg: 'Incorrect password. Please try again.' });
+    }
 
-  if (!user) {
-    return res.status(404).json({ ok: false, msg: 'Account not found. Please Sign Up first.' });
+    return res.json({ ok: true, user: mapUserOut(user) });
+  } catch (e) {
+    return res.status(500).json({ ok: false, msg: 'Server connecting. Please tap Login again.' });
   }
-  if (user.pass !== cleanPass) {
-    return res.status(401).json({ ok: false, msg: 'Incorrect password. Please try again.' });
-  }
-
-  const { pass: _, ...safeUser } = user;
-  return res.json({ ok: true, user: safeUser });
 });
 
-app.post('/api/auth/send-otp', (req, res) => {
-  const { contact } = req.body || {};
-  const cleanContact = String(contact || '').trim().toLowerCase();
-  const users = loadUsers();
-  if (!users[cleanContact]) {
-    return res.status(404).json({ ok: false, msg: 'Account not registered.' });
+app.post('/api/auth/send-otp', async (req, res) => {
+  try {
+    const { contact } = req.body || {};
+    const cleanContact = String(contact || '').trim().toLowerCase();
+    const rows = await sbSelect('users', `?contact=eq.${encodeURIComponent(cleanContact)}`);
+    if (rows.length === 0) {
+      return res.status(404).json({ ok: false, msg: 'Account not registered.' });
+    }
+    const code = String(100000 + Math.floor(Math.random() * 899999));
+    await sbUpdate('users', `?contact=eq.${encodeURIComponent(cleanContact)}`, { otp: code });
+    return res.json({ ok: true, code });
+  } catch (e) {
+    return res.status(500).json({ ok: false, msg: 'Could not generate code. Try again.' });
   }
-  const code = String(100000 + Math.floor(Math.random() * 899999));
-  users[cleanContact].otp = code;
-  writeJson(USERS_DB_FILE, users);
-  return res.json({ ok: true, code });
 });
 
-app.post('/api/auth/verify-otp', (req, res) => {
-  const { contact, code, newPass } = req.body || {};
-  const cleanContact = String(contact || '').trim().toLowerCase();
-  const users = loadUsers();
-  const user = users[cleanContact];
-  if (!user) return res.status(404).json({ ok: false, msg: 'Account not found.' });
-  if (String(newPass || '').trim().length < 6) {
-    return res.status(400).json({ ok: false, msg: 'New password must be at least 6 characters.' });
+app.post('/api/auth/verify-otp', async (req, res) => {
+  try {
+    const { contact, code, newPass } = req.body || {};
+    const cleanContact = String(contact || '').trim().toLowerCase();
+    const rows = await sbSelect('users', `?contact=eq.${encodeURIComponent(cleanContact)}`);
+    if (rows.length === 0) return res.status(404).json({ ok: false, msg: 'Account not found.' });
+    const user = rows[0];
+    if (String(newPass || '').trim().length < 6) {
+      return res.status(400).json({ ok: false, msg: 'New password must be at least 6 characters.' });
+    }
+    if (user.otp && user.otp !== String(code || '').trim()) {
+      return res.status(400).json({ ok: false, msg: 'Invalid verification code.' });
+    }
+    const updated = await sbUpdate(
+      'users',
+      `?contact=eq.${encodeURIComponent(cleanContact)}`,
+      { pass: String(newPass).trim(), otp: null }
+    );
+    return res.json({ ok: true, user: mapUserOut(updated[0]) });
+  } catch (e) {
+    return res.status(500).json({ ok: false, msg: 'Reset failed. Try again.' });
   }
-  if (user.otp && user.otp !== String(code || '').trim()) {
-    return res.status(400).json({ ok: false, msg: 'Invalid verification code.' });
-  }
-  user.pass = String(newPass).trim();
-  delete user.otp;
-  writeJson(USERS_DB_FILE, users);
-
-  const { pass: _, ...safeUser } = user;
-  return res.json({ ok: true, user: safeUser });
 });
 
-app.post('/api/user/sync', (req, res) => {
-  const { contact, name, coins, points, vipLevel, hostLv, wealthLv, totalGifted, totalReceived } = req.body || {};
-  const cleanContact = String(contact || '').trim().toLowerCase();
-  if (!cleanContact) return res.json({ ok: false });
+app.post('/api/user/sync', async (req, res) => {
+  try {
+    const { contact, name, coins, points, vipLevel, hostLv, wealthLv, totalGifted, totalReceived } = req.body || {};
+    const cleanContact = String(contact || '').trim().toLowerCase();
+    if (!cleanContact) return res.json({ ok: false });
 
-  const users = loadUsers();
-  if (users[cleanContact]) {
-    if (name) users[cleanContact].name = name;
-    if (typeof coins === 'number') users[cleanContact].coins = coins;
-    if (typeof points === 'number') users[cleanContact].points = points;
-    if (typeof vipLevel === 'number') users[cleanContact].vipLevel = vipLevel;
-    if (typeof hostLv === 'number') users[cleanContact].hostLv = hostLv;
-    if (typeof wealthLv === 'number') users[cleanContact].wealthLv = wealthLv;
-    if (typeof totalGifted === 'number') users[cleanContact].totalGifted = (users[cleanContact].totalGifted || 0) + totalGifted;
-    if (typeof totalReceived === 'number') users[cleanContact].totalReceived = (users[cleanContact].totalReceived || 0) + totalReceived;
-    writeJson(USERS_DB_FILE, users);
+    const rows = await sbSelect('users', `?contact=eq.${encodeURIComponent(cleanContact)}`);
+    if (rows.length > 0) {
+      const cur = rows[0];
+      const patch = {};
+      if (name) patch.name = name;
+      if (typeof coins === 'number') patch.coins = coins;
+      if (typeof points === 'number') patch.points = points;
+      if (typeof vipLevel === 'number') patch.vip_level = vipLevel;
+      if (typeof hostLv === 'number') patch.host_lv = hostLv;
+      if (typeof wealthLv === 'number') patch.wealth_lv = wealthLv;
+      if (typeof totalGifted === 'number') patch.total_gifted = Number(cur.total_gifted || 0) + totalGifted;
+      if (typeof totalReceived === 'number') patch.total_received = Number(cur.total_received || 0) + totalReceived;
+      await sbUpdate('users', `?contact=eq.${encodeURIComponent(cleanContact)}`, patch);
+    }
+    return res.json({ ok: true });
+  } catch (e) {
+    return res.json({ ok: false });
   }
-  return res.json({ ok: true });
 });
 
-app.get('/api/leaderboard', (req, res) => {
-  const users = Object.values(loadUsers());
-  const topGifters = [...users]
-    .sort((a, b) => (b.totalGifted || 0) - (a.totalGifted || 0))
-    .slice(0, 10)
-    .map(u => ({ uid: u.uid, name: u.name, vipLevel: u.vipLevel || 0, gifted: u.totalGifted || 0 }));
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const gifters = await sbSelect('users', '?select=uid,name,vip_level,total_gifted&order=total_gifted.desc&limit=10');
+    const hosts = await sbSelect('users', '?select=uid,name,vip_level,total_received&order=total_received.desc&limit=10');
+    return res.json({
+      ok: true,
+      topGifters: gifters.map(u => ({ uid: u.uid, name: u.name, vipLevel: u.vip_level || 0, gifted: u.total_gifted || 0 })),
+      topHosts: hosts.map(u => ({ uid: u.uid, name: u.name, vipLevel: u.vip_level || 0, received: u.total_received || 0 }))
+    });
+  } catch (e) {
+    return res.json({ ok: true, topGifters: [], topHosts: [] });
+  }
+});
 
-  const topHosts = [...users]
-    .sort((a, b) => (b.totalReceived || 0) - (a.totalReceived || 0))
-    .slice(0, 10)
-    .map(u => ({ uid: u.uid, name: u.name, vipLevel: u.vipLevel || 0, received: u.totalReceived || 0 }));
+// ==================== CASHOUT & REPORT ROUTES ====================
 
-  return res.json({ ok: true, topGifters, topHosts });
+app.post('/api/cashout', async (req, res) => {
+  try {
+    const { userId, userName, method, account, points, etbAmount } = req.body || {};
+    if (!userId || !method || !account || Number(points) < 100) {
+      return res.status(400).json({ ok: false, msg: 'Minimum 100 points and valid account required.' });
+    }
+    await sbInsert('cashout_requests', {
+      user_id: String(userId),
+      user_name: String(userName || 'User'),
+      method: String(method),
+      account: String(account),
+      points: Number(points),
+      etb_amount: Number(etbAmount || 0),
+      status: 'pending'
+    });
+    return res.json({ ok: true, msg: 'Cash-out request saved to server!' });
+  } catch (e) {
+    return res.status(500).json({ ok: false, msg: 'Could not submit cash-out.' });
+  }
+});
+
+app.get('/api/admin/cashouts', async (req, res) => {
+  try {
+    const list = await sbSelect('cashout_requests', '?order=created_at.desc&limit=50');
+    return res.json({ ok: true, requests: list });
+  } catch (e) {
+    return res.json({ ok: true, requests: [] });
+  }
 });
 
 // ==================== AUTOMATIC PAYMENT VERIFIER ====================
@@ -191,15 +255,6 @@ const ACCOUNTS = {
   usdtContract: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
   ownerName: 'MOHAMMEDSABIT'
 };
-
-const PACKAGES = [
-  { coins: 1000, etb: 150, usdt: 1.0 },
-  { coins: 5000, etb: 700, usdt: 5.0 },
-  { coins: 10000, etb: 1350, usdt: 10.0 },
-  { coins: 50000, etb: 6500, usdt: 45.0 },
-  { coins: 100000, etb: 12500, usdt: 85.0 },
-  { coins: 500000, etb: 60000, usdt: 400.0 }
-];
 
 const MAX_RECEIPT_AGE_MS = 24 * 60 * 60 * 1000;
 
@@ -250,8 +305,8 @@ async function verifyUsdtTrc20Tx(txHash, expectedUsdt) {
 
 app.get('/', (req, res) => {
   res.json({
-    status: 'Voice Chat ET Auth & Automatic Payment Server Active',
-    auth: ['signup', 'login', 'otp', 'sync', 'leaderboard'],
+    status: 'Voice Chat ET Supabase Cloud & Auto-Payment Server Active',
+    database: 'Supabase Connected',
     autoPayments: ['CBE', 'USDT (TRC20)']
   });
 });
@@ -263,12 +318,12 @@ app.post('/api/verify-payment', async (req, res) => {
   }
 
   const txKey = `${method.toLowerCase()}_${transactionId.trim()}`;
-  const usedTx = readJson(TX_DB_FILE, {});
-  if (usedTx[txKey]) {
-    return res.status(409).json({ success: false, message: 'This Transaction ID / TxID has already been used.' });
-  }
-
   try {
+    const existingTx = await sbSelect('used_transactions', `?tx_key=eq.${encodeURIComponent(txKey)}`);
+    if (existingTx.length > 0) {
+      return res.status(409).json({ success: false, message: 'This Transaction ID / TxID has already been used.' });
+    }
+
     const m = method.toLowerCase();
     let coinsToCredit = Number(requestedCoins) || 0;
     let summaryText = '';
@@ -288,15 +343,14 @@ app.post('/api/verify-payment', async (req, res) => {
       });
     }
 
-    usedTx[txKey] = {
-      userId,
-      method,
-      transactionId: transactionId.trim(),
-      summaryText,
-      coinsCredited: coinsToCredit,
-      timestamp: new Date().toISOString()
-    };
-    writeJson(TX_DB_FILE, usedTx);
+    await sbInsert('used_transactions', {
+      tx_key: txKey,
+      user_id: String(userId),
+      method: String(method),
+      transaction_id: transactionId.trim(),
+      summary_text: summaryText,
+      coins_credited: coinsToCredit
+    });
 
     return res.json({
       success: true,
@@ -312,4 +366,4 @@ app.post('/api/verify-payment', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Voice Chat ET Full Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Voice Chat ET Supabase Server running on port ${PORT}`));
