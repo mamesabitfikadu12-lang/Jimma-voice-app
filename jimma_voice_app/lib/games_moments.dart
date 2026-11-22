@@ -956,6 +956,7 @@ class _ChatTabState extends State<ChatTab> {
       ),
     );
   }
+  }
   class MessagesTab extends ChatTab {
   const MessagesTab({super.key, required super.onUpd});
 }
