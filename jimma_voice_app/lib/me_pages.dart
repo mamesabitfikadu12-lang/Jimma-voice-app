@@ -129,7 +129,7 @@ class _MeTabState extends State<MeTab> {
         title: const Text('Me'),
         actions: [
           IconButton(icon: const Icon(Icons.edit), onPressed: _editProfile),
-          IconButton(icon: const Icon(Icons.settings), onPressed: () => _go(const SettingsPage())),
+          IconButton(icon: const Icon(Icons.settings), onPressed: () => _go( SettingsPage())),
         ],
       ),
       body: ListView(
@@ -271,8 +271,8 @@ class _MeTabState extends State<MeTab> {
               _gridBtn(Icons.storefront, Colors.tealAccent, 'Store', () => _go(StorePage(onUpd: widget.onUpd))),
               _gridBtn(Icons.workspace_premium, Colors.orangeAccent, 'VIP Club', () => _go(VipClubPage(onUpd: widget.onUpd))),
               _gridBtn(Icons.account_balance_wallet, Colors.cyanAccent, 'Cash Out', () => _go(PointsCashOutPage(onUpd: widget.onUpd))),
-              _gridBtn(Icons.policy, Colors.amber, 'Policies', () => _go(const SettingsPage())),
-              _gridBtn(Icons.settings, Colors.white70, 'Settings', () => _go(const SettingsPage())),
+              _gridBtn(Icons.policy, Colors.amber, 'Policies', () => _go( SettingsPage())),
+              _gridBtn(Icons.settings, Colors.white70, 'Settings', () => _go( SettingsPage())),
             ],
           ),
         ],
