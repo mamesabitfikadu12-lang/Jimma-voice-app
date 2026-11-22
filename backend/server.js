@@ -7,29 +7,47 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-const SUPABASE_URL = 'https://supabase.co';
-const SUPABASE_KEY = 'sb_publishable_M1d5TY-ak6_pSUDiJo38RQ_A46yTGct';
+const insecureAgent = new https.Agent({ rejectUnauthorized: false });
 
-const sbHeaders = {
-  apikey: SUPABASE_KEY,
-  Authorization: `Bearer ${SUPABASE_KEY}`,
-  'Content-Type': 'application/json',
-  Prefer: 'return=representation'
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_b855lS0q_K3Xry_3w7b1-w_4yJ_yS0a';
+
+const ACCOUNTS = {
+  cbe: '1000273060937',
+  ownerName: 'MOHAMMEDSABIT',
+  usdtTrc20: 'TYdr3JdbDzhxjfsGeU3yazNAmTbkHBuNcE',
+  usdtContract: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
 };
 
+const FOUNDER_EMAIL = 'admin@ethiovoice.com';
+const FOUNDER_PASS = '142730';
+const otpStore = new Map();
+
+function sbHeaders() {
+  return {
+    apikey: SUPABASE_KEY,
+    Authorization: `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'application/json',
+    Prefer: 'return=representation'
+  };
+}
+
 async function sbSelect(table, query = '') {
-  const res = await axios.get(`${SUPABASE_URL}/rest/v1/${table}${query}`, { headers: sbHeaders, timeout: 12000 });
-  return res.data || [];
+  const url = `${SUPABASE_URL}/rest/v1/${table}${query}`;
+  const res = await axios.get(url, { headers: sbHeaders(), timeout: 12000 });
+  return Array.isArray(res.data) ? res.data : [];
 }
 
-async function sbInsert(table, payload) {
-  const res = await axios.post(`${SUPABASE_URL}/rest/v1/${table}`, payload, { headers: sbHeaders, timeout: 12000 });
-  return res.data || [];
+async function sbInsert(table, row) {
+  const url = `${SUPABASE_URL}/rest/v1/${table}`;
+  const res = await axios.post(url, row, { headers: sbHeaders(), timeout: 12000 });
+  return Array.isArray(res.data) ? res.data : [res.data];
 }
 
-async function sbUpdate(table, query, payload) {
-  const res = await axios.patch(`${SUPABASE_URL}/rest/v1/${table}${query}`, payload, { headers: sbHeaders, timeout: 12000 });
-  return res.data || [];
+async function sbUpdate(table, query, patch) {
+  const url = `${SUPABASE_URL}/rest/v1/${table}${query}`;
+  const res = await axios.patch(url, patch, { headers: sbHeaders(), timeout: 12000 });
+  return Array.isArray(res.data) ? res.data : [res.data];
 }
 
 function mapUserOut(u) {
@@ -39,86 +57,78 @@ function mapUserOut(u) {
     contact: u.contact,
     coins: Number(u.coins || 0),
     points: Number(u.points || 0),
-    vipLevel: Number(u.vip_level || 0),
-    hostLv: Number(u.host_lv || 1),
-    wealthLv: Number(u.wealth_lv || 1),
-    isAgency: Boolean(u.is_agency),
-    isCoinSeller: Boolean(u.is_coin_seller),
-    totalGifted: Number(u.total_gifted || 0),
-    totalReceived: Number(u.total_received || 0)
+    vipLevel: Number(u.vip_level || 0)
   };
 }
 
-async function ensureFounder() {
+async function ensureFounderAccount() {
   try {
-    const existing = await sbSelect('users', '?contact=eq.admin%40ethiovoice.com');
+    const existing = await sbSelect('users', `?contact=eq.${encodeURIComponent(FOUNDER_EMAIL)}`);
     if (existing.length === 0) {
       await sbInsert('users', {
-        contact: 'admin@ethiovoice.com',
-        uid: '1000001',
+        uid: '100001',
         name: 'Mohammedsabit (Founder)',
-        pass: '142730',
+        contact: FOUNDER_EMAIL,
+        pass: FOUNDER_PASS,
         coins: 500000,
-        points: 250000.0,
-        vip_level: 19,
-        host_lv: 15,
-        wealth_lv: 20,
-        is_agency: true,
-        is_coin_seller: true,
-        total_gifted: 120000,
-        total_received: 95000
+        points: 1000,
+        vip_level: 19
       });
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('Founder init warning:', e.message);
+  }
 }
-
-// ==================== AUTH & SYNC ROUTES (SUPABASE) ====================
 
 app.post('/api/auth/signup', async (req, res) => {
   try {
-    const { name, contact, pass, ref } = req.body || {};
+    await ensureFounderAccount();
+    const { name, contact, password } = req.body || {};
     const cleanContact = String(contact || '').trim().toLowerCase();
-    const cleanName = String(name || '').trim();
-    const cleanPass = String(pass || '').trim();
+    const cleanPass = String(password || '').trim();
+    const cleanName = String(name || '').trim() || `User_${Math.floor(1000 + Math.random() * 9000)}`;
 
-    if (cleanContact.length < 5 || cleanPass.length < 6 || cleanName.length < 2) {
-      return res.status(400).json({ ok: false, msg: 'Enter valid name, phone/email, and 6+ char password.' });
+    if (!cleanContact || cleanPass.length < 6) {
+      return res.status(400).json({ ok: false, msg: 'Enter valid phone/email and at least 6-character password.' });
     }
-
     const existing = await sbSelect('users', `?contact=eq.${encodeURIComponent(cleanContact)}`);
     if (existing.length > 0) {
-      return res.status(409).json({ ok: false, msg: 'Account already registered. Please tap Login.' });
+      return res.status(409).json({ ok: false, msg: 'Account already exists. Please use Login.' });
     }
 
-    const uid = String(100000 + Math.floor(Math.random() * 8999999));
+    const uid = String(Math.floor(100000 + Math.random() * 899999));
     const inserted = await sbInsert('users', {
-      contact: cleanContact,
       uid,
       name: cleanName,
+      contact: cleanContact,
       pass: cleanPass,
-      coins: String(ref || '').trim().length >= 5 ? 1500 : 1000,
-      points: 0.0,
-      vip_level: 0,
-      host_lv: 1,
-      wealth_lv: 1,
-      is_agency: false,
-      is_coin_seller: false,
-      total_gifted: 0,
-      total_received: 0
+      coins: 5000,
+      points: 0,
+      vip_level: 0
     });
-
     return res.json({ ok: true, user: mapUserOut(inserted[0]) });
-  } catch (e) {
-    return res.status(500).json({ ok: false, msg: 'Database busy. Please tap Sign Up again.' });
+  } catch (err) {
+    return res.status(500).json({ ok: false, msg: 'Database error during Sign Up. Try again.' });
   }
 });
 
 app.post('/api/auth/login', async (req, res) => {
   try {
-    await ensureFounder();
-    const { contact, pass } = req.body || {};
+    await ensureFounderAccount();
+    const { contact, password } = req.body || {};
     const cleanContact = String(contact || '').trim().toLowerCase();
-    const cleanPass = String(pass || '').trim();
+    const cleanPass = String(password || '').trim();
+
+    if (cleanContact === FOUNDER_EMAIL && cleanPass === FOUNDER_PASS) {
+      const fRows = await sbSelect('users', `?contact=eq.${encodeURIComponent(FOUNDER_EMAIL)}`);
+      if (fRows.length > 0) {
+        return res.json({ ok: true, user: mapUserOut(fRows[0]) });
+      }
+      return res.json({
+        ok: true,
+        user: { uid: '100001', name: 'Mohammedsabit (Founder)', contact: FOUNDER_EMAIL, coins: 500000, points: 1000, vipLevel: 19 }
+      });
+    }
 
     const rows = await sbSelect('users', `?contact=eq.${encodeURIComponent(cleanContact)}`);
     if (rows.length === 0) {
@@ -126,245 +136,219 @@ app.post('/api/auth/login', async (req, res) => {
     }
     const user = rows[0];
     if (user.pass !== cleanPass) {
-      return res.status(401).json({ ok: false, msg: 'Incorrect password. Please try again.' });
+      return res.status(401).json({ ok: false, msg: 'Incorrect password. Use Forgot Password if needed.' });
     }
-
     return res.json({ ok: true, user: mapUserOut(user) });
-  } catch (e) {
-    return res.status(500).json({ ok: false, msg: 'Server connecting. Please tap Login again.' });
+  } catch (err) {
+    return res.status(500).json({ ok: false, msg: 'Server connection error. Please try again.' });
   }
 });
 
-app.post('/api/auth/send-otp', async (req, res) => {
-  try {
-    const { contact } = req.body || {};
-    const cleanContact = String(contact || '').trim().toLowerCase();
-    const rows = await sbSelect('users', `?contact=eq.${encodeURIComponent(cleanContact)}`);
-    if (rows.length === 0) {
-      return res.status(404).json({ ok: false, msg: 'Account not registered.' });
-    }
-    const code = String(100000 + Math.floor(Math.random() * 899999));
-    await sbUpdate('users', `?contact=eq.${encodeURIComponent(cleanContact)}`, { otp: code });
-    return res.json({ ok: true, code });
-  } catch (e) {
-    return res.status(500).json({ ok: false, msg: 'Could not generate code. Try again.' });
-  }
+app.post('/api/auth/request-otp', async (req, res) => {
+  const { contact } = req.body || {};
+  const cleanContact = String(contact || '').trim().toLowerCase();
+  if (!cleanContact) return res.status(400).json({ ok: false, msg: 'Enter your registered phone or email.' });
+
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  otpStore.set(cleanContact, { code, expires: Date.now() + 10 * 60 * 1000 });
+  return res.json({
+    ok: true,
+    demoOtp: code,
+    msg: `Verification OTP code generated: ${code}`
+  });
 });
 
 app.post('/api/auth/verify-otp', async (req, res) => {
   try {
-    const { contact, code, newPass } = req.body || {};
+    const { contact, otp, newPassword } = req.body || {};
     const cleanContact = String(contact || '').trim().toLowerCase();
+    const record = otpStore.get(cleanContact);
+    if (!record || record.code !== String(otp || '').trim() || Date.now() > record.expires) {
+      return res.status(400).json({ ok: false, msg: 'Invalid or expired OTP code.' });
+    }
+    otpStore.delete(cleanContact);
+
     const rows = await sbSelect('users', `?contact=eq.${encodeURIComponent(cleanContact)}`);
-    if (rows.length === 0) return res.status(404).json({ ok: false, msg: 'Account not found.' });
+    if (rows.length === 0) {
+      return res.status(404).json({ ok: false, msg: 'No account found with this phone/email.' });
+    }
     const user = rows[0];
-    if (String(newPass || '').trim().length < 6) {
-      return res.status(400).json({ ok: false, msg: 'New password must be at least 6 characters.' });
-    }
-    if (user.otp && user.otp !== String(code || '').trim()) {
-      return res.status(400).json({ ok: false, msg: 'Invalid verification code.' });
-    }
-    const updated = await sbUpdate(
-      'users',
-      `?contact=eq.${encodeURIComponent(cleanContact)}`,
-      { pass: String(newPass).trim(), otp: null }
-    );
+    const nextPass = (newPassword && String(newPassword).trim().length >= 6) ? String(newPassword).trim() : user.pass;
+    const updated = await sbUpdate('users', `?uid=eq.${encodeURIComponent(user.uid)}`, { pass: nextPass });
     return res.json({ ok: true, user: mapUserOut(updated[0]) });
-  } catch (e) {
-    return res.status(500).json({ ok: false, msg: 'Reset failed. Try again.' });
+  } catch (err) {
+    return res.status(500).json({ ok: false, msg: 'Could not verify OTP. Try again.' });
   }
 });
-
 app.post('/api/user/sync', async (req, res) => {
   try {
-    const { contact, name, coins, points, vipLevel, hostLv, wealthLv, totalGifted, totalReceived } = req.body || {};
-    const cleanContact = String(contact || '').trim().toLowerCase();
-    if (!cleanContact) return res.json({ ok: false });
+    const { uid, coins, points, vipLevel } = req.body || {};
+    if (!uid) return res.status(400).json({ ok: false, msg: 'Missing UID' });
+    const rows = await sbSelect('users', `?uid=eq.${encodeURIComponent(String(uid))}`);
+    if (rows.length === 0) return res.status(404).json({ ok: false, msg: 'User not found' });
 
-    const rows = await sbSelect('users', `?contact=eq.${encodeURIComponent(cleanContact)}`);
-    if (rows.length > 0) {
-      const cur = rows[0];
-      const patch = {};
-      if (name) patch.name = name;
-      if (typeof coins === 'number') patch.coins = coins;
-      if (typeof points === 'number') patch.points = points;
-      if (typeof vipLevel === 'number') patch.vip_level = vipLevel;
-      if (typeof hostLv === 'number') patch.host_lv = hostLv;
-      if (typeof wealthLv === 'number') patch.wealth_lv = wealthLv;
-      if (typeof totalGifted === 'number') patch.total_gifted = Number(cur.total_gifted || 0) + totalGifted;
-      if (typeof totalReceived === 'number') patch.total_received = Number(cur.total_received || 0) + totalReceived;
-      await sbUpdate('users', `?contact=eq.${encodeURIComponent(cleanContact)}`, patch);
-    }
-    return res.json({ ok: true });
-  } catch (e) {
-    return res.json({ ok: false });
+    const patch = {};
+    if (typeof coins === 'number') patch.coins = Math.max(0, Math.floor(coins));
+    if (typeof points === 'number') patch.points = Math.max(0, Number(points));
+    if (typeof vipLevel === 'number') patch.vip_level = Math.max(0, Math.floor(vipLevel));
+    patch.updated_at = new Date().toISOString();
+
+    const updated = await sbUpdate('users', `?uid=eq.${encodeURIComponent(String(uid))}`, patch);
+    return res.json({ ok: true, user: mapUserOut(updated) });
+  } catch (err) {
+    return res.status(500).json({ ok: false, msg: 'Sync error' });
   }
 });
 
-app.get('/api/leaderboard', async (req, res) => {
+app.get('/api/user/:uid', async (req, res) => {
   try {
-    const gifters = await sbSelect('users', '?select=uid,name,vip_level,total_gifted&order=total_gifted.desc&limit=10');
-    const hosts = await sbSelect('users', '?select=uid,name,vip_level,total_received&order=total_received.desc&limit=10');
+    const rows = await sbSelect('users', `?uid=eq.${encodeURIComponent(String(req.params.uid))}`);
+    if (rows.length === 0) return res.status(404).json({ ok: false, msg: 'User not found' });
+    return res.json({ ok: true, user: mapUserOut(rows) });
+  } catch (err) {
+    return res.status(500).json({ ok: false, msg: 'Fetch error' });
+  }
+});
+
+async function verifyCbeTransaction(txRef, expectedEtb) {
+  const cleanRef = String(txRef || '').trim().toUpperCase();
+  if (!cleanRef.startsWith('FT') || cleanRef.length < 10) {
+    return { valid: false, reason: 'Invalid CBE Reference format. Must start with FT (e.g., FT26085XXXXX).' };
+  }
+  const suffix = ACCOUNTS.cbe.slice(-8);
+  const urls = [
+    `https://cbe.com.et{cleanRef}${suffix}`,
+    `https://cbe.com.et{cleanRef}${suffix}`
+  ];
+  for (const url of urls) {
+    try {
+      const response = await axios.get(url, { httpsAgent: insecureAgent, timeout: 14000 });
+      const html = String(response.data || '');
+      const hasOwner = html.toUpperCase().includes(ACCOUNTS.ownerName) || html.includes(ACCOUNTS.cbe);
+      const amountMatch = html.match(/([0-9,]+(?:\.[0-9]{1,2})?)\s*ETB/i);
+      const paidEtb = amountMatch ? parseFloat(amountMatch.replace(/,/g, '')) : expectedEtb;
+      if (hasOwner && paidEtb + 1 >= expectedEtb) {
+        return { valid: true, paidAmount: paidEtb, currency: 'ETB' };
+      }
+      if (hasOwner && paidEtb + 1 < expectedEtb) {
+        return { valid: false, reason: `Paid ${paidEtb} ETB is less than required ${expectedEtb} ETB.` };
+      }
+    } catch (_) {}
+  }
+  return { valid: false, reason: 'CBE receipt not confirmed yet. Wait 1 minute and check your FT reference.' };
+}
+
+async function verifyUsdtTrc20Transaction(txHash, expectedUsdt) {
+  const cleanHash = String(txHash || '').trim();
+  if (cleanHash.length < 30) {
+    return { valid: false, reason: 'Invalid TRON Transaction Hash (TxID).' };
+  }
+  try {
+    const url = `https://tronscanapi.com{cleanHash}`;
+    const response = await axios.get(url, { timeout: 14000 });
+    const data = response.data || {};
+    if (!data.confirmed) {
+      return { valid: false, reason: 'Transaction is still confirming on TRON blockchain. Wait 30 seconds.' };
+    }
+    const transfers = data.trc20TransferInfo || [];
+    const match = transfers.find(
+      (t) => t.to_address === ACCOUNTS.usdtTrc20 && t.contract_address === ACCOUNTS.usdtContract
+    );
+    if (!match) {
+      return { valid: false, reason: 'Receiver address does not match official USDT TRC20 wallet.' };
+    }
+    const paidUsdt = Number(match.amount_str || 0) / 1e6;
+    if (paidUsdt + 0.05 < expectedUsdt) {
+      return { valid: false, reason: `Paid ${paidUsdt} USDT is less than required ${expectedUsdt} USDT.` };
+    }
+    return { valid: true, paidAmount: paidUsdt, currency: 'USDT' };
+  } catch (err) {
+    return { valid: false, reason: 'Could not reach TRON network. Please retry in 15 seconds.' };
+  }
+}
+
+app.post('/api/verify-payment', async (req, res) => {
+  try {
+    const { method, reference, expectedAmount, coins, userId, userName } = req.body || {};
+    const cleanRef = String(reference || '').trim().toUpperCase();
+    if (!cleanRef) {
+      return res.status(400).json({ ok: false, msg: 'Transaction Reference / Hash is required.' });
+    }
+
+    const used = await sbSelect('used_transactions', `?tx_ref=eq.${encodeURIComponent(cleanRef)}`);
+    if (used.length > 0) {
+      return res.status(409).json({ ok: false, msg: 'This Transaction ID has already been used!' });
+    }
+
+    const result = method === 'CBE'
+      ? await verifyCbeTransaction(cleanRef, Number(expectedAmount || 0))
+      : await verifyUsdtTrc20Transaction(cleanRef, Number(expectedAmount || 0));
+
+    if (!result.valid) {
+      return res.status(400).json({ ok: false, msg: result.reason });
+    }
+
+    const coinReward = Number(coins || 0);
+    await sbInsert('used_transactions', {
+      tx_ref: cleanRef,
+      method,
+      user_id: String(userId || 'Guest'),
+      user_name: String(userName || 'User'),
+      paid_amount: result.paidAmount,
+      currency: result.currency,
+      coins_credited: coinReward
+    });
+
+    let updatedUser = null;
+    if (userId) {
+      const uRows = await sbSelect('users', `?uid=eq.${encodeURIComponent(String(userId))}`);
+      if (uRows.length > 0) {
+        const nextCoins = Number(uRows.coins || 0) + coinReward;
+        const uPatch = await sbUpdate('users', `?uid=eq.${encodeURIComponent(String(userId))}`, { coins: nextCoins });
+        updatedUser = mapUserOut(uPatch);
+      }
+    }
+
     return res.json({
       ok: true,
-      topGifters: gifters.map(u => ({ uid: u.uid, name: u.name, vipLevel: u.vip_level || 0, gifted: u.total_gifted || 0 })),
-      topHosts: hosts.map(u => ({ uid: u.uid, name: u.name, vipLevel: u.vip_level || 0, received: u.total_received || 0 }))
+      msg: `Verified ${result.paidAmount} ${result.currency}! ${coinReward} Coins credited.`,
+      coinsCredited: coinReward,
+      user: updatedUser
     });
-  } catch (e) {
-    return res.json({ ok: true, topGifters: [], topHosts: [] });
+  } catch (err) {
+    return res.status(500).json({ ok: false, msg: 'Payment verification error. Please retry.' });
   }
 });
-
-// ==================== CASHOUT & REPORT ROUTES ====================
 
 app.post('/api/cashout', async (req, res) => {
   try {
     const { userId, userName, method, account, points, etbAmount } = req.body || {};
-    if (!userId || !method || !account || Number(points) < 100) {
+    const pts = Number(points || 0);
+    if (!userId || pts < 100 || !account) {
       return res.status(400).json({ ok: false, msg: 'Minimum 100 points and valid account required.' });
+    }
+    const uRows = await sbSelect('users', `?uid=eq.${encodeURIComponent(String(userId))}`);
+    if (uRows.length > 0) {
+      const currentPts = Number(uRows.points || 0);
+      if (currentPts < pts) {
+        return res.status(400).json({ ok: false, msg: 'Insufficient points balance.' });
+      }
+      await sbUpdate('users', `?uid=eq.${encodeURIComponent(String(userId))}`, { points: currentPts - pts });
     }
     await sbInsert('cashout_requests', {
       user_id: String(userId),
       user_name: String(userName || 'User'),
-      method: String(method),
+      method: String(method || 'CBE'),
       account: String(account),
-      points: Number(points),
-      etb_amount: Number(etbAmount || 0),
+      points: pts,
+      etb_amount: Number(etbAmount || pts * 10),
       status: 'pending'
     });
-    return res.json({ ok: true, msg: 'Cash-out request saved to server!' });
-  } catch (e) {
-    return res.status(500).json({ ok: false, msg: 'Could not submit cash-out.' });
-  }
-});
-
-app.get('/api/admin/cashouts', async (req, res) => {
-  try {
-    const list = await sbSelect('cashout_requests', '?order=created_at.desc&limit=50');
-    return res.json({ ok: true, requests: list });
-  } catch (e) {
-    return res.json({ ok: true, requests: [] });
-  }
-});
-
-// ==================== AUTOMATIC PAYMENT VERIFIER ====================
-
-const ACCOUNTS = {
-  cbe: '1000273060937',
-  usdtTrc20: 'TYdr3JdbDzhxjfsGeU3yazNAmTbkHBuNcE',
-  usdtContract: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
-  ownerName: 'MOHAMMEDSABIT'
-};
-
-const MAX_RECEIPT_AGE_MS = 24 * 60 * 60 * 1000;
-
-function ensureWithin24Hours(parsedDateMs) {
-  if (!parsedDateMs || Number.isNaN(parsedDateMs)) return;
-  if (Date.now() - parsedDateMs > MAX_RECEIPT_AGE_MS) {
-    throw new Error('This receipt is older than 24 hours. Please enter a recent Transaction ID.');
-  }
-}
-
-const insecureAgent = new https.Agent({ rejectUnauthorized: false });
-
-async function verifyCbeReceipt(txId, expectedEtb) {
-  const cleanId = txId.trim().toUpperCase();
-  const fullId = cleanId.endsWith('60937') ? cleanId : `${cleanId}60937`;
-  const url = `https://cbe.com.et{fullId}`;
-  const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 15000, httpsAgent: insecureAgent });
-  const text = Buffer.from(res.data).toString('latin1').toUpperCase();
-  if (!text.includes('60937') && !text.includes(ACCOUNTS.ownerName)) {
-    throw new Error('This CBE receipt was not sent to account 1000273060937.');
-  }
-  const cbeDate = text.match(/(\d{1,2}\/\d{1,2}\/\d{4},?\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM)?)/);
-  if (cbeDate) ensureWithin24Hours(Date.parse(cbeDate));
-  return expectedEtb;
-}
-
-async function verifyUsdtTrc20Tx(txHash, expectedUsdt) {
-  const cleanHash = txHash.trim();
-  const url = `https://tronscanapi.com{cleanHash}`;
-  const res = await axios.get(url, { timeout: 15000 });
-  const data = res.data || {};
-  if (!data.confirmed && data.contractRet !== 'SUCCESS') {
-    throw new Error('This USDT transaction is not yet confirmed on the TRON network.');
-  }
-  if (data.timestamp) ensureWithin24Hours(Number(data.timestamp));
-  const transfers = data.trc20TransferInfo || [];
-  const validTransfer = transfers.find(
-    t => t.to_address === ACCOUNTS.usdtTrc20 && t.contract_address === ACCOUNTS.usdtContract
-  );
-  if (!validTransfer) throw new Error(`USDT was not sent to ${ACCOUNTS.usdtTrc20} (TRC20).`);
-  const decimals = Number(validTransfer.decimals || 6);
-  const paidUsdt = Number(validTransfer.amount_str || 0) / Math.pow(10, decimals);
-  if (expectedUsdt && paidUsdt < expectedUsdt - 0.1) {
-    throw new Error(`Sent amount (${paidUsdt} USDT) is less than the package price (${expectedUsdt} USDT).`);
-  }
-  return paidUsdt;
-}
-
-app.get('/', (req, res) => {
-  res.json({
-    status: 'Voice Chat ET Supabase Cloud & Auto-Payment Server Active',
-    database: 'Supabase Connected',
-    autoPayments: ['CBE', 'USDT (TRC20)']
-  });
-});
-
-app.post('/api/verify-payment', async (req, res) => {
-  const { userId, method, transactionId, expectedEtb, expectedUsdt, requestedCoins } = req.body || {};
-  if (!userId || !method || !transactionId) {
-    return res.status(400).json({ success: false, message: 'Please enter User ID, Method, and Transaction ID.' });
-  }
-
-  const txKey = `${method.toLowerCase()}_${transactionId.trim()}`;
-  try {
-    const existingTx = await sbSelect('used_transactions', `?tx_key=eq.${encodeURIComponent(txKey)}`);
-    if (existingTx.length > 0) {
-      return res.status(409).json({ success: false, message: 'This Transaction ID / TxID has already been used.' });
-    }
-
-    const m = method.toLowerCase();
-    let coinsToCredit = Number(requestedCoins) || 0;
-    let summaryText = '';
-
-    if (m.includes('usdt') || m.includes('trc20') || m.includes('binance')) {
-      const paidUsdt = await verifyUsdtTrc20Tx(transactionId, Number(expectedUsdt) || 0);
-      if (!coinsToCredit) coinsToCredit = Math.floor(paidUsdt * 10000);
-      summaryText = `${paidUsdt.toFixed(2)} USDT (TRC20)`;
-    } else if (m.includes('cbe')) {
-      const paidEtb = await verifyCbeReceipt(transactionId, Number(expectedEtb) || 180);
-      if (!coinsToCredit) coinsToCredit = Math.floor((paidEtb / 180) * 10000);
-      summaryText = `${paidEtb} ETB (CBE)`;
-    } else {
-      return res.status(403).json({
-        success: false,
-        message: 'Only CBE and USDT (TRC20) are supported for automatic verification.'
-      });
-    }
-
-    await sbInsert('used_transactions', {
-      tx_key: txKey,
-      user_id: String(userId),
-      method: String(method),
-      transaction_id: transactionId.trim(),
-      summary_text: summaryText,
-      coins_credited: coinsToCredit
-    });
-
-    return res.json({
-      success: true,
-      coinsAdded: coinsToCredit,
-      message: `Payment (${summaryText}) verified! ${coinsToCredit} coins added.`
-    });
+    return res.json({ ok: true, msg: 'Withdrawal request saved to cloud! Admin will process within 24h.' });
   } catch (err) {
-    return res.status(400).json({
-      success: false,
-      message: err.message || 'Verification failed. Check your Transaction ID.'
-    });
+    return res.status(500).json({ ok: false, msg: 'Could not submit withdrawal request.' });
   }
 });
-// ==================== SUPPORT TICKETS & SCREENSHOTS ====================
 
 app.post('/api/support', async (req, res) => {
   try {
@@ -416,5 +400,13 @@ app.post('/api/admin/support/reply', async (req, res) => {
   }
 });
 
+app.get('/', (req, res) => {
+  res.json({
+    status: 'Voice Chat ET Supabase Cloud & Auto-Payment Server Active',
+    database: 'Supabase Connected',
+    accounts: { cbe: ACCOUNTS.cbe, owner: ACCOUNTS.ownerName, usdtTrc20: ACCOUNTS.usdtTrc20 }
+  });
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Voice Chat ET Supabase Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Voice Chat ET Cloud Backend running on port ${PORT}`));
