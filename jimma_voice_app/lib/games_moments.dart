@@ -234,7 +234,7 @@ class FullScreenGameArena extends StatefulWidget {
 
 class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
-  final List<int> _bets = const;
+    final List<int> _bets = const;
   int _betIdx = 1;
   bool _spinning = false;
   bool _autoSpin = false;
@@ -955,7 +955,8 @@ class _ChatTabState extends State<ChatTab> {
         ),
       ),
     );
-  }class MessagesTab extends ChatTab {
+  }
+  class MessagesTab extends ChatTab {
   const MessagesTab({super.key, required super.onUpd});
 }
 
