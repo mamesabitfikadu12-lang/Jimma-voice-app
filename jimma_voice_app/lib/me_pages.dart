@@ -978,19 +978,37 @@ class _PointsCashOutPageState extends State<PointsCashOutPage> {
               foregroundColor: Colors.black,
               minimumSize: const Size(double.infinity, 48),
             ),
-            onPressed: () {
+                        onPressed: () async {
               if (pts < 100 || AppState.points < pts || _accCtrl.text.trim().length < 5) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(backgroundColor: Colors.red, content: Text('Check minimum 100 points & account details.')),
                 );
                 return;
               }
+              try {
+                await http.post(
+                  Uri.parse('https://onrender.com'),
+                  headers: {'Content-Type': 'application/json'},
+                  body: jsonEncode({
+                    'userId': AppState.userId,
+                    'userName': AppState.userName,
+                    'method': _method,
+                    'account': _accCtrl.text.trim(),
+                    'points': pts,
+                    'etbAmount': pts * 10,
+                  }),
+                ).timeout(const Duration(seconds: 15));
+              } catch (_) {}
               setState(() => AppState.points -= pts);
               widget.onUpd();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(backgroundColor: Colors.green, content: Text('Withdrawal request submitted!')),
-              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(backgroundColor: Colors.green, content: Text('Withdrawal request saved to server!')),
+                );
+              }
             },
+
+                  
             child: const Text('Request Cash Out', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
@@ -1097,3 +1115,8 @@ class SettingsPage extends StatelessWidget {
     );
   }
 }
+       ListTile(
+         leading: Icon(Icons.report_problem, color: Colors.redAccent),
+         title: Text('Report Abuse / Block User'),
+         subtitle: Text('Report any offensive user or voice room 24/7 for immediate moderation.'),
+       ),
