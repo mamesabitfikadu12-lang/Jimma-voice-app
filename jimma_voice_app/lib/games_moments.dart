@@ -233,8 +233,8 @@ class FullScreenGameArena extends StatefulWidget {
 }
 
 class _FullScreenGameArenaState extends State<FullScreenGameArena> with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-    final List<int> _bets = const;
+    late AnimationController _ctrl;
+  final List<int> _bets = List.of(<int>[50, 100, 500, 1000, 5000]);
   int _betIdx = 1;
   bool _spinning = false;
   bool _autoSpin = false;
