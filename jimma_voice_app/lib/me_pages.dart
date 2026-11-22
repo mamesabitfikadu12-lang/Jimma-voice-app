@@ -24,7 +24,6 @@ class TronVerifyHelper {
       for (final item in list) {
         if (item['to_address'] == wallet && item['contract_address'] == usdtContract) {
           final raw = double.tryParse('${item['amount_str']}') ?? 0;
-          final dec = (item['decimals'] as num?)?.toInt() ?? 6;
           return raw / 1000000.0;
         }
       }
@@ -66,28 +65,22 @@ class _MeTabState extends State<MeTab> {
   }
 
   void _editProfile() {
-    final nameCtrl = TextEditingController(text: AppState.username);
-    final bioCtrl = TextEditingController(text: AppState.bio);
+    final nameCtrl = TextEditingController(text: AppState.userName);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
         title: const Text('Edit Profile'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Username')),
-            const SizedBox(height: 10),
-            TextField(controller: bioCtrl, decoration: const InputDecoration(labelText: 'Bio')),
-          ],
+        content: TextField(
+          controller: nameCtrl,
+          decoration: const InputDecoration(labelText: 'Username'),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               setState(() {
-                if (nameCtrl.text.trim().isNotEmpty) AppState.username = nameCtrl.text.trim();
-                AppState.bio = bioCtrl.text.trim();
+                if (nameCtrl.text.trim().isNotEmpty) AppState.userName = nameCtrl.text.trim();
               });
               widget.onUpd();
               Navigator.pop(ctx);
@@ -130,12 +123,13 @@ class _MeTabState extends State<MeTab> {
 
   @override
   Widget build(BuildContext context) {
+    final initial = AppState.userName.isNotEmpty ? AppState.userName.toUpperCase() : 'U';
     return Scaffold(
       appBar: AppBar(
         title: const Text('Me'),
         actions: [
           IconButton(icon: const Icon(Icons.edit), onPressed: _editProfile),
-          IconButton(icon: const Icon(Icons.settings), onPressed: () => _go(AppSettingsPage())),
+          IconButton(icon: const Icon(Icons.settings), onPressed: () => _go(const SettingsPage())),
         ],
       ),
       body: ListView(
@@ -154,7 +148,7 @@ class _MeTabState extends State<MeTab> {
                   radius: 32,
                   backgroundColor: Colors.tealAccent,
                   child: Text(
-                    AppState.userName.isNotEmpty ? AppState.userName[0].toUpperCase() : 'U',
+                    initial,
                     style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black),
                   ),
                 ),
@@ -202,9 +196,9 @@ class _MeTabState extends State<MeTab> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                         'Welcome to Voice Chat ET!' : AppState.bio,
-                        style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      const Text(
+                        'Welcome to Voice Chat ET!',
+                        style: TextStyle(fontSize: 12, color: Colors.white70),
                       ),
                     ],
                   ),
@@ -277,8 +271,8 @@ class _MeTabState extends State<MeTab> {
               _gridBtn(Icons.storefront, Colors.tealAccent, 'Store', () => _go(StorePage(onUpd: widget.onUpd))),
               _gridBtn(Icons.workspace_premium, Colors.orangeAccent, 'VIP Club', () => _go(VipClubPage(onUpd: widget.onUpd))),
               _gridBtn(Icons.account_balance_wallet, Colors.cyanAccent, 'Cash Out', () => _go(PointsCashOutPage(onUpd: widget.onUpd))),
-              _gridBtn(Icons.policy, Colors.amber, 'Policies', () => _go(AppSettingsPage())),
-              _gridBtn(Icons.settings, Colors.white70, 'Settings', () => _go(AppSettingsPage())),
+              _gridBtn(Icons.policy, Colors.amber, 'Policies', () => _go(const SettingsPage())),
+              _gridBtn(Icons.settings, Colors.white70, 'Settings', () => _go(const SettingsPage())),
             ],
           ),
         ],
@@ -914,7 +908,8 @@ class _StorePageState extends State<StorePage> {
       ),
     );
   }
-}class PointsCashOutPage extends StatefulWidget {
+}
+class PointsCashOutPage extends StatefulWidget {
   final VoidCallback onUpd;
   const PointsCashOutPage({super.key, required this.onUpd});
   @override
@@ -1073,4 +1068,3 @@ class _VipClubPageState extends State<VipClubPage> {
     );
   }
 }
-
