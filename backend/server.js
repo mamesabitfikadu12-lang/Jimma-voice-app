@@ -120,16 +120,17 @@ app.post('/api/auth/login', async (req, res) => {
     const cleanContact = String(contact || '').trim().toLowerCase();
     const cleanPass = String(password || '').trim();
 
-    if (cleanContact === FOUNDER_EMAIL && cleanPass === FOUNDER_PASS) {
-      const fRows = await sbSelect('users', `?contact=eq.${encodeURIComponent(FOUNDER_EMAIL)}`);
-      if (fRows.length > 0) {
-        return res.json({ ok: true, user: mapUserOut(fRows[0]) });
-      }
+        if (cleanContact === FOUNDER_EMAIL && cleanPass === FOUNDER_PASS) {
+      try {
+        const fRows = await sbSelect('users', `?contact=eq.${encodeURIComponent(FOUNDER_EMAIL)}`);
+        if (fRows.length > 0) return res.json({ ok: true, user: mapUserOut(fRows[0]) });
+      } catch (_) {}
       return res.json({
         ok: true,
         user: { uid: '100001', name: 'Mohammedsabit (Founder)', contact: FOUNDER_EMAIL, coins: 500000, points: 1000, vipLevel: 19 }
       });
     }
+
 
     const rows = await sbSelect('users', `?contact=eq.${encodeURIComponent(cleanContact)}`);
     if (rows.length === 0) {
@@ -140,7 +141,10 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ ok: false, msg: 'Incorrect password. Use Forgot Password if needed.' });
     }
     return res.json({ ok: true, user: mapUserOut(user) });
-  } catch (err) {
+    } catch (err) {
+    return res.status(500).json({ ok: false, msg: `DB Error: ${err.response?.data?.message || err.message}` });
+  }
+
     return res.status(500).json({ ok: false, msg: 'Server connection error. Please try again.' });
   }
 });
