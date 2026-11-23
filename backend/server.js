@@ -121,14 +121,7 @@ app.post('/api/auth/login', async (req, res) => {
     const cleanContact = String(body.contact || '').trim().toLowerCase();
     const cleanPass = String(body.password || '').trim();
 
-    if (cleanContact === FOUNDER_EMAIL && cleanPass === FOUNDER_PASS) {
-      try {
-        await ensureFounderAccount();
-        const fRows = await sbSelect('users', '?contact=eq.' + encodeURIComponent(FOUNDER_EMAIL));
-        if (fRows.length > 0) {
-          return res.json({ ok: true, user: mapUserOut(fRows) });
-        }
-      } catch (e) {}
+        if (cleanContact === FOUNDER_EMAIL && cleanPass === FOUNDER_PASS) {
       return res.json({
         ok: true,
         user: { uid: '100001', name: 'Mohammedsabit (Founder)', contact: FOUNDER_EMAIL, coins: 500000, points: 1000, vipLevel: 19 }
