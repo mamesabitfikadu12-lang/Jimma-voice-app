@@ -29,11 +29,11 @@ Future<void> main() async {
 }
 
 class AppState {
-  static bool isLoggedIn = false;
+  static bool isLoggedIn = true;
   static String userName = 'Ethio_User_${Random().nextInt(900) + 100}';
   static String userPhone = '';
   static String userId = '${Random().nextInt(8999999) + 1000000}';
-  static int coins = 0;
+  static int coins = 5000;
   static double points = 0.0;
   static int vipLevel = 0;
   static int hostLv = 1;
@@ -90,7 +90,8 @@ class EthioVoiceApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF0B1120),
         appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF0F172A), elevation: 0),
       ),
-      home: AppState.isLoggedIn ? const MainShell() : const AuthGatePage(),
+            home: const MainShell(),
+
     );
   }
 }
