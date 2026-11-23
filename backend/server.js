@@ -24,13 +24,17 @@ const FOUNDER_PASS = '142730';
 const otpStore = new Map();
 
 function sbHeaders() {
-  return {
+  const h = {
     apikey: SUPABASE_KEY,
-    Authorization: `Bearer ${SUPABASE_KEY}`,
     'Content-Type': 'application/json',
     Prefer: 'return=representation'
   };
+  if (SUPABASE_KEY.startsWith('eyJ')) {
+    h.Authorization = `Bearer ${SUPABASE_KEY}`;
+  }
+  return h;
 }
+
 
 async function sbSelect(table, query = '') {
   const url = `${SUPABASE_URL}/rest/v1/${table}${query}`;
