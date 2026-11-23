@@ -145,8 +145,10 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ ok: false, msg: 'Incorrect password. Use Forgot Password if needed.' });
     }
     return res.json({ ok: true, user: mapUserOut(user) });
-    } catch (err) {
-    return res.status(500).json({ ok: false, msg: `DB Error: ${err.response?.data?.message || err.message}` });
+      } catch (err) {
+    return res.status(500).json({ ok: false, msg: `404 URL: ${err.config?.url} | ${err.response?.data?.message || err.message}` 
+  }
+
   }
 });
 
