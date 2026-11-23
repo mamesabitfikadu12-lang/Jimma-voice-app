@@ -9,7 +9,7 @@ app.use(express.json({ limit: '10mb' }));
 
 const insecureAgent = new https.Agent({ rejectUnauthorized: false });
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://supabase.com';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_M1d5TY-ak6_pSUDiJo38RQ_A46yTGct';
 
 const ACCOUNTS = {
