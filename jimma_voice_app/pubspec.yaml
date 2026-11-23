@@ -1,7 +1,7 @@
 name: jimma_voice_app
 description: Jimma Voice Chat Family Official App
 publish_to: 'none'
-version: 3.0.0+3
+version: 3.0.6+9
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -14,6 +14,8 @@ dependencies:
   socket_io_client: ^2.0.3+1
   image_picker: ^1.1.2
   audioplayers: ^6.1.0
+  shared_preferences: ^2.3.2
+  webview_flutter: ^4.10.0
 
 flutter:
   uses-material-design: true
