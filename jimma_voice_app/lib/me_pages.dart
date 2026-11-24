@@ -329,14 +329,15 @@ class _MeTabState extends State<MeTab> {
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
             childAspectRatio: 1.25,
-            children: [
-              _gridBtn(Icons.monetization_on, Colors.amber, 'Coin Seller', () => _go(CoinSellerPage(onUpd: widget.onUpd))),
-              _gridBtn(Icons.storefront, Colors.tealAccent, 'Store', () => _go(StorePage(onUpd: widget.onUpd))),
+             children: [
+              _gridBtn(Icons.verified_user, Colors.amber, 'Official Agents', () => _go(OfficialAgentsDirectoryPage())),
+              _gridBtn(Icons.business_center, Colors.tealAccent, 'Agency & Payroll', () => _go(AgencyWebPortalPage())),
+              _gridBtn(Icons.account_balance_wallet, Colors.cyanAccent, 'Cash Out (ETB/USDT)', () => _go(PointsCashOutPage(onUpd: widget.onUpd))),
+              _gridBtn(Icons.storefront, Colors.greenAccent, 'Store', () => _go(StorePage(onUpd: widget.onUpd))),
               _gridBtn(Icons.workspace_premium, Colors.orangeAccent, 'VIP Club', () => _go(VipClubPage(onUpd: widget.onUpd))),
-              _gridBtn(Icons.account_balance_wallet, Colors.cyanAccent, 'Cash Out', () => _go(PointsCashOutPage(onUpd: widget.onUpd))),
-              _gridBtn(Icons.support_agent, Colors.greenAccent, 'Support', () => _go(const SupportChatPage())),
-              _gridBtn(Icons.settings, Colors.white70, 'Settings', () => _go( SettingsPage())),
+              _gridBtn(Icons.admin_panel_settings, Colors.redAccent, 'Founder / Support', () => _go(const SupportChatPage())),
             ],
+
           ),
         ],
       ),
@@ -1554,5 +1555,198 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
+    class OfficialAgentsDirectoryPage extends StatefulWidget {
+  const OfficialAgentsDirectoryPage({super.key});
+  @override
+  State<OfficialAgentsDirectoryPage> createState() => _OfficialAgentsDirectoryPageState();
+}
+
+class _OfficialAgentsDirectoryPageState extends State<OfficialAgentsDirectoryPage> {
+  static const String baseApi = 'https://onrender.com';
+  List<dynamic> _agents = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAgents();
+  }
+
+  Future<void> _loadAgents() async {
+    try {
+      final res = await http.get(Uri.parse('$baseApi/api/agency/overview')).timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200 && mounted) {
+        setState(() {
+          _agents = jsonDecode(res.body)['agencies'] ?? [];
+          _loading = false;
+        });
+        return;
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _loading = false);
+  }
+
+  void _copy(String label, String val) {
+    Clipboard.setData(ClipboardData(text: val));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('✅ $label copied: $val')));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Official Coin Sellers & Agents')),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator(color: Colors.amber))
+          : ListView(
+              padding: const EdgeInsets.all(14),
+              children: [
+                Card(
+                  color: const Color(0xFF1E293B),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('👑 Official Headquarters (Founder Direct)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber)),
+                        const SizedBox(height: 8),
+                        const Text('• CBE: 1000273060937 (MOHAMMEDSABIT)\n• Telebirr / WhatsApp: +251919108311\n• Telegram: @Mosabit11\n• USDT (TRC20): TYdr3JdbDzhxjfsGeU3yazNAmTbkHBuNcE', style: TextStyle(height: 1.5)),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(child: ElevatedButton(onPressed: () => _copy('Telegram', '@Mosabit11'), child: const Text('Copy Telegram'))),
+                            const SizedBox(width: 8),
+                            Expanded(child: ElevatedButton(onPressed: () => _copy('WhatsApp/Telebirr', '+251919108311'), child: const Text('Copy WhatsApp'))),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text('Verified Regional & International Agents', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.tealAccent)),
+                const SizedBox(height: 8),
+                ..._agents.map((ag) => Card(
+                      color: const Color(0xFF1E293B),
+                      child: ListTile(
+                        title: Text('${ag['agency_name']} (${ag['agency_code']})', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text('Agent: ${ag['owner_name']} | UID: ${ag['owner_uid']}\nBanks/Telebirr/TG/WA: ${ag['phone'] ?? ''}'),
+                        trailing: Text('${ag['coin_stock']} Coins', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                        onTap: () => _copy('Agent Contact', '${ag['phone'] ?? ''}'),
+                      ),
+                    )),
+              ],
+            ),
+    );
   }
 }
+
+class AgencyWebPortalPage extends StatefulWidget {
+  const AgencyWebPortalPage({super.key});
+  @override
+  State<AgencyWebPortalPage> createState() => _AgencyWebPortalPageState();
+}
+
+class _AgencyWebPortalPageState extends State<AgencyWebPortalPage> {
+  static const String baseApi = 'https://onrender.com';
+  final _pass = TextEditingController(), _ac = TextEditingController(), _an = TextEditingController(), _ou = TextEditingController(), _on = TextEditingController(), _pay = TextEditingController(), _stk = TextEditingController();
+  final _sac = TextEditingController(), _sto = TextEditingController(), _samt = TextEditingController(), _setb = TextEditingController();
+  final _pac = TextEditingController(), _phu = TextEditingController(), _phn = TextEditingController(), _pdi = TextEditingController();
+  bool _unlocked = false, _busy = false;
+  List<dynamic> _agencies = [], _members = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  Future<void> _refresh() async {
+    try {
+      final res = await http.get(Uri.parse('$baseApi/api/agency/overview')).timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200 && mounted) {
+        final d = jsonDecode(res.body);
+        setState(() {
+          _agencies = d['agencies'] ?? [];
+          _members = d['members'] ?? [];
+        });
+      }
+    } catch (_) {}
+  }
+
+  void _msg(String t, {bool ok = true}) {
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: ok ? Colors.green : Colors.red, content: Text(t)));
+  }
+
+  Future<void> _post(String path, Map<String, dynamic> body, String okMsg) async {
+    setState(() => _busy = true);
+    try {
+      final res = await http.post(Uri.parse('$baseApi$path'), headers: {'Content-Type': 'application/json'}, body: jsonEncode(body));
+      final d = jsonDecode(res.body);
+      if (d['ok'] == true) {
+        _msg(okMsg);
+        await _refresh();
+      } else {
+        _msg(d['msg'] ?? 'Failed', ok: false);
+      }
+    } catch (_) {
+      _msg('Network error', ok: false);
+    }
+    if (mounted) setState(() => _busy = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Agency, Coin Seller & Payroll')),
+      body: ListView(
+        padding: const EdgeInsets.all(14),
+        children: [
+          Card(
+            color: const Color(0xFF1E293B),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('1. Hire / Create Agency (Founder Only)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber)),
+                  if (!_unlocked) ...[
+                    TextField(controller: _pass, obscureText: true, decoration: const InputDecoration(labelText: 'Founder Password')),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
+                      onPressed: () => _pass.text.trim() == '142730' ? setState(() => _unlocked = true) : _msg('Wrong Password', ok: false),
+                      child: const Text('Unlock Agency Creator'),
+                    ),
+                  ] else ...[
+                    TextField(controller: _ac, decoration: const InputDecoration(labelText: 'Agency Code (e.g. AG102)')),
+                    TextField(controller: _an, decoration: const InputDecoration(labelText: 'Agency Name')),
+                    TextField(controller: _ou, decoration: const InputDecoration(labelText: 'Agent UID')),
+                    TextField(controller: _on, decoration: const InputDecoration(labelText: 'Agent Full Name')),
+                    TextField(controller: _pay, decoration: const InputDecoration(labelText: 'Telebirr, Banks, Telegram & WhatsApp')),
+                    TextField(controller: _stk, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Initial Coin Stock')),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
+                      onPressed: _busy ? null : () => _post('/api/agency/create', {'agency_code': _ac.text.trim(), 'agency_name': _an.text.trim(), 'owner_uid': _ou.text.trim(), 'owner_name': _on.text.trim(), 'phone': _pay.text.trim(), 'coin_stock': int.tryParse(_stk.text.trim()) ?? 0}, '✅ Agency Created!'),
+                      child: const Text('Create Agency'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          Card(
+            color: const Color(0xFF1E293B),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('2. Agent Coin Sale (Reseller -> User UID)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.tealAccent)),
+                  TextField(controller: _sac, decoration: const InputDecoration(labelText: 'Agency Code')),
+                  TextField(controller: _sto, decoration: const InputDecoration(labelText: 'Buyer User UID')),
+                  TextField(controller: _samt, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Coins Amount')),
+                  TextField(controller: _setb, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Price (ETB/USDT)')),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black),
