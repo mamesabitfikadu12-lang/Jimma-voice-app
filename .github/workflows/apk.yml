@@ -53,5 +53,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete v3.0.8 -y || true
-          gh release create v3.0.8 jimma_voice_app/build/app/outputs/bundle/release/app-release.aab --title "Voice Chat ET v3.0.8 (Version 11)" --notes "Persistent user storage, daily bonus, create/save account and 3D real games hub"
+          gh release delete v3.0.9 -y || true
+          gh release create v3.0.9 jimma_voice_app/build/app/outputs/bundle/release/app-release.aab --title "Voice Chat ET v3.0.9 (Version 12)" --notes "Official coin sellers directory (Telebirr, all banks, Telegram & WhatsApp), in-app agency creator and payroll"
