@@ -28,40 +28,17 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Configure App Name, ZegoVoice, Audio Assets & Build
+      - name: Configure App Name, ZegoVoice & Build
         run: |
           cd jimma_voice_app
           flutter create --org com.jimmavoice --project-name app .
           for d in android/app/src/main/res/mipmap-*; do cp ../voice_et_icon_512.png "$d/ic_launcher.png" 2>/dev/null || true; done
           mkdir -p assets/sounds
-          python3 -c "import wave,struct,math; [ (lambda p,fs,d: (lambda w: (w.setnchannels(1),w.setsampwidth(2),w.setframerate(22050),w.writeframes(b''.join(struct.pack('<h',int(16000*math.sin(2*math.pi*fs[int(i*len(fs)/(22050*d))]*i/22050)*(1-i/(22050*d)))) for i in range(int(22050*d)))),w.close()))(wave.open(p,'w')))(*x) for x in [('assets/sounds/coin.wav',(880,1320),0.18),('assets/sounds/gift.wav',(523,659,784,1046),0.42),('assets/sounds/win.wav',(587,740,880,1174),0.55),('assets/sounds/notify.wav',(987,1318),0.12)] ]"
-          cat << 'EOF' > pubspec.yaml
-          name: jimma_voice_app
-          description: Voice Chat ET Official App
-          publish_to: 'none'
-          version: 3.0.6+9
-
-          environment:
-            sdk: '>=3.4.0 <4.0.0'
-
-          dependencies:
-            flutter:
-              sdk: flutter
-            cupertino_icons: ^1.0.8
-            http: ^1.2.0
-            socket_io_client: ^2.0.3+1
-            image_picker: ^1.1.2
-            audioplayers: ^6.1.0
-            zego_express_engine: ^3.18.0
-            permission_handler: ^11.3.1
-            shared_preferences: ^2.3.2
-            webview_flutter: ^4.10.0
-
-          flutter:
-            uses-material-design: true
-            assets:
-              - assets/sounds/
-          EOF
+          printf "RIFF$\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00D\xac\x00\x00\x88X\x01\x00\x02\x00\x10\x00data\x00\x00\x00\x00" > assets/sounds/coin.wav
+          cp assets/sounds/coin.wav assets/sounds/gift.wav
+          cp assets/sounds/coin.wav assets/sounds/win.wav
+          cp assets/sounds/coin.wav assets/sounds/notify.wav
+          printf "name: jimma_voice_app\ndescription: Voice Chat ET Official App\npublish_to: 'none'\nversion: 3.0.6+9\nenvironment:\n  sdk: '>=3.4.0 <4.0.0'\ndependencies:\n  flutter:\n    sdk: flutter\n  cupertino_icons: ^1.0.8\n  http: ^1.2.0\n  socket_io_client: ^2.0.3+1\n  image_picker: ^1.1.2\n  audioplayers: ^6.1.0\n  zego_express_engine: ^3.18.0\n  permission_handler: ^11.3.1\n  shared_preferences: ^2.3.2\n  webview_flutter: ^4.10.0\nflutter:\n  uses-material-design: true\n  assets:\n    - assets/sounds/\n" > pubspec.yaml
           sed -i 's/android:label="[^"]*"/android:label="Voice Chat ET"/' android/app/src/main/AndroidManifest.xml
           sed -i 's/<application/<uses-permission android:name="android.permission.RECORD_AUDIO" \/>\n    <uses-permission android:name="android.permission.INTERNET" \/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" \/>\n    <application/' android/app/src/main/AndroidManifest.xml
           sed -i 's/android {/android {\n    lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }/' android/app/build.gradle.kts || true
