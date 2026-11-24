@@ -38,13 +38,13 @@ jobs:
           cp assets/sounds/coin.wav assets/sounds/gift.wav
           cp assets/sounds/coin.wav assets/sounds/win.wav
           cp assets/sounds/coin.wav assets/sounds/notify.wav
-          printf "name: jimma_voice_app\ndescription: Voice Chat ET Official App\npublish_to: 'none'\nversion: 3.0.6+9\nenvironment:\n  sdk: '>=3.4.0 <4.0.0'\ndependencies:\n  flutter:\n    sdk: flutter\n  cupertino_icons: ^1.0.8\n  http: ^1.2.0\n  socket_io_client: ^2.0.3+1\n  image_picker: ^1.1.2\n  audioplayers: ^6.1.0\n  zego_express_engine: ^3.18.0\n  permission_handler: ^11.3.1\n  shared_preferences: ^2.3.2\n  webview_flutter: ^4.10.0\nflutter:\n  uses-material-design: true\n  assets:\n    - assets/sounds/\n" > pubspec.yaml
+          printf "name: jimma_voice_app\ndescription: Voice Chat ET Official App\npublish_to: 'none'\nversion: 3.0.8+11\nenvironment:\n  sdk: '>=3.4.0 <4.0.0'\ndependencies:\n  flutter:\n    sdk: flutter\n  cupertino_icons: ^1.0.8\n  http: ^1.2.0\n  socket_io_client: ^2.0.3+1\n  image_picker: ^1.1.2\n  audioplayers: ^6.1.0\n  zego_express_engine: ^3.18.0\n  permission_handler: ^11.3.1\n  shared_preferences: ^2.3.2\n  webview_flutter: ^4.10.0\nflutter:\n  uses-material-design: true\n  assets:\n    - assets/sounds/\n" > pubspec.yaml
           sed -i 's/android:label="[^"]*"/android:label="Voice Chat ET"/' android/app/src/main/AndroidManifest.xml
           sed -i 's/<application/<uses-permission android:name="android.permission.RECORD_AUDIO" \/>\n    <uses-permission android:name="android.permission.INTERNET" \/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" \/>\n    <application/' android/app/src/main/AndroidManifest.xml
           sed -i 's/android {/android {\n    lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }/' android/app/build.gradle.kts || true
           flutter pub get
           find ~/.pub-cache -name "build.gradle" -exec sed -i 's/compileSdkVersion 31/compileSdkVersion 36/g; s/compileSdk 31/compileSdk 36/g' {} + || true
-          flutter build appbundle --release
+          flutter build appbundle --release --build-number=11 --build-name=3.0.8
           zip -d build/app/outputs/bundle/release/app-release.aab "META-INF/*" || true
           ALIAS=$(keytool -list -v -keystore ../voice_et_release.jks -storepass VoiceET2026 | grep "Alias name:" | head -n 1 | awk -F': ' '{print $2}')
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ../voice_et_release.jks -storepass VoiceET2026 -keypass VoiceET2026 build/app/outputs/bundle/release/app-release.aab "$ALIAS"
@@ -53,7 +53,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete v3.0.7 -y || true
-          gh release create v3.0.7 jimma_voice_app/build/app/outputs/bundle/release/app-release.aab --title "Voice Chat ET v3.0.7 (Version 10)" --notes "Persistent user storage, separate admin panel, create account, daily bonus and invite friends"
-
-          
+          gh release delete v3.0.8 -y || true
+          gh release create v3.0.8 jimma_voice_app/build/app/outputs/bundle/release/app-release.aab --title "Voice Chat ET v3.0.8 (Version 11)" --notes "Persistent user storage, daily bonus, create/save account and 3D real games hub"
