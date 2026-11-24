@@ -21,9 +21,17 @@ Future<void> main() async {
     AppState.userName = prefs.getString('user_name') ?? AppState.userName;
     AppState.userId = prefs.getString('user_id') ?? AppState.userId;
     AppState.userPhone = prefs.getString('user_phone') ?? '';
-    AppState.coins = prefs.getInt('coins') ?? 0;
+    AppState.coins = prefs.getInt('coins') ?? 5000;
     AppState.points = prefs.getDouble('points') ?? 0.0;
     AppState.vipLevel = prefs.getInt('vip_level') ?? 0;
+  } else {
+    AppState.isLoggedIn = true;
+    await prefs.setBool('logged_in', true);
+    await prefs.setString('user_name', AppState.userName);
+    await prefs.setString('user_id', AppState.userId);
+    await prefs.setInt('coins', AppState.coins);
+    await prefs.setDouble('points', AppState.points);
+    await prefs.setInt('vip_level', AppState.vipLevel);
   }
   runApp(const EthioVoiceApp());
 }
