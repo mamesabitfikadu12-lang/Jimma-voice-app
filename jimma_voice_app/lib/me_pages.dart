@@ -1555,12 +1555,12 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
-        ),
+      ),
   );
 }
 
-  class OfficialAgentsDirectoryPage extends StatefulWidget {
-  const OfficialAgentsDirectoryPage({super.key});
+class OfficialAgentsDirectoryPage extends StatefulWidget {
+  const OfficialAgentsDirectoryPage({super.key);
   @override
   State<OfficialAgentsDirectoryPage> createState() => _OfficialAgentsDirectoryPageState();
 }
