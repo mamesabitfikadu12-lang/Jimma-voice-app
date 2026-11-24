@@ -34,26 +34,7 @@ jobs:
           flutter create --org com.jimmavoice --project-name app .
           for d in android/app/src/main/res/mipmap-*; do cp ../voice_et_icon_512.png "$d/ic_launcher.png" 2>/dev/null || true; done
           mkdir -p assets/sounds
-          python3 - << 'PYEOF'
-          import wave, struct, math
-          def make_tone(path, freqs, dur):
-              w = wave.open(path, 'w')
-              w.setnchannels(1)
-              w.setsampwidth(2)
-              w.setframerate(22050)
-              n = int(22050 * dur)
-              frames = bytearray()
-              for i in range(n):
-                  f = freqs[int(i * len(freqs) / n)]
-                  val = int(16000 * math.sin(2 * math.pi * f * i / 22050) * (1 - i / n))
-                  frames.extend(struct.pack('<h', val))
-              w.writeframes(frames)
-              w.close()
-          make_tone('assets/sounds/coin.wav', [880, 1320], 0.18)
-          make_tone('assets/sounds/gift.wav', [523, 659, 784, 1046], 0.42)
-          make_tone('assets/sounds/win.wav', [440, 554, 659, 880], 0.55)
-          make_tone('assets/sounds/notify.wav', [740, 980], 0.12)
-          PYEOF
+          python3 -c "import wave,struct,math; [ (lambda p,fs,d: (lambda w: (w.setnchannels(1),w.setsampwidth(2),w.setframerate(22050),w.writeframes(b''.join(struct.pack('<h',int(16000*math.sin(2*math.pi*fs[int(i*len(fs)/(22050*d))]*i/22050)*(1-i/(22050*d)))) for i in range(int(22050*d)))),w.close()))(wave.open(p,'w')))(*x) for x in [('assets/sounds/coin.wav',(880,1320),0.18),('assets/sounds/gift.wav',(523,659,784,1046),0.42),('assets/sounds/win.wav',(587,740,880,1174),0.55),('assets/sounds/notify.wav',(987,1318),0.12)] ]"
           cat << 'EOF' > pubspec.yaml
           name: jimma_voice_app
           description: Voice Chat ET Official App
