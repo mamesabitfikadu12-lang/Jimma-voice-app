@@ -53,5 +53,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete v3.0.6 -y || true
-          gh release create v3.0.6 jimma_voice_app/build/app/outputs/bundle/release/app-release.aab --title "Voice Chat ET v3.0.6 (Version 9)" --notes "Instant guest entry with 5,000 free welcome coins and 3D real games hub"
+          gh release delete v3.0.7 -y || true
+          gh release create v3.0.7 jimma_voice_app/build/app/outputs/bundle/release/app-release.aab --title "Voice Chat ET v3.0.7 (Version 10)" --notes "Persistent user storage, separate admin panel, create account, daily bonus and invite friends"
+
+          
