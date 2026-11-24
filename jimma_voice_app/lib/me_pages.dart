@@ -66,33 +66,92 @@ class _MeTabState extends State<MeTab> {
     );
   }
 
+    Future<void> _claimDailyBonus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    if (prefs.getString('last_daily_bonus') == today) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(backgroundColor: Colors.orange, content: Text('Daily Bonus already claimed today! Come back tomorrow.')),
+      );
+      return;
+    }
+    setState(() {
+      AppState.coins += 1000;
+    });
+    await prefs.setString('last_daily_bonus', today);
+    await prefs.setInt('coins', AppState.coins);
+    widget.onUpd();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(backgroundColor: Colors.green, content: Text('🎁 Daily Bonus Claimed: +1,000 Free Coins!')),
+    );
+  }
+
   void _editProfile() {
     final nameCtrl = TextEditingController(text: AppState.userName);
+    final phoneCtrl = TextEditingController(text: AppState.userPhone);
+    final passCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Edit Profile'),
-        content: TextField(
-          controller: nameCtrl,
-          decoration: const InputDecoration(labelText: 'Username'),
+        title: const Text('Create / Save My Account', style: TextStyle(color: Colors.amber)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(labelText: 'Username / Display Name'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: phoneCtrl,
+                decoration: const InputDecoration(labelText: 'Phone Number or Email'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: passCtrl,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Create Password (Optional)'),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
-            onPressed: () {
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
+            onPressed: () async {
               setState(() {
                 if (nameCtrl.text.trim().isNotEmpty) AppState.userName = nameCtrl.text.trim();
+                if (phoneCtrl.text.trim().isNotEmpty) AppState.userPhone = phoneCtrl.text.trim();
               });
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setBool('logged_in', true);
+              await prefs.setString('user_name', AppState.userName);
+              await prefs.setString('user_id', AppState.userId);
+              await prefs.setString('user_phone', AppState.userPhone);
+              await prefs.setInt('coins', AppState.coins);
+              if (passCtrl.text.trim().isNotEmpty) {
+                await prefs.setString('user_pass', passCtrl.text.trim());
+              }
               widget.onUpd();
-              Navigator.pop(ctx);
+              if (ctx.mounted) Navigator.pop(ctx);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(backgroundColor: Colors.green, content: Text('✅ Account & Coins Saved Permanently!')),
+                );
+              }
             },
-            child: const Text('Save'),
+            child: const Text('Save Account', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
   }
+
 
   Widget _gridBtn(IconData icon, Color color, String label, VoidCallback onTap) {
     return InkWell(
@@ -127,13 +186,15 @@ class _MeTabState extends State<MeTab> {
   Widget build(BuildContext context) {
     final initial = AppState.userName.isNotEmpty ? AppState.userName.toUpperCase() : 'U';
     return Scaffold(
-      appBar: AppBar(
+            appBar: AppBar(
         title: const Text('Me'),
         actions: [
-          IconButton(icon: const Icon(Icons.edit), onPressed: _editProfile),
-          IconButton(icon: const Icon(Icons.settings), onPressed: () => _go( SettingsPage())),
+          IconButton(icon: const Icon(Icons.card_giftcard, color: Colors.amber), tooltip: 'Daily Bonus', onPressed: _claimDailyBonus),
+          IconButton(icon: const Icon(Icons.person_add_alt_1, color: Colors.tealAccent), tooltip: 'Save Account', onPressed: _editProfile),
+          IconButton(icon: const Icon(Icons.settings), onPressed: () => _go(SettingsPage())),
         ],
       ),
+
       body: ListView(
         padding: const EdgeInsets.all(14),
         children: [
