@@ -88,7 +88,9 @@ jobs:
           find ~/.pub-cache -name "build.gradle" -exec sed -i 's/compileSdkVersion 31/compileSdkVersion 36/g; s/compileSdk 31/compileSdk 36/g' {} + || true
           flutter build appbundle --release
           zip -d build/app/outputs/bundle/release/app-release.aab "META-INF/*" || true
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ../voice_et_release.jks -storepass VoiceET2026 -keypass VoiceET2026 build/app/outputs/bundle/release/app-release.aab voice_et
+          ALIAS=$(keytool -list -v -keystore ../voice_et_release.jks -storepass VoiceET2026 | grep "Alias name:" | head -n 1 | awk -F': ' '{print $2}')
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ../voice_et_release.jks -storepass VoiceET2026 -keypass VoiceET2026 build/app/outputs/bundle/release/app-release.aab "$ALIAS"
+
 
       - name: Publish Play Store AAB to GitHub Releases
         env:
