@@ -49,10 +49,10 @@ jobs:
                   frames.extend(struct.pack('<h', val))
               w.writeframes(frames)
               w.close()
-          make_tone('assets/sounds/coin.wav', [987, 1318], 0.18)
+          make_tone('assets/sounds/coin.wav', [880, 1320], 0.18)
           make_tone('assets/sounds/gift.wav', [523, 659, 784, 1046], 0.42)
-          make_tone('assets/sounds/win.wav', [587, 784, 987, 1174], 0.55)
-          make_tone('assets/sounds/notify.wav', [880, 1108], 0.12)
+          make_tone('assets/sounds/win.wav', [440, 554, 659, 880], 0.55)
+          make_tone('assets/sounds/notify.wav', [740, 980], 0.12)
           PYEOF
           cat << 'EOF' > pubspec.yaml
           name: jimma_voice_app
@@ -90,7 +90,6 @@ jobs:
           zip -d build/app/outputs/bundle/release/app-release.aab "META-INF/*" || true
           ALIAS=$(keytool -list -v -keystore ../voice_et_release.jks -storepass VoiceET2026 | grep "Alias name:" | head -n 1 | awk -F': ' '{print $2}')
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ../voice_et_release.jks -storepass VoiceET2026 -keypass VoiceET2026 build/app/outputs/bundle/release/app-release.aab "$ALIAS"
-
 
       - name: Publish Play Store AAB to GitHub Releases
         env:
