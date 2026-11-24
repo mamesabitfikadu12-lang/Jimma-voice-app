@@ -47,20 +47,22 @@ jobs:
                   f = freqs[int(i * len(freqs) / n)]
                   val = int(16000 * math.sin(2 * math.pi * f * i / 22050) * (1 - i / n))
                   frames.extend(struct.pack('<h', val))
-              w.writeframes(bytes(frames))
+              w.writeframes(frames)
               w.close()
-          make_tone('assets/sounds/coin.wav', (987, 1318), 0.18)
-          make_tone('assets/sounds/gift.wav', (523, 659, 784, 1046), 0.42)
-          make_tone('assets/sounds/win.wav', (587, 784, 987, 1174), 0.55)
-          make_tone('assets/sounds/notify.wav', (880, 1108), 0.12)
+          make_tone('assets/sounds/coin.wav', [987, 1318], 0.18)
+          make_tone('assets/sounds/gift.wav', [523, 659, 784, 1046], 0.42)
+          make_tone('assets/sounds/win.wav', [587, 784, 987, 1174], 0.55)
+          make_tone('assets/sounds/notify.wav', [880, 1108], 0.12)
           PYEOF
           cat << 'EOF' > pubspec.yaml
           name: jimma_voice_app
           description: Voice Chat ET Official App
           publish_to: 'none'
-          version: 3.0.5+8
+          version: 3.0.6+9
+
           environment:
             sdk: '>=3.4.0 <4.0.0'
+
           dependencies:
             flutter:
               sdk: flutter
@@ -80,17 +82,17 @@ jobs:
               - assets/sounds/
           EOF
           sed -i 's/android:label="[^"]*"/android:label="Voice Chat ET"/' android/app/src/main/AndroidManifest.xml
-          sed -i 's/<application/<uses-permission android:name="android.permission.RECORD_AUDIO" \/>\n    <uses-permission android:name="android.permission.INTERNET" \/>\n    <application/' android/app/src/main/AndroidManifest.xml
-          sed -i 's/android {/android {\n    lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }/' android/app/build.gradle.kts
+          sed -i 's/<application/<uses-permission android:name="android.permission.RECORD_AUDIO" \/>\n    <uses-permission android:name="android.permission.INTERNET" \/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" \/>\n    <application/' android/app/src/main/AndroidManifest.xml
+          sed -i 's/android {/android {\n    lint {\n        checkReleaseBuilds = false\n        abortOnError = false\n    }/' android/app/build.gradle.kts || true
           flutter pub get
-          find ~/.pub-cache -name "build.gradle" -exec sed -i 's/compileSdkVersion 31/compileSdkVersion 35/g; s/compileSdk = 31/compileSdk = 35/g' {} + || true
+          find ~/.pub-cache -name "build.gradle" -exec sed -i 's/compileSdkVersion 31/compileSdkVersion 36/g; s/compileSdk 31/compileSdk 36/g' {} + || true
           flutter build appbundle --release
           zip -d build/app/outputs/bundle/release/app-release.aab "META-INF/*" || true
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ../voice_et_release.jks -storepass VoiceET2026 -keypass VoiceET2026 build/app/outputs/bundle/release/app-release.aab voiceet
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ../voice_et_release.jks -storepass VoiceET2026 -keypass VoiceET2026 build/app/outputs/bundle/release/app-release.aab voice_et_key
 
       - name: Publish Play Store AAB to GitHub Releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete v3.0.5 -y || true
-          gh release create v3.0.5 jimma_voice_app/build/app/outputs/bundle/release/app-release.aab --title "Voice Chat ET v3.0.5 (Version 8)" --notes "Play Store Release AAB - Auto-Verify CBE & USDT"
+          gh release delete v3.0.6 -y || true
+          gh release create v3.0.6 jimma_voice_app/build/app/outputs/bundle/release/app-release.aab --title "Voice Chat ET v3.0.6 (Version 9)" --notes "Instant guest entry with 5,000 free welcome coins and 3D real games hub"
