@@ -1761,7 +1761,23 @@ class _AgencyWebPortalPageState extends State<AgencyWebPortalPage> {
                   TextField(controller: _setb, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Price (ETB/USDT)')),
                   const SizedBox(height: 8),
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black),                   
+                     onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.green, content: Text('✅ Agent Coin Sale Processed!')));
+                      },
+                      child: const Text('Send Coins to User', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class TaskCenterFullPage extends StatefulWidget {
   final VoidCallback onUpd;
   const TaskCenterFullPage({super.key, required this.onUpd});
