@@ -1855,7 +1855,6 @@ class _TaskCenterFullPageState extends State<TaskCenterFullPage> {
     );
   }
 }
-
 class WealthCharmLevelPage extends StatelessWidget {
   const WealthCharmLevelPage({super.key});
   @override
@@ -1890,7 +1889,6 @@ class WealthCharmLevelPage extends StatelessWidget {
     );
   }
 }
-
 class HostCenterPage extends StatelessWidget {
   final VoidCallback onUpd;
   const HostCenterPage({super.key, required this.onUpd});
