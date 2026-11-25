@@ -1815,8 +1815,8 @@ class _TaskCenterFullPageState extends State<TaskCenterFullPage> {
               children: [
                 _taskTile('t1', 'Stay in a Room for 5 Minutes', 'Daily Activity (5/5)', 500),
                 _taskTile('t2', 'Follow 5 Hosts', 'Social Bonus (5/5)', 300),
-                _taskTile('t3', 'Play Ocean Hunt Once', 'Game Bonus (1/1)', 200),
-                _taskTile('t4', 'Play Jungle Hunt Once', 'Game Bonus (1/1)', 200),
+                _taskTile('t3', 'Play Ludo 3D Once', 'Game Bonus (1/1)', 200),
+                _taskTile('t4', 'Play 8 Ball Pool Once', 'Game Bonus (1/1)', 200),
                 _taskTile('t5', 'Spend 6,000 Coins', 'VIP Task (6K/6K)', 600),
               ],
             ),
@@ -1989,7 +1989,7 @@ class LuckyIslandPage extends StatelessWidget {
             onUpd();
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.green, content: Text('🎉 Lucky Island Won +200 Coins!')));
           },
-                    child: const Text('Spin Lucky Island (100 Coins)', style: TextStyle(fontWeight: FontWeight.bold)),
+          child: const Text('Spin Lucky Island (100 Coins)', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       ),
     );
@@ -1997,7 +1997,6 @@ class LuckyIslandPage extends StatelessWidget {
 }
 
 class BadgeCollectionPage extends StatelessWidget {
-
   const BadgeCollectionPage({super.key});
   @override
   Widget build(BuildContext context) {
