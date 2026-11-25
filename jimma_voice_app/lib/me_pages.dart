@@ -1902,7 +1902,7 @@ class HostCenterPage extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         children: [
           Card(color: const Color(0xFF1E293B), child: ListTile(title: const Text('My Diamonds Balance'), subtitle: Text('${AppState.points.toStringAsFixed(2)} Diamonds'), trailing: ElevatedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PointsCashOutPage(onUpd: onUpd))), child: const Text('Cash Out')))),
-          const Card(color: Color(0xFF1E293B), child: ListTile(title: Text('Host Revenue Split'), subtitle: Text('• 70% Direct Host Payout (CBE / Telebirr / USDT)\n• 15% Agency Management Bonus\n• Join an Official Agency to unlock weekly salary!'))),
+      const Card(color: Color(0xFF1E293B), child: ListTile(title: Text('Host Revenue Split'), subtitle: Text('• 70% Direct Host Payout (CBE / Telebirr / USDT)\n• 15% Agency Management Bonus\n• Join an Official Agency to unlock weekly salary!'))),
         ],
       ),
     );
@@ -1910,6 +1910,7 @@ class HostCenterPage extends StatelessWidget {
 }
 
 class AboutAppPage extends StatelessWidget {
+
   const AboutAppPage({super.key});
   @override
   Widget build(BuildContext context) {
