@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
@@ -16,6 +18,28 @@ class GamesTab extends StatefulWidget {
 }
 
 class _GamesTabState extends State<GamesTab> {
+    @override
+  void initState() {
+    super.initState();
+    _loadServerGames();
+  }
+
+  Future<void> _loadServerGames() async {
+    try {
+      final res = await http.get(Uri.parse('https://onrender.com')).timeout(const Duration(seconds: 8));
+      if (res.statusCode == 200 && mounted) {
+        final list = jsonDecode(res.body)['games'] as List?;
+        if (list != null && list.isNotEmpty) {
+          setState(() {
+            for (final g in list) {
+              games.insert(0, {'name': g['name'], 'cat': '3D Real', 'tag': 'NEW', 'mode': 'web3d', 'url': g['url'], 'c1': 0xFFF59E0B, 'c2': 0xFFEF4444, 'ic': Icons.sports_esports});
+            }
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
   String _cat = 'Hot';
     final _cats = const ['3D Real', 'Hot', 'Latest', 'Slot', 'Fishing', 'Multi Player'];
 
