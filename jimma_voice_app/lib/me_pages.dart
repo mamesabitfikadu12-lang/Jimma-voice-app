@@ -1977,35 +1977,33 @@ class BackpackPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('My Backpack')),
-      body: ListView(
-        padding: const EdgeInsets.all(14),
-        children: const [
-          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.directions_car, color: Colors.amber), title: Text('Golden Lion Entry Car'), subtitle: Text('Active • 7 Days Remaining'))),
-          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.stars, color: Colors.cyanAccent), title: Text('VIP Royal Mic Frame'), subtitle: Text('Equipped'))),
-        ],
+      body:             ListView(
+              padding: const EdgeInsets.all(14),
+              children: [
+                Card(color: const Color(0xFF1E293B), child: ListTile(title: Text('Charm Lv.$cLv', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.pinkAccent)), subtitle: Text('Diamonds Balance: ${AppState.points.toStringAsFixed(2)}'))),
+                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.favorite, color: Colors.pinkAccent), title: Text('Charm Star Privileges'), subtitle: Text('Higher diamond-to-ETB/USDT cashout priority'))),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class LuckyIslandPage extends StatelessWidget {
+class HostCenterPage extends StatelessWidget {
   final VoidCallback onUpd;
-  const LuckyIslandPage({super.key, required this.onUpd});
+  const HostCenterPage({super.key, required this.onUpd});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lucky Island Spin')),
-      body: Center(
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14)),
-          onPressed: () {
-               if (AppState.coins < 100) return;
-            AppState.coins += 200;
-            onUpd();
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.green, content: Text('🎉 Lucky Island Won +200 Coins!')));
-          },
-          child: const Text('Spin Lucky Island (100 Coins)', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
+      appBar: AppBar(title: const Text('Host Center')),
+      body: ListView(
+        padding: const EdgeInsets.all(14),
+        children: [
+          Card(color: const Color(0xFF1E293B), child: ListTile(title: const Text('My Diamonds Balance'), subtitle: Text('${AppState.points.toStringAsFixed(2)} Diamonds'), trailing: ElevatedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PointsCashOutPage(onUpd: onUpd))), child: const Text('Cash Out')))),
+          const Card(color: Color(0xFF1E293B), child: ListTile(title: Text('Host Revenue Split'), subtitle: Text('• 70% Direct Host Payout (CBE / Telebirr / USDT)\n• 15% Agency Management Bonus\n• Join an Official Agency to unlock weekly salary!'))),
+        ],
       ),
     );
   }
