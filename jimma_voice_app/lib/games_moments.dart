@@ -24,16 +24,26 @@ class _GamesTabState extends State<GamesTab> {
     _loadServerGames();
   }
 
+    static const String _serverApi = 'https://Jimma-server.onrender.com';
+  static const String _sudBase = 'https://sud.tech';
+
   Future<void> _loadServerGames() async {
     try {
-      final res = await http.get(Uri.parse('https://onrender.com')).timeout(const Duration(seconds: 8));
+      final res = await http.get(Uri.parse('$_serverApi/api/games')).timeout(const Duration(seconds: 8));
       if (res.statusCode == 200 && mounted) {
         final list = jsonDecode(res.body)['games'] as List?;
         if (list != null && list.isNotEmpty) {
           setState(() {
-            for (final g in list) {
-              games.insert(0, {'name': g['name'], 'cat': '3D Real', 'tag': 'NEW', 'mode': 'web3d', 'url': g['url'], 'c1': 0xFFF59E0B, 'c2': 0xFFEF4444, 'ic': Icons.sports_esports});
-            }
+            _games = list.map<Map<String, dynamic>>((g) => {
+              'name': g['name'] ?? '3D Game',
+              'cat': g['cat'] ?? 'Hot',
+              'tag': g['tag'] ?? 'HOT',
+              'url': g['url'] ?? '',
+              'c1': 0xFFF59E0B,
+              'c2': 0xFFDC2626,
+              'ic': '🎮',
+              'sub': '3D',
+            }).toList();
           });
         }
       }
@@ -41,56 +51,36 @@ class _GamesTabState extends State<GamesTab> {
   }
 
   String _cat = 'Hot';
-    final _cats = const ['3D Real', 'Hot', 'Latest', 'Slot', 'Fishing', 'Multi Player'];
+  final _cats = const ['Hot', 'Board', 'Card', 'Party', 'Arcade', 'Sports'];
 
-  final List<Map<String, dynamic>> _games = const [    
-    {'name': '3D Pool 8-Ball', 'cat': '3D Real', 'tag': '3D', 'mode': 'web3d', 'url': 'https://famobi.com', 'c1': 0xFF0284C7, 'c2': 0xFF0F172A, 'ic': '🎱', 'sub': '🏆', 'syms': ['WILD', 'SCATTER', '🎱', '🏆']},
-    {'name': '3D Car Racing', 'cat': '3D Real', 'tag': '3D', 'mode': 'web3d', 'url': 'https://famobi.com', 'c1': 0xFFDC2626, 'c2': 0xFF1E293B, 'ic': '🏎️', 'sub': '🔥', 'syms': ['WILD', 'SCATTER', '🏎️', '🔥']},
-    {'name': '3D Ludo Club', 'cat': '3D Real', 'tag': '3D', 'mode': 'web3d', 'url': 'https://famobi.com', 'c1': 0xFF16A34A, 'c2': 0xFF1E3A8A, 'ic': '🎲', 'sub': '👑', 'syms': ['WILD', 'SCATTER', '🎲', '👑']},
-    {'name': '3D Fruit Ninja', 'cat': '3D Real', 'tag': '3D', 'mode': 'web3d', 'url': 'https://famobi.com', 'c1': 0xFFEA580C, 'c2': 0xFF7E22CE, 'ic': '🍉', 'sub': '⚔️', 'syms': ['WILD', 'SCATTER', '🍉', '⚔️']},
-    {'name': '3D Archery', 'cat': '3D Real', 'tag': '3D', 'mode': 'web3d', 'url': 'https://famobi.com', 'c1': 0xFFD97706, 'c2': 0xFF065F46, 'ic': '🏹', 'sub': '🎯', 'syms': ['WILD', 'SCATTER', '🏹', '🎯']},
-    {'name': '3D Table Tennis', 'cat': '3D Real', 'tag': '3D', 'mode': 'web3d', 'url': 'https://famobi.com', 'c1': 0xFF2563EB, 'c2': 0xFF0F172A, 'ic': '🏓', 'sub': '🥇', 'syms': ['WILD', 'SCATTER', '🏓', '🥇']},         
-    {'name': 'Jungle Hunt', 'cat': 'Hot', 'tag': 'HOT', 'mode': 'jungle', 'c1': 0xFFF59E0B, 'c2': 0xFF15803D, 'ic': '🦍', 'sub': '🦁', 'syms': ['WILD', 'SCATTER', '🦍', '🦁', '🐊', '🦏', 'A', 'K', 'Q']},
-    {'name': 'Ocean Hunt', 'cat': 'Fishing', 'tag': 'HOT', 'mode': 'ocean', 'c1': 0xFF7E22CE, 'c2': 0xFF0284C7, 'ic': '🦈', 'sub': '🐙', 'syms': ['WILD', 'SCATTER', '🦈', '🐡', '🐙', '🐢', '🦪', 'K', '10']},
-    {'name': 'Royal Battle', 'cat': 'Multi Player', 'tag': 'HOT', 'mode': 'battle', 'c1': 0xFFDC2626, 'c2': 0xFF1D4ED8, 'ic': '👑', 'sub': '⚔️', 'syms': ['WILD', 'SCATTER', '♠️', '♥️', '♦️', '♣️', 'A', 'K', 'Q']},
-    {'name': 'Garo Gems III', 'cat': 'Latest', 'tag': 'NEW', 'mode': 'gems', 'c1': 0xFFD97706, 'c2': 0xFF78350F, 'ic': '💎', 'sub': '🐒', 'syms': ['WILD', 'SCATTER', '💎', '💚', '❤️', '👑', 'A', 'K', 'Q']},
-    {'name': 'Jungle Delight', 'cat': 'Hot', 'tag': 'HOT', 'mode': 'fruit', 'c1': 0xFF16A34A, 'c2': 0xFF065F46, 'ic': '🍉', 'sub': '🐒', 'syms': ['WILD', 'SCATTER', '🍉', '🍎', '🫐', '🍌', '🍒', '🍋']},
-    {'name': 'The Monkey King', 'cat': 'Hot', 'tag': 'HOT', 'mode': 'monkey', 'c1': 0xFFDC2626, 'c2': 0xFFF59E0B, 'ic': '🐒', 'sub': '🍑', 'syms': ['WILD', 'SCATTER', '🐒', '👑', '🦄', '🧔', 'A', 'K', 'Q']},
-    {'name': 'Money Coming', 'cat': 'Slot', 'tag': 'NEW', 'mode': 'wheel', 'c1': 0xFF15803D, 'c2': 0xFFEAB308, 'ic': '🎡', 'sub': '💵', 'syms': ['WILD', 'SCATTER', '💵', '💰', '💎', '7️⃣', '10x', '5x']},
-    {'name': 'Gates Of Olympus', 'cat': 'Hot', 'tag': 'HOT', 'mode': 'jungle', 'c1': 0xFF2563EB, 'c2': 0xFFF59E0B, 'ic': '⚡', 'sub': '👑', 'syms': ['WILD', 'SCATTER', '⚡', '👑', '💍', '⏳', '🏆', '💎']},
-    {'name': 'Sweet Bonanza', 'cat': 'Slot', 'tag': 'HOT', 'mode': 'fruit', 'c1': 0xFFEC4899, 'c2': 0xFF8B5CF6, 'ic': '🍭', 'sub': '🍬', 'syms': ['WILD', 'SCATTER', '🍭', '🍬', '🍉', '🍇', '🍎', '🍌']},
-    {'name': 'Fishing Tycoon', 'cat': 'Fishing', 'tag': 'HOT', 'mode': 'ocean', 'c1': 0xFF0284C7, 'c2': 0xFF1E3A8A, 'ic': '🐡', 'sub': '🦈', 'syms': ['WILD', 'SCATTER', '🦈', '🐡', '🐬', '🐙', '🦀', '🦪']},
-    {'name': 'Fruit Party', 'cat': 'Slot', 'tag': 'HOT', 'mode': 'fruit', 'c1': 0xFFEA580C, 'c2': 0xFF65A30D, 'ic': '🍓', 'sub': '🍑', 'syms': ['WILD', 'SCATTER', '🍓', '🍑', '🍉', '🍇', '🍊', '🍎']},
-    {'name': 'Blaze Of Fortune', 'cat': 'Latest', 'tag': 'NEW', 'mode': 'wheel', 'c1': 0xFFB45309, 'c2': 0xFFDC2626, 'ic': '🏛️', 'sub': '🪙', 'syms': ['WILD', 'SCATTER', '🏛️', '🪙', '👑', '🔥', '💎', '7️⃣']},
-    {'name': 'Lucky Piggy', 'cat': 'Slot', 'tag': 'HOT', 'mode': 'wheel', 'c1': 0xFFDB2777, 'c2': 0xFF7E22CE, 'ic': '🐷', 'sub': '🪙', 'syms': ['WILD', 'SCATTER', '🐷', '🪙', '💎', '🔨', '7️⃣', '💰']},
-    {'name': 'Fortune Rabbit', 'cat': 'Slot', 'tag': 'NEW', 'mode': 'monkey', 'c1': 0xFFE11D48, 'c2': 0xFFF59E0B, 'ic': '🐰', 'sub': '🥕', 'syms': ['WILD', 'SCATTER', '🐰', '🥕', '🧧', '🪙', '💎', '👑']},
-    {'name': 'Fortune Tiger', 'cat': 'Hot', 'tag': 'HOT', 'mode': 'monkey', 'c1': 0xFFEA580C, 'c2': 0xFFB91C1C, 'ic': '🐯', 'sub': '🧧', 'syms': ['WILD', 'SCATTER', '🐯', '🧧', '🪙', '🍊', '🔔', '💎']},
-    {'name': 'Roulette', 'cat': 'Multi Player', 'tag': 'HOT', 'mode': 'battle', 'c1': 0xFF15803D, 'c2': 0xFF991B1B, 'ic': '🎯', 'sub': '🎰', 'syms': ['WILD', 'SCATTER', '🔴', '⚫', '🟢', '0', '36', '7']},
-    {'name': 'Ludo King', 'cat': 'Multi Player', 'tag': 'HOT', 'mode': 'battle', 'c1': 0xFF1D4ED8, 'c2': 0xFFEAB308, 'ic': '🎲', 'sub': '🏆', 'syms': ['WILD', 'SCATTER', '🎲', '👑', '🔴', '🟢', '🟡', '🔵']},
-    {'name': 'Chicken Road', 'cat': 'Latest', 'tag': 'HOT', 'mode': 'jungle', 'c1': 0xFFEA580C, 'c2': 0xFF78350F, 'ic': '🐔', 'sub': '🔥', 'syms': ['WILD', 'SCATTER', '🐔', '🥚', '🔥', '🪙', '👑', '💎']},
-    {'name': 'Dragon Ball', 'cat': 'Latest', 'tag': 'NEW', 'mode': 'monkey', 'c1': 0xFF16A34A, 'c2': 0xFFEA580C, 'ic': '🐉', 'sub': '🔮', 'syms': ['WILD', 'SCATTER', '🐉', '🔮', '⚡', '🔥', '👑', '💎']},
-    {'name': 'Super Ace', 'cat': 'Slot', 'tag': 'HOT', 'mode': 'battle', 'c1': 0xFF15803D, 'c2': 0xFFEAB308, 'ic': '🃏', 'sub': '👑', 'syms': ['WILD', 'SCATTER', '♠️', '♥️', '♦️', '♣️', 'A', 'K']},
-    {'name': 'Deep Sea', 'cat': 'Fishing', 'tag': 'NEW', 'mode': 'ocean', 'c1': 0xFF0369A1, 'c2': 0xFF1E1B4B, 'ic': '🐋', 'sub': '🔱', 'syms': ['WILD', 'SCATTER', '🐋', '🦈', '🐙', '🦀', '🦪', '🔱']},
-    {'name': 'Color Game', 'cat': 'Multi Player', 'tag': 'HOT', 'mode': 'battle', 'c1': 0xFF7C3AED, 'c2': 0xFFDB2777, 'ic': '🎨', 'sub': '🎲', 'syms': ['WILD', 'SCATTER', '🟥', '🟦', '🟩', '🟨', '🟪', '⬜']},
-    {'name': 'World Goal', 'cat': 'Multi Player', 'tag': 'NEW', 'mode': 'battle', 'c1': 0xFF16A34A, 'c2': 0xFF2563EB, 'ic': '⚽', 'sub': '🏆', 'syms': ['WILD', 'SCATTER', '⚽', '🥅', '🏆', '🥇', '👟', '🔥']},
-    {'name': 'Teen Patti', 'cat': 'Multi Player', 'tag': 'HOT', 'mode': 'battle', 'c1': 0xFF0F766E, 'c2': 0xFFBE123C, 'ic': '🂡', 'sub': '💎', 'syms': ['WILD', 'SCATTER', '🂡', '🂱', '🃁', '👑', '💎', '🪙']},
+  List<Map<String, dynamic>> _games = [
+    {'name': 'Ludo 3D', 'cat': 'Board', 'tag': 'HOT', 'url': '${_sudBase}1461227817776713818', 'c1': 0xFFF59E0B, 'c2': 0xFFEA580C, 'ic': '🎲', 'sub': '3D'},
+    {'name': '8 Ball Pool 3D', 'cat': 'Sports', 'tag': 'HOT', 'url': '${_sudBase}1468180338417074177', 'c1': 0xFF0284C7, 'c2': 0xFF0369A1, 'ic': '🎱', 'sub': 'PRO'},
+    {'name': 'Carrom Master', 'cat': 'Board', 'tag': 'HOT', 'url': '${_sudBase}1461228379255603251', 'c1': 0xFFD97706, 'c2': 0xFFB45309, 'ic': '🎯', 'sub': '3D'},
+    {'name': 'Teen Patti Royal', 'cat': 'Card', 'tag': 'HOT', 'url': '${_sudBase}1461228465024925740', 'c1': 0xFFDC2626, 'c2': 0xFF991B1B, 'ic': '🃏', 'sub': 'VIP'},
+    {'name': 'Texas Holdem Poker', 'cat': 'Card', 'tag': 'HOT', 'url': '${_sudBase}1461228436944060458', 'c1': 0xFF059669, 'c2': 0xFF065F46, 'ic': '♠️', 'sub': '3D'},
+    {'name': 'UMO Party', 'cat': 'Card', 'tag': 'HOT', 'url': '${_sudBase}1461228410184400899', 'c1': 0xFF7C3AED, 'c2': 0xFF5B21B6, 'ic': '🎴', 'sub': 'FUN'},
+    {'name': 'Domino Royal', 'cat': 'Board', 'tag': 'HOT', 'url': '${_sudBase}1461228492543754284', 'c1': 0xFF2563EB, 'c2': 0xFF1D4ED8, 'ic': '🁣', 'sub': 'TOP'},
+    {'name': 'Super Football', 'cat': 'Sports', 'tag': 'HOT', 'url': '${_sudBase}1461228520020639789', 'c1': 0xFF16A34A, 'c2': 0xFF15803D, 'ic': '⚽', 'sub': 'LIVE'},
+    {'name': 'Werewolf', 'cat': 'Party', 'tag': 'HOT', 'url': '${_sudBase}1472142559912517633', 'c1': 0xFF4F46E5, 'c2': 0xFF3730A3, 'ic': '🐺', 'sub': 'TOP'},
+    {'name': 'Number Bomb', 'cat': 'Party', 'tag': 'HOT', 'url': '${_sudBase}1472142640866844673', 'c1': 0xFFEA580C, 'c2': 0xFFC2410C, 'ic': '💥', 'sub': 'HOT'},
   ];
 
-    void _openFullGame(Map<String, dynamic> g) {
-    if (g['mode'] == 'web3d') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => Real3DWebGameScreen(title: g['name'] as String, url: g['url'] as String)),
-      );
-      return;
-    }
+  void _openFullGame(Map<String, dynamic> g) {
+    final raw = (g['url'] ?? '') as String;
+    final sep = raw.contains('?') ? '&' : '?';
+    final fullUrl = '$raw${sep}uid=${AppState.uid}&coins=${AppState.coins}&app_id=2125623090652110848';
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => FullScreenGameArena(game: g, onUpd: () { setState(() {}); widget.onUpd(); }),
+        builder: (_) => Real3DWebGameScreen(
+          title: (g['name'] ?? '3D Game') as String,
+          url: fullUrl,
+        ),
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
