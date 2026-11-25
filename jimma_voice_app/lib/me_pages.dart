@@ -1989,7 +1989,7 @@ class LuckyIslandPage extends StatelessWidget {
             onUpd();
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.green, content: Text('🎉 Lucky Island Won +200 Coins!')));
           },
-          child: const Text('Spin Lucky Island (100 Coins)', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('Spin Lucky Island (100 Coins)', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       ),
     );
@@ -1997,6 +1997,7 @@ class LuckyIslandPage extends StatelessWidget {
 }
 
 class BadgeCollectionPage extends StatelessWidget {
+
   const BadgeCollectionPage({super.key});
   @override
   Widget build(BuildContext context) {
