@@ -1776,9 +1776,8 @@ class _AgencyWebPortalPageState extends State<AgencyWebPortalPage> {
       ),
     );
   }
-}
 
-class TaskCenterFullPage extends StatefulWidget {
+         class TaskCenterFullPage extends StatefulWidget {
   final VoidCallback onUpd;
   const TaskCenterFullPage({super.key, required this.onUpd});
   @override
@@ -1793,7 +1792,6 @@ class _TaskCenterFullPageState extends State<TaskCenterFullPage> {
       _claimed.add(id);
       AppState.coins += coins;
     });
-    AppState.save();
     widget.onUpd();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('🎉 Claimed +$coins Coins!')));
   }
@@ -1862,8 +1860,8 @@ class WealthCharmLevelPage extends StatelessWidget {
   const WealthCharmLevelPage({super.key});
   @override
   Widget build(BuildContext context) {
-    final wLv = (AppState.totalGifted ~/ 10000) + 1;
-    final cLv = (AppState.totalReceived ~/ 10000) + 1;
+    final wLv = (AppState.coins ~/ 10000) + 1;
+    final cLv = (AppState.points.toInt() ~/ 500) + 1;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -1873,7 +1871,7 @@ class WealthCharmLevelPage extends StatelessWidget {
             ListView(
               padding: const EdgeInsets.all(14),
               children: [
-                Card(color: const Color(0xFF1E293B), child: ListTile(title: Text('Wealth Lv.$wLv', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber)), subtitle: Text('Total Sent: ${AppState.totalGifted} Coins'))),
+                Card(color: const Color(0xFF1E293B), child: ListTile(title: Text('Wealth Lv.$wLv', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber)), subtitle: Text('Current Balance: ${AppState.coins} Coins'))),
                 const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.redeem, color: Colors.redAccent), title: Text('Lv.5 — Room Red Packet'), subtitle: Text('Send lucky red packets in audio rooms'))),
                 const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.visibility, color: Colors.tealAccent), title: Text('Lv.10 — Audio Room Entry Banner'), subtitle: Text('Special entrance badge when joining rooms'))),
                 const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.workspace_premium, color: Colors.amber), title: Text('Lv.20 — Royal Aura & Frame'), subtitle: Text('Exclusive golden seat frame in all rooms'))),
@@ -1882,7 +1880,7 @@ class WealthCharmLevelPage extends StatelessWidget {
             ListView(
               padding: const EdgeInsets.all(14),
               children: [
-                Card(color: const Color(0xFF1E293B), child: ListTile(title: Text('Charm Lv.$cLv', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.pinkAccent)), subtitle: Text('Total Diamonds Received: ${AppState.totalReceived}'))),
+                Card(color: const Color(0xFF1E293B), child: ListTile(title: Text('Charm Lv.$cLv', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.pinkAccent)), subtitle: Text('Diamonds Balance: ${AppState.points.toStringAsFixed(2)}'))),
                 const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.favorite, color: Colors.pinkAccent), title: Text('Charm Star Privileges'), subtitle: Text('Higher diamond-to-ETB/USDT cashout priority'))),
               ],
             ),
@@ -1944,7 +1942,7 @@ class InvitationBonusPage extends StatelessWidget {
   const InvitationBonusPage({super.key, required this.onUpd});
   @override
   Widget build(BuildContext context) {
-    final code = 'ET${AppState.uid}';
+    final code = 'ET${AppState.userId}';
     return Scaffold(
       appBar: AppBar(title: const Text('Invitation Rewards')),
       body: Padding(
@@ -1952,7 +1950,7 @@ class InvitationBonusPage extends StatelessWidget {
         child: Card(
           color: const Color(0xFF1E293B),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -1999,9 +1997,8 @@ class LuckyIslandPage extends StatelessWidget {
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14)),
           onPressed: () {
-            if (AppState.coins < 100) return;
+               if (AppState.coins < 100) return;
             AppState.coins += 200;
-            AppState.save();
             onUpd();
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.green, content: Text('🎉 Lucky Island Won +200 Coins!')));
           },
