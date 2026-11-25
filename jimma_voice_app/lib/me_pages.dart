@@ -321,25 +321,31 @@ class _MeTabState extends State<MeTab> {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+                    const SizedBox(height: 14),
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 3,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: 1.25,
-             children: [
-              _gridBtn(Icons.verified_user, Colors.amber, 'Official Agents', () => _go(OfficialAgentsDirectoryPage())),
-              _gridBtn(Icons.business_center, Colors.tealAccent, 'Agency & Payroll', () => _go(AgencyWebPortalPage())),
-              _gridBtn(Icons.account_balance_wallet, Colors.cyanAccent, 'Cash Out (ETB/USDT)', () => _go(PointsCashOutPage(onUpd: widget.onUpd))),
-              _gridBtn(Icons.storefront, Colors.greenAccent, 'Store', () => _go(StorePage(onUpd: widget.onUpd))),
-              _gridBtn(Icons.workspace_premium, Colors.orangeAccent, 'VIP Club', () => _go(VipClubPage(onUpd: widget.onUpd))),
-              _gridBtn(Icons.admin_panel_settings, Colors.redAccent, 'Founder / Support', () => _go(const SupportChatPage())),
+            crossAxisCount: 4,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 0.92,
+            children: [
+              _gridBtn(Icons.account_balance_wallet, Colors.amber, 'Recharge', () => _go(CoinSellerPage(onUpd: widget.onUpd))),
+              _gridBtn(Icons.storefront, Colors.pinkAccent, 'Store', () => _go(StorePage(onUpd: widget.onUpd))),
+              _gridBtn(Icons.card_giftcard, Colors.redAccent, 'Invitation', () => _go(InvitationBonusPage(onUpd: widget.onUpd))),
+              _gridBtn(Icons.backpack, Colors.lightBlueAccent, 'Backpack', () => _go(BackpackPage(onUpd: widget.onUpd))),
+              _gridBtn(Icons.casino, Colors.greenAccent, 'Lucky Island', () => _go(LuckyIslandPage(onUpd: widget.onUpd))),
+              _gridBtn(Icons.stars, Colors.purpleAccent, 'Level', () => _go(WealthCharmLevelPage())),
+              _gridBtn(Icons.task_alt, Colors.tealAccent, 'Task', () => _go(TaskCenterFullPage(onUpd: widget.onUpd))),
+              _gridBtn(Icons.military_tech, Colors.orangeAccent, 'Badge', () => _go(BadgeCollectionPage())),
+              _gridBtn(Icons.mic, Colors.cyanAccent, 'Host Center', () => _go(HostCenterPage(onUpd: widget.onUpd))),
+              _gridBtn(Icons.business_center, Colors.teal, 'Agency', () => _go(AgencyWebPortalPage())),
+              _gridBtn(Icons.verified_user, Colors.amberAccent, 'Coin Seller', () => _go(OfficialAgentsDirectoryPage())),
+              _gridBtn(Icons.headset_mic, Colors.blueAccent, 'Support', () => _go(const SupportChatPage())),
+              _gridBtn(Icons.info_outline, Colors.green, 'About', () => _go(const AboutAppPage())),
+              _gridBtn(Icons.settings, Colors.grey, 'Setting', () => _go(SettingsPage(onUpd: widget.onUpd))),
             ],
-
           ),
-        ],
       ),
     );
   }
@@ -1756,3 +1762,253 @@ class _AgencyWebPortalPageState extends State<AgencyWebPortalPage> {
                   const SizedBox(height: 8),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.tealAccent, foregroundColor: Colors.black),
+class TaskCenterFullPage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const TaskCenterFullPage({super.key, required this.onUpd});
+  @override
+  State<TaskCenterFullPage> createState() => _TaskCenterFullPageState();
+}
+
+class _TaskCenterFullPageState extends State<TaskCenterFullPage> {
+  final Set<String> _claimed = {};
+  void _claim(String id, int coins) {
+    if (_claimed.contains(id)) return;
+    setState(() {
+      _claimed.add(id);
+      AppState.coins += coins;
+    });
+    AppState.save();
+    widget.onUpd();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('🎉 Claimed +$coins Coins!')));
+  }
+
+  Widget _taskTile(String id, String title, String sub, int reward) {
+    final done = _claimed.contains(id);
+    return Card(
+      color: const Color(0xFF1E293B),
+      child: ListTile(
+        leading: const Icon(Icons.monetization_on, color: Colors.amber),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text('$sub • +$reward Coins', style: const TextStyle(color: Colors.amberAccent)),
+        trailing: ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: done ? Colors.grey : Colors.tealAccent, foregroundColor: Colors.black),
+          onPressed: done ? null : () => _claim(id, reward),
+          child: Text(done ? 'Done' : 'Claim'),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Task Center'),
+          bottom: const TabBar(tabs: [Tab(text: 'Tasks'), Tab(text: 'Host Tasks'), Tab(text: 'Events')]),
+        ),
+        body: TabBarView(
+          children: [
+            ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                _taskTile('t1', 'Stay in a Room for 5 Minutes', 'Daily Activity (5/5)', 500),
+                _taskTile('t2', 'Follow 5 Hosts', 'Social Bonus (5/5)', 300),
+                _taskTile('t3', 'Play Ocean Hunt Once', 'Game Bonus (1/1)', 200),
+                _taskTile('t4', 'Play Jungle Hunt Once', 'Game Bonus (1/1)', 200),
+                _taskTile('t5', 'Spend 6,000 Coins', 'VIP Task (6K/6K)', 600),
+              ],
+            ),
+            ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                const Card(color: Color(0xFF1E293B), child: ListTile(title: Text('Hourly Host Tiers'), subtitle: Text('Upgrade: H 600/h • 1200/h • 3000/h • 5000/h'))),
+                _taskTile('h1', 'On Mic for 2 Hours', 'Host Daily Target (120 mins)', 1200),
+                _taskTile('h2', 'Join Party & Crowned for 1 Hour', 'Room Host Reward', 800),
+              ],
+            ),
+            ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                _taskTile('e1', 'VIP Daily Rewards', 'Exclusive VIP Event Bonus', 5000),
+                _taskTile('e2', 'Weekly Top Gifter & Host Event', 'Weekend Super Bonus', 2500),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class WealthCharmLevelPage extends StatelessWidget {
+  const WealthCharmLevelPage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final wLv = (AppState.totalGifted ~/ 10000) + 1;
+    final cLv = (AppState.totalReceived ~/ 10000) + 1;
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Level & Privileges'), bottom: const TabBar(tabs: [Tab(text: 'Wealth'), Tab(text: 'Charm')])),
+        body: TabBarView(
+          children: [
+            ListView(
+              padding: const EdgeInsets.all(14),
+              children: [
+                Card(color: const Color(0xFF1E293B), child: ListTile(title: Text('Wealth Lv.$wLv', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber)), subtitle: Text('Total Sent: ${AppState.totalGifted} Coins'))),
+                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.redeem, color: Colors.redAccent), title: Text('Lv.5 — Room Red Packet'), subtitle: Text('Send lucky red packets in audio rooms'))),
+                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.visibility, color: Colors.tealAccent), title: Text('Lv.10 — Audio Room Entry Banner'), subtitle: Text('Special entrance badge when joining rooms'))),
+                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.workspace_premium, color: Colors.amber), title: Text('Lv.20 — Royal Aura & Frame'), subtitle: Text('Exclusive golden seat frame in all rooms'))),
+              ],
+            ),
+            ListView(
+              padding: const EdgeInsets.all(14),
+              children: [
+                Card(color: const Color(0xFF1E293B), child: ListTile(title: Text('Charm Lv.$cLv', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.pinkAccent)), subtitle: Text('Total Diamonds Received: ${AppState.totalReceived}'))),
+                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.favorite, color: Colors.pinkAccent), title: Text('Charm Star Privileges'), subtitle: Text('Higher diamond-to-ETB/USDT cashout priority'))),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class HostCenterPage extends StatelessWidget {
+  final VoidCallback onUpd;
+  const HostCenterPage({super.key, required this.onUpd});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Host Center')),
+      body: ListView(
+        padding: const EdgeInsets.all(14),
+        children: [
+          Card(color: const Color(0xFF1E293B), child: ListTile(title: const Text('My Diamonds Balance'), subtitle: Text('${AppState.points.toStringAsFixed(2)} Diamonds'), trailing: ElevatedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PointsCashOutPage(onUpd: onUpd))), child: const Text('Cash Out')))),
+          const Card(color: Color(0xFF1E293B), child: ListTile(title: Text('Host Revenue Split'), subtitle: Text('• 70% Direct Host Payout (CBE / Telebirr / USDT)\n• 15% Agency Management Bonus\n• Join an Official Agency to unlock weekly salary!'))),
+        ],
+      ),
+    );
+  }
+}
+
+class AboutAppPage extends StatelessWidget {
+  const AboutAppPage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('About Voice Chat ET')),
+      body: const Padding(
+        padding: EdgeInsets.all(16),
+        child: Card(
+          color: Color(0xFF1E293B),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Voice Chat ET (v3.0.9)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
+                SizedBox(height: 8),
+                Text('Ethiopia & International Live Audio Rooms, 3D Social Games, Official Agencies, and Real-Time Rewards Platform.\n\nSupport: @Mosabit11 | +251919108311'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class InvitationBonusPage extends StatelessWidget {
+  final VoidCallback onUpd;
+  const InvitationBonusPage({super.key, required this.onUpd});
+  @override
+  Widget build(BuildContext context) {
+    final code = 'ET${AppState.uid}';
+    return Scaffold(
+      appBar: AppBar(title: const Text('Invitation Rewards')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Card(
+          color: const Color(0xFF1E293B),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Invite Friends & Earn +1,000 Coins Each!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber)),
+                const SizedBox(height: 10),
+                SelectableText('Your Invite Code: $code', style: const TextStyle(fontSize: 18, color: Colors.tealAccent)),
+                const SizedBox(height: 12),
+                ElevatedButton(onPressed: () { Clipboard.setData(ClipboardData(text: 'Join Voice Chat ET with my code $code!')); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Invite Link Copied!'))); }, child: const Text('Copy Invite Link')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class BackpackPage extends StatelessWidget {
+  final VoidCallback onUpd;
+  const BackpackPage({super.key, required this.onUpd});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('My Backpack')),
+      body: ListView(
+        padding: const EdgeInsets.all(14),
+        children: const [
+          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.directions_car, color: Colors.amber), title: Text('Golden Lion Entry Car'), subtitle: Text('Active • 7 Days Remaining'))),
+          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.stars, color: Colors.cyanAccent), title: Text('VIP Royal Mic Frame'), subtitle: Text('Equipped'))),
+        ],
+      ),
+    );
+  }
+}
+
+class LuckyIslandPage extends StatelessWidget {
+  final VoidCallback onUpd;
+  const LuckyIslandPage({super.key, required this.onUpd});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Lucky Island Spin')),
+      body: Center(
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14)),
+          onPressed: () {
+            if (AppState.coins < 100) return;
+            AppState.coins += 200;
+            AppState.save();
+            onUpd();
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.green, content: Text('🎉 Lucky Island Won +200 Coins!')));
+          },
+          child: const Text('Spin Lucky Island (100 Coins)', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+      ),
+    );
+  }
+}
+
+class BadgeCollectionPage extends StatelessWidget {
+  const BadgeCollectionPage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('My Badges')),
+      body: ListView(
+        padding: const EdgeInsets.all(14),
+        children: const [
+          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.verified, color: Colors.amber), title: Text('Pioneer Member Badge'), subtitle: Text('Unlocked on registration'))),
+          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.local_fire_department, color: Colors.redAccent), title: Text('Top Gifter Badge'), subtitle: Text('Send 10,000+ Coins in rooms'))),
+        ],
+      ),
+    );
+  }
+}
