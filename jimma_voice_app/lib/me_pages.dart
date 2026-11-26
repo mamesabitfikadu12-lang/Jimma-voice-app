@@ -1895,26 +1895,26 @@ class HostCenterPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Host Center')),
+      appBar: AppBar(title: const Text("Host Center")),
       body: ListView(
         padding: const EdgeInsets.all(14),
         children: [
           Card(
             color: const Color(0xFF1E293B),
             child: ListTile(
-              title: const Text('My Diamonds Balance'),
-              subtitle: Text('${AppState.points.toStringAsFixed(2)} Diamonds'),
+              title: const Text("My Diamonds Balance"),
+              subtitle: Text("${AppState.points.toStringAsFixed(2)} Diamonds"),
               trailing: ElevatedButton(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PointsCashOutPage(onUpd: onUpd)),
-                child: const Text('Cash Out'),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PointsCashOutPage(onUpd: onUpd))),
+                child: const Text("Cash Out"),
               ),
             ),
           ),
           const Card(
             color: Color(0xFF1E293B),
             child: ListTile(
-              title: Text('Host Revenue Split'),
-              subtitle: Text('70% Direct Host Payout (CBE / Telebirr / USDT) • 15% Agency Bonus'),
+              title: Text("Host Revenue Split"),
+              subtitle: Text("70% Direct Host Payout (CBE / Telebirr / USDT) • 15% Agency Bonus"),
             ),
           ),
         ],
@@ -1928,14 +1928,14 @@ class AboutAppPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('About Voice Chat ET')),
+      appBar: AppBar(title: const Text("About Voice Chat ET")),
       body: const Padding(
         padding: EdgeInsets.all(16),
         child: Card(
           color: Color(0xFF1E293B),
           child: Padding(
             padding: EdgeInsets.all(16),
-            child: Text('Voice Chat ET (v3.0.9)\nLive Audio Rooms, 3D Social Games & Official Agencies.\nSupport: @Mosabit11 | +251919108311'),
+            child: Text("Voice Chat ET (v3.0.9)\nLive Audio Rooms, 3D Social Games & Official Agencies.\nSupport: @Mosabit11 | +251919108311"),
           ),
         ),
       ),
@@ -1948,16 +1948,16 @@ class InvitationBonusPage extends StatelessWidget {
   const InvitationBonusPage({super.key, required this.onUpd});
   @override
   Widget build(BuildContext context) {
-    final code = 'ET${AppState.userId}';
+    final code = "ET${AppState.userId}";
     return Scaffold(
-      appBar: AppBar(title: const Text('Invitation Rewards')),
+      appBar: AppBar(title: const Text("Invitation Rewards")),
       body: Center(
         child: ElevatedButton(
           onPressed: () {
-            Clipboard.setData(ClipboardData(text: 'Join Voice Chat ET with code $code!'));
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Invite Link Copied!')));
+            Clipboard.setData(ClipboardData(text: "Join Voice Chat ET with code $code!"));
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("✅ Invite Link Copied!")));
           },
-          child: Text('Copy Invite Code: $code'),
+          child: Text("Copy Invite Code: $code"),
         ),
       ),
     );
@@ -1970,12 +1970,12 @@ class BackpackPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My Backpack')),
+      appBar: AppBar(title: const Text("My Backpack")),
       body: ListView(
         padding: const EdgeInsets.all(14),
         children: const [
-          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.directions_car, color: Colors.amber), title: Text('Golden Lion Entry Car'), subtitle: Text('Active • 7 Days'))),
-          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.stars, color: Colors.cyanAccent), title: Text('VIP Royal Mic Frame'), subtitle: Text('Equipped'))),
+          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.directions_car, color: Colors.amber), title: Text("Golden Lion Entry Car"), subtitle: Text("Active • 7 Days"))),
+          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.stars, color: Colors.cyanAccent), title: Text("VIP Royal Mic Frame"), subtitle: Text("Equipped"))),
         ],
       ),
     );
@@ -1988,16 +1988,16 @@ class LuckyIslandPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lucky Island Spin')),
+      appBar: AppBar(title: const Text("Lucky Island Spin")),
       body: Center(
         child: ElevatedButton(
           onPressed: () {
             if (AppState.coins < 100) return;
             AppState.coins += 200;
             onUpd();
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.green, content: Text('🎉 Lucky Island Won +200 Coins!')));
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.green, content: Text("🎉 Lucky Island Won +200 Coins!")));
           },
-          child: const Text('Spin Lucky Island (100 Coins)'),
+          child: const Text("Spin Lucky Island (100 Coins)"),
         ),
       ),
     );
@@ -2009,12 +2009,12 @@ class BadgeCollectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My Badges')),
+      appBar: AppBar(title: const Text("My Badges")),
       body: ListView(
         padding: const EdgeInsets.all(14),
         children: const [
-          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.verified, color: Colors.amber), title: Text('Pioneer Member Badge'), subtitle: Text('Unlocked on registration'))),
-          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.local_fire_department, color: Colors.redAccent), title: Text('Top Gifter Badge'), subtitle: Text('Send 10,000+ Coins in rooms'))),
+          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.verified, color: Colors.amber), title: Text("Pioneer Member Badge"), subtitle: Text("Unlocked on registration"))),
+          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.local_fire_department, color: Colors.redAccent), title: Text("Top Gifter Badge"), subtitle: Text("Send 10,000+ Coins in rooms"))),
         ],
       ),
     );
