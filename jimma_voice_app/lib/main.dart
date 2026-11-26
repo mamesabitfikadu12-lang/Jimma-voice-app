@@ -150,9 +150,9 @@ class _AuthGatePageState extends State<AuthGatePage> {
   
   Future<void> _googleSignIn() async {
     setState(() => _loading = true);
-    final raw = _contactCtrl.text.trim();
+    const raw = '';
     final gEmail = raw.contains('@') ? raw : 'google_${DateTime.now().millisecondsSinceEpoch % 99999}@gmail.com';
-    final gName = _nameCtrl.text.trim().isNotEmpty ? _nameCtrl.text.trim() : gEmail.split('@').first;
+    final gName = 'Google_\${DateTime.now().millisecondsSinceEpoch % 9999}';
     final res = await CloudSyncService.signUp(gName, gEmail, 'google_auth', '');
     final u = res['user'] ?? {};
     AppState.userId = '${u['userId'] ?? u['uid'] ?? '774921'}';
@@ -344,7 +344,7 @@ class _MainShellState extends State<MainShell> {
      Html5GameLobbyPage(onBalanceChanged: _refresh),
       MomentsTab(onUpd: _refresh),
       MessagesTab(onUpd: _refresh),
-      MeTab(onUpd: _refresh),
+      MeTabPage(onUpd: _refresh),
     });
     return Scaffold(
       body: Stack(children: List<Widget>.of({
