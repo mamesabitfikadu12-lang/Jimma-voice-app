@@ -1864,23 +1864,23 @@ class WealthCharmLevelPage extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(title: const Text('Level & Privileges'), bottom: const TabBar(tabs: [Tab(text: 'Wealth'), Tab(text: 'Charm')])),
+        appBar: AppBar(title: const Text("Level & Privileges"), bottom: const TabBar(tabs: [Tab(text: "Wealth"), Tab(text: "Charm")])),
         body: TabBarView(
           children: [
             ListView(
               padding: const EdgeInsets.all(14),
               children: [
-                Card(color: const Color(0xFF1E293B), child: ListTile(title: Text('Wealth Lv.$wLv', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber)), subtitle: Text('Current Balance: ${AppState.coins} Coins'))),
-                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.redeem, color: Colors.redAccent), title: Text('Lv.5 — Room Red Packet'), subtitle: Text('Send lucky red packets in audio rooms'))),
-                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.visibility, color: Colors.tealAccent), title: Text('Lv.10 — Audio Room Entry Banner'), subtitle: Text('Special entrance badge when joining rooms'))),
-                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.workspace_premium, color: Colors.amber), title: Text('Lv.20 — Royal Aura & Frame'), subtitle: Text('Exclusive golden seat frame in all rooms'))),
+                Card(color: const Color(0xFF1E293B), child: ListTile(title: Text("Wealth Lv.$wLv", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber)), subtitle: Text("Current Balance: ${AppState.coins} Coins"))),
+                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.redeem, color: Colors.redAccent), title: Text("Lv.5 — Room Red Packet"), subtitle: Text("Send lucky red packets in audio rooms"))),
+                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.visibility, color: Colors.tealAccent), title: Text("Lv.10 — Audio Room Entry Banner"), subtitle: Text("Special entrance badge when joining rooms"))),
+                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.workspace_premium, color: Colors.amber), title: Text("Lv.20 — Royal Aura & Frame"), subtitle: Text("Exclusive golden seat frame in all rooms"))),
               ],
             ),
             ListView(
               padding: const EdgeInsets.all(14),
               children: [
-                Card(color: const Color(0xFF1E293B), child: ListTile(title: Text('Charm Lv.$cLv', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.pinkAccent)), subtitle: Text('Diamonds Balance: ${AppState.points.toStringAsFixed(2)}'))),
-                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.favorite, color: Colors.pinkAccent), title: Text('Charm Star Privileges'), subtitle: Text('Higher diamond-to-ETB/USDT cashout priority'))),
+                Card(color: const Color(0xFF1E293B), child: ListTile(title: Text("Charm Lv.$cLv", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.pinkAccent)), subtitle: Text("Diamonds Balance: ${AppState.points.toStringAsFixed(2)}"))),
+                const Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.favorite, color: Colors.pinkAccent), title: Text("Charm Star Privileges"), subtitle: Text("Higher diamond-to-ETB/USDT cashout priority"))),
               ],
             ),
           ],
@@ -1889,6 +1889,7 @@ class WealthCharmLevelPage extends StatelessWidget {
     );
   }
 }
+
 class HostCenterPage extends StatelessWidget {
   final VoidCallback onUpd;
   const HostCenterPage({super.key, required this.onUpd});
