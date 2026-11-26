@@ -1906,11 +1906,12 @@ class HostCenterPage extends StatelessWidget {
               subtitle: Text('${AppState.points.toStringAsFixed(2)} Diamonds'),
               trailing: ElevatedButton(
                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PointsCashOutPage(onUpd: onUpd))),
-                child: const Text('Cash Out'),
-              ),
-            ),
-          ),
-          const Card(
+              child: const Text('Cash Out'),
+           ),
+         ),
+       ),
+
+            const Card(
             color: Color(0xFF1E293B),
             child: ListTile(
               title: Text('Host Revenue Split'),
