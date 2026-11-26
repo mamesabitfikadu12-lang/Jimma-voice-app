@@ -1855,6 +1855,9 @@ class _TaskCenterFullPageState extends State<TaskCenterFullPage> {
     );
   }
 }
+
+));}}))}})]))}}
+
 class WealthCharmLevelPage extends StatelessWidget {
   const WealthCharmLevelPage({super.key});
   @override
