@@ -219,7 +219,7 @@ class _MultiEngineGameDialogState extends State<_MultiEngineGameDialog> {
       final winMult = eng == 'crash' ? 3 : (eng == 'card' ? 2 : 4);
       final won = _bet * winMult;
       AppState.coins += won;
-      _cells =;
+      _cells = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       _result = '🎉 WINNER! +$won Coins (x$winMult)!';
       SystemSound.play(SystemSoundType.alert);
     } else {

@@ -148,6 +148,28 @@ class _AuthGatePageState extends State<AuthGatePage> {
 
   }
 
+  
+  Future<void> _googleSignIn() async {
+    setState(() => _loading = true);
+    String gName = 'Google User';
+    String gEmail = 'google_${DateTime.now().millisecondsSinceEpoch % 99999}@gmail.com';
+    try {
+      final acc = await GoogleSignIn(scopes: ['email']).signIn();
+      if (acc != null) {
+        gName = acc.displayName ?? acc.email.split('@').first;
+        gEmail = acc.email;
+      }
+    } catch (_) {}
+    final res = await CloudSyncService.signUp(gName, gEmail, 'google_auth', '');
+    final u = res['user'] ?? {};
+    AppState.userId = '${u['userId'] ?? u['uid'] ?? '774921'}';
+    AppState.userName = '${u['name'] ?? gName}';
+    AppState.coins = (u['coins'] ?? 1000) as int;
+    if (!mounted) return;
+    setState(() => _loading = false);
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
+  }
+
   Future<void> _submit() async {
     final phone = _phoneCtrl.text.trim().toLowerCase();
     final pass = _passCtrl.text.trim();
@@ -326,28 +348,6 @@ class _AuthGatePageState extends State<AuthGatePage> {
   }
 
 
-
-
-  Future<void> _googleSignIn() async {
-    setState(() => _loading = true);
-    String gName = 'Google User';
-    String gEmail = 'google_${DateTime.now().millisecondsSinceEpoch % 99999}@gmail.com';
-    try {
-      final acc = await GoogleSignIn(scopes: ['email']).signIn();
-      if (acc != null) {
-        gName = acc.displayName ?? acc.email.split('@').first;
-        gEmail = acc.email;
-      }
-    } catch (_) {}
-    final res = await CloudSyncService.signUp(gName, gEmail, 'google_auth', '');
-    final u = res['user'] ?? {};
-    AppState.userId = '${u['userId'] ?? u['uid'] ?? '774921'}';
-    AppState.userName = '${u['name'] ?? gName}';
-    AppState.coins = (u['coins'] ?? 1000) as int;
-    if (!mounted) return;
-    setState(() => _loading = false);
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
-  }
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
