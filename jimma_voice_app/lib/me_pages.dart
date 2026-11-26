@@ -1899,15 +1899,31 @@ class HostCenterPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(14),
         children: [
-             Card(color: const Color(0xFF1E293B), child: ListTile(title: const Text('My Diamonds Balance'), subtitle: Text('${AppState.points.toStringAsFixed(2)} Diamonds'), trailing: ElevatedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PointsCashOutPage(onUpd: onUpd))), child: const Text('Cash Out')))),
-           Card(color: Color(0xFF1E293B), child: ListTile(title: Text('Host Revenue Split'), subtitle: Text('• 70% Direct Host Payout (CBE / Telebirr / USDT)\n• 15% Agency Management Bonus\n• Join an Official Agency to unlock weekly salary!'))),
+          Card(
+            color: const Color(0xFF1E293B),
+            child: ListTile(
+              title: const Text('My Diamonds Balance'),
+              subtitle: Text('${AppState.points.toStringAsFixed(2)} Diamonds'),
+              trailing: ElevatedButton(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PointsCashOutPage(onUpd: onUpd))),
+                child: const Text('Cash Out'),
+              ),
+            ),
+          ),
+          const Card(
+            color: Color(0xFF1E293B),
+            child: ListTile(
+              title: Text('Host Revenue Split'),
+              subtitle: Text('70% Direct Host Payout (CBE / Telebirr / USDT) • 15% Agency Bonus'),
+            ),
+          ),
         ],
       ),
     );
   }
 }
-class AboutAppPage extends StatelessWidget {
 
+class AboutAppPage extends StatelessWidget {
   const AboutAppPage({super.key});
   @override
   Widget build(BuildContext context) {
@@ -1919,15 +1935,7 @@ class AboutAppPage extends StatelessWidget {
           color: Color(0xFF1E293B),
           child: Padding(
             padding: EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Voice Chat ET (v3.0.9)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
-                SizedBox(height: 8),
-                Text('Ethiopia & International Live Audio Rooms, 3D Social Games, Official Agencies, and Real-Time Rewards Platform.\n\nSupport: @Mosabit11 | +251919108311'),
-              ],
-            ),
+            child: Text('Voice Chat ET (v3.0.9)\nLive Audio Rooms, 3D Social Games & Official Agencies.\nSupport: @Mosabit11 | +251919108311'),
           ),
         ),
       ),
@@ -1943,23 +1951,13 @@ class InvitationBonusPage extends StatelessWidget {
     final code = 'ET${AppState.userId}';
     return Scaffold(
       appBar: AppBar(title: const Text('Invitation Rewards')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Card(
-          color: const Color(0xFF1E293B),
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Invite Friends & Earn +1,000 Coins Each!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber)),
-                const SizedBox(height: 10),
-                SelectableText('Your Invite Code: $code', style: const TextStyle(fontSize: 18, color: Colors.tealAccent)),
-                const SizedBox(height: 12),
-                ElevatedButton(onPressed: () { Clipboard.setData(ClipboardData(text: 'Join Voice Chat ET with my code $code!')); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Invite Link Copied!'))); }, child: const Text('Copy Invite Link')),
-              ],
-            ),
-          ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: 'Join Voice Chat ET with code $code!'));
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Invite Link Copied!')));
+          },
+          child: Text('Copy Invite Code: $code'),
         ),
       ),
     );
@@ -1976,7 +1974,7 @@ class BackpackPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(14),
         children: const [
-          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.directions_car, color: Colors.amber), title: Text('Golden Lion Entry Car'), subtitle: Text('Active • 7 Days Remaining'))),
+          Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.directions_car, color: Colors.amber), title: Text('Golden Lion Entry Car'), subtitle: Text('Active • 7 Days'))),
           Card(color: Color(0xFF1E293B), child: ListTile(leading: Icon(Icons.stars, color: Colors.cyanAccent), title: Text('VIP Royal Mic Frame'), subtitle: Text('Equipped'))),
         ],
       ),
@@ -1993,14 +1991,13 @@ class LuckyIslandPage extends StatelessWidget {
       appBar: AppBar(title: const Text('Lucky Island Spin')),
       body: Center(
         child: ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14)),
           onPressed: () {
             if (AppState.coins < 100) return;
             AppState.coins += 200;
             onUpd();
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.green, content: Text('🎉 Lucky Island Won +200 Coins!')));
           },
-          child: const Text('Spin Lucky Island (100 Coins)', style: TextStyle(fontWeight: FontWeight.bold)),
+          child: const Text('Spin Lucky Island (100 Coins)'),
         ),
       ),
     );
