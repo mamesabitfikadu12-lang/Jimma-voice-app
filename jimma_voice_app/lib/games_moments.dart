@@ -69,7 +69,7 @@ class _GamesTabState extends State<GamesTab> {
   void _openFullGame(Map<String, dynamic> g) {
     final raw = (g['url'] ?? '') as String;
     final sep = raw.contains('?') ? '&' : '?';
-    final fullUrl = '$raw${sep}uid=${AppState.uid}&coins=${AppState.coins}&app_id=2125623090652110848';
+    final fullUrl = '$raw${sep}uid=${AppState.userId}&coins=${AppState.coins}&app_id=2125623090652110848';
     Navigator.push(
       context,
       MaterialPageRoute(

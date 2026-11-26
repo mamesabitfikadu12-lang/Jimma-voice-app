@@ -354,3 +354,5 @@ class BadgeCollectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('My Badges')), body: const ListTile(title: Text('Pioneer Member Badge'), subtitle: Text('Unlocked on registration')));
 }
+
+Widget MeTab({required VoidCallback onUpd}) => MeTabPage(onUpd: onUpd);
