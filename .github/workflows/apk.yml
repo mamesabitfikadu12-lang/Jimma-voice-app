@@ -54,4 +54,4 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release delete v3.3.0 -y || true
-          gh release create v3.3.0 jimma_voice_app/build/app/outputs/bundle/release/app-release.aab --title "Voice Chat ET v3.3.0 (Version 12)" --notes "Added 25+ 3D Sud.Tech multiplayer games, full Hala-style Me menu (Task Center, Host Tasks, Events, Wealth & Charm Levels, Host Center), Official Coin Sellers directory, and In-App Agency & Payroll"
+          gh release create v3.3.0 jimma_voice_app/build/app/outputs/bundle/release/app-release.aab --title "Voice Chat ET v3.3.0 (Version 15)" --notes "Added 25+ 3D Sud.Tech multiplayer games, full Hala-style Me menu (Task Center, Host Tasks, Events, Wealth & Charm Levels, Host Center), Official Coin Sellers directory, and In-App Agency & Payroll"
