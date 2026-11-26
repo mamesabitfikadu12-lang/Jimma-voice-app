@@ -1907,7 +1907,6 @@ class HostCenterPage extends StatelessWidget {
   }
 }
 class AboutAppPage extends StatelessWidget {
-
   const AboutAppPage({super.key});
   @override
   Widget build(BuildContext context) {
