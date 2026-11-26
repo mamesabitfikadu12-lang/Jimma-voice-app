@@ -1647,7 +1647,6 @@ static const String baseApi = 'https://jimma-server.onrender.com';
               ],
     );
             ],
-        ),
     );
   }
 }
@@ -1773,7 +1772,6 @@ class _AgencyWebPortalPageState extends State<AgencyWebPortalPage> {
           ],
         ),
     );
-  }
 
          }
 
