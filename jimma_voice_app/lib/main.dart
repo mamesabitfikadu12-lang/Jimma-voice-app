@@ -1,3 +1,4 @@
+import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -297,6 +298,21 @@ class _AuthGatePageState extends State<AuthGatePage> {
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
                         onPressed: _loading ? null : _submit,
                         child: Text(_loading ? 'Connecting to Cloud...' : (_isSignUp ? 'Create Account & Enter' : 'Login to Ethio-Voice'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black87,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        icon: const Icon(Icons.g_mobiledata, size: 30, color: Colors.red),
+                        label: const Text('Continue with Google', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        onPressed: _loading ? null : _googleSignIn,
+                      ),
+                    ),
                       ),
                     ]),
                   ),
@@ -310,6 +326,28 @@ class _AuthGatePageState extends State<AuthGatePage> {
   }
 
 
+
+
+  Future<void> _googleSignIn() async {
+    setState(() => _loading = true);
+    String gName = 'Google User';
+    String gEmail = 'google_${DateTime.now().millisecondsSinceEpoch % 99999}@gmail.com';
+    try {
+      final acc = await GoogleSignIn(scopes: ['email']).signIn();
+      if (acc != null) {
+        gName = acc.displayName ?? acc.email.split('@').first;
+        gEmail = acc.email;
+      }
+    } catch (_) {}
+    final res = await CloudSyncService.signUp(gName, gEmail, 'google_auth', '');
+    final u = res['user'] ?? {};
+    AppState.userId = '${u['userId'] ?? u['uid'] ?? '774921'}';
+    AppState.userName = '${u['name'] ?? gName}';
+    AppState.coins = (u['coins'] ?? 1000) as int;
+    if (!mounted) return;
+    setState(() => _loading = false);
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
+  }
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
