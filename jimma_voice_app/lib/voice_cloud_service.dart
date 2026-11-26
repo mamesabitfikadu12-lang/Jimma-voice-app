@@ -8,7 +8,7 @@ import 'package:zego_express_engine/zego_express_engine.dart';
 import 'main.dart';
 
 class CloudSyncService {
-static const String baseUrl = 'https://Jimma-voice-app.onrender.com';
+static const String baseUrl = 'https://api.mosabitshob.com';
 
   static Future<Map<String, dynamic>> signUp(String name, String contact, String pass, String ref) async {
     try {

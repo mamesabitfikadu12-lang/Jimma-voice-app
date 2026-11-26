@@ -12,7 +12,7 @@ class MeTabPage extends StatefulWidget {
 }
 
 class _MeTabPageState extends State<MeTabPage> {
-  static const String serverUrl = 'https://onrender.com';
+  static const String serverUrl = 'https://api.mosabitshob.com';
 
   void _copyId() {
     Clipboard.setData(ClipboardData(text: AppState.userId));
@@ -144,7 +144,7 @@ class WalletRechargePage extends StatefulWidget {
 }
 
 class _WalletRechargePageState extends State<WalletRechargePage> {
-  static const String serverUrl = 'https://onrender.com';
+  static const String serverUrl = 'https://api.mosabitshob.com';
   final _txCtrl = TextEditingController();
   int _coins = 1000;
   String _method = 'CBE';
@@ -199,7 +199,7 @@ class PointsCashOutPage extends StatefulWidget {
 }
 
 class _PointsCashOutPageState extends State<PointsCashOutPage> {
-  static const String serverUrl = 'https://onrender.com';
+  static const String serverUrl = 'https://api.mosabitshob.com';
   final _amtCtrl = TextEditingController();
   final _accCtrl = TextEditingController();
   String _method = 'CBE';
@@ -269,7 +269,7 @@ class FamilyCenterPage extends StatelessWidget {
 class AppSettingsPage extends StatelessWidget {
   const AppSettingsPage({super.key});
   @override
-  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('App Settings')), body: const ListTile(title: Text('Voice Chat ET v3.0.9 (Build 12)'), subtitle: Text('Server: https://onrender.com')));
+  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('App Settings')), body: const ListTile(title: Text('Voice Chat ET v3.1.0 (Build 13)'), subtitle: Text('Server: https://api.mosabitshob.com')));
 }
 
 class AgencyWebPortalPage extends StatefulWidget {
@@ -280,7 +280,7 @@ class AgencyWebPortalPage extends StatefulWidget {
 }
 
 class _AgencyWebPortalPageState extends State<AgencyWebPortalPage> {
-  static const String serverUrl = 'https://onrender.com';
+  static const String serverUrl = 'https://api.mosabitshob.com';
   final _nameCtrl = TextEditingController();
   final _tgCtrl = TextEditingController();
 
@@ -325,7 +325,7 @@ class HostCenterPage extends StatelessWidget {
 class AboutAppPage extends StatelessWidget {
   const AboutAppPage({super.key});
   @override
-  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Customer Service & About')), body: const Padding(padding: EdgeInsets.all(16), child: Text('Voice Chat ET (v3.0.9)\nServer: https://onrender.com\nSupport Bot: @EthioVoiceAlertBot | +251919108311')));
+  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Customer Service & About')), body: const Padding(padding: EdgeInsets.all(16), child: Text('Voice Chat ET (v3.1.0)\nServer: https://api.mosabitshob.com\nSupport Bot: @EthioVoiceAlertBot | +251919108311')));
 }
 
 class InvitationBonusPage extends StatelessWidget {

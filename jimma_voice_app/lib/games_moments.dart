@@ -24,7 +24,7 @@ class _GamesTabState extends State<GamesTab> {
     _loadServerGames();
   }
 
-    static const String _serverApi = 'https://Jimma-server.onrender.com';
+    static const String _serverApi = 'https://api.mosabitshob.com';
   static const String _sudBase = 'https://sud.tech';
 
   Future<void> _loadServerGames() async {
