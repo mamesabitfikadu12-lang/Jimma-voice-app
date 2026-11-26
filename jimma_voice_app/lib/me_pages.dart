@@ -469,24 +469,24 @@ class PointsCashoutPayrollPage extends StatefulWidget {
 
 class _PointsCashoutPayrollPageState extends State<PointsCashoutPayrollPage> {
   static const String serverUrl = 'https://mosabitshob.com';
-  String _channel = 'Payroll Admin';
+  String _channel = 'Agency';
   String _method = 'CBE Bank';
-  final _ptsCtrl = TextEditingController(text: '10000');
+  final _ptsCtrl = TextEditingController(text: '100000');
+  final _receiverIdCtrl = TextEditingController();
   final _accCtrl = TextEditingController();
-  final _agencyIdCtrl = TextEditingController();
   bool _sending = false;
 
   @override
   Widget build(BuildContext context) {
     final pts = double.tryParse(_ptsCtrl.text.trim()) ?? 0;
     final grossEtb = (pts / 10000) * 190;
-    final taxRate = _channel == 'Agency' ? 0.15 : 0.05;
+    final taxRate = _channel == 'Payroll Admin' ? 0.05 : 0.10;
     final taxEtb = grossEtb * taxRate;
     final netEtb = grossEtb - taxEtb;
 
     return Scaffold(
       backgroundColor: const Color(0xFF090E1A),
-      appBar: AppBar(backgroundColor: const Color(0xFF1E1B4B), title: const Text('💸 Points Cashout & Payroll')),
+      appBar: AppBar(backgroundColor: const Color(0xFF1E1B4B), title: const Text('💎 Sell / Transfer Points & Cashout')),
       body: ListView(
         padding: const EdgeInsets.all(14),
         children: [
@@ -494,35 +494,60 @@ class _PointsCashoutPayrollPageState extends State<PointsCashoutPayrollPage> {
             color: const Color(0xFF1E293B),
             child: ListTile(
               leading: const Icon(Icons.diamond, color: Colors.cyanAccent, size: 32),
-              title: Text('Available Points: ${AppState.points.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
-              subtitle: const Text('Rate: 10,000 Points = 190 ETB (Before Tax)'),
+              title: Text('Available Diamonds: ${AppState.points.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
+              subtitle: const Text('Minimum Transfer: 100,000 Diamonds • 10,000 = 190 ETB'),
             ),
           ),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
             initialValue: _channel,
-            decoration: const InputDecoration(labelText: 'Select Payout Receiver (Agency or Payroll Admin)', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'Sell / Transfer Points To', border: OutlineInputBorder()),
             items: const [
-              DropdownMenuItem(value: 'Payroll Admin', child: Text('Payroll Admin (5% Tax Deduction)')),
-              DropdownMenuItem(value: 'Agency', child: Text('My Agency (15% Agency Tax & Fee)')),
+              DropdownMenuItem(value: 'Agency', child: Text('Sell to Agency (Enter Agency ID • 10% Tax)')),
+              DropdownMenuItem(value: 'Coin Seller', child: Text('Sell to Official Coin Seller (Enter Seller ID • 10% Tax)')),
+              DropdownMenuItem(value: 'Payroll Admin', child: Text('Direct Payroll Admin Cashout (5% Tax)')),
             ],
-            onChanged: (v) => setState(() => _channel = v ?? 'Payroll Admin'),
+            onChanged: (v) => setState(() => _channel = v ?? 'Agency'),
           ),
-          if (_channel == 'Agency') ...[
+          if (_channel != 'Payroll Admin') ...[
             const SizedBox(height: 10),
-            TextField(controller: _agencyIdCtrl, decoration: const InputDecoration(labelText: 'Agency ID (e.g. AG1001)', border: OutlineInputBorder())),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _receiverIdCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Paste $_channel ID (Copy & Paste)',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16)),
+                  icon: const Icon(Icons.paste, size: 18),
+                  label: const Text('Paste ID', style: TextStyle(fontWeight: FontWeight.bold)),
+                  onPressed: () async {
+                    final clip = await Clipboard.getData('text/plain');
+                    if (clip?.text != null && clip!.text!.trim().isNotEmpty) {
+                      setState(() => _receiverIdCtrl.text = clip.text!.trim());
+                    }
+                  },
+                ),
+              ],
+            ),
           ],
           const SizedBox(height: 10),
           TextField(
             controller: _ptsCtrl,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Points to Cashout', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'Diamonds to Transfer (Min: 100,000)', border: OutlineInputBorder()),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
             initialValue: _method,
-            decoration: const InputDecoration(labelText: 'Payment Method', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'Receive Payment Via', border: OutlineInputBorder()),
             items: const [
               DropdownMenuItem(value: 'CBE Bank', child: Text('CBE Bank Account')),
               DropdownMenuItem(value: 'Telebirr', child: Text('Telebirr Phone Number')),
@@ -531,7 +556,7 @@ class _PointsCashoutPayrollPageState extends State<PointsCashoutPayrollPage> {
             onChanged: (v) => setState(() => _method = v ?? 'CBE Bank'),
           ),
           const SizedBox(height: 10),
-          TextField(controller: _accCtrl, decoration: const InputDecoration(labelText: 'Account Number / Telebirr / Wallet', border: OutlineInputBorder())),
+          TextField(controller: _accCtrl, decoration: const InputDecoration(labelText: 'Your Account Number / Telebirr / Wallet', border: OutlineInputBorder())),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(14),
@@ -539,8 +564,8 @@ class _PointsCashoutPayrollPageState extends State<PointsCashoutPayrollPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Gross Amount: ${grossEtb.toStringAsFixed(2)} ETB', style: const TextStyle(color: Colors.white70)),
-                Text('Tax Deducted (${(taxRate * 100).toInt()}% • $_channel): -${taxEtb.toStringAsFixed(2)} ETB', style: const TextStyle(color: Colors.redAccent)),
+                Text('Gross Value: ${grossEtb.toStringAsFixed(2)} ETB', style: const TextStyle(color: Colors.white70)),
+                Text('Tax Deducted (${(taxRate * 100).toInt()}%): -${taxEtb.toStringAsFixed(2)} ETB', style: const TextStyle(color: Colors.redAccent)),
                 const Divider(color: Colors.white24),
                 Text('Net Payout: ${netEtb.toStringAsFixed(2)} ETB', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.greenAccent)),
               ],
@@ -550,12 +575,20 @@ class _PointsCashoutPayrollPageState extends State<PointsCashoutPayrollPage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 14)),
             onPressed: _sending ? null : () async {
-              if (pts <= 0 || _accCtrl.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter valid points and account details')));
+              if (pts < 100000) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.redAccent, content: Text('❌ Minimum transfer is 100,000 Diamonds!')));
+                return;
+              }
+              if (_channel != 'Payroll Admin' && _receiverIdCtrl.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please paste $_channel ID first')));
+                return;
+              }
+              if (_accCtrl.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter your payment account details')));
                 return;
               }
               if (AppState.points < pts) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Insufficient Points balance')));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Insufficient Diamonds balance (Need >= 100,000)')));
                 return;
               }
               setState(() => _sending = true);
@@ -569,8 +602,8 @@ class _PointsCashoutPayrollPageState extends State<PointsCashoutPayrollPage> {
                     'userId': AppState.userId,
                     'userName': AppState.userName,
                     'channel': _channel,
-                    'agencyId': _agencyIdCtrl.text.trim(),
-                    'points': pts,
+                    'receiverId': _receiverIdCtrl.text.trim(),
+                    'diamonds': pts,
                     'grossEtb': grossEtb.toStringAsFixed(2),
                     'taxEtb': taxEtb.toStringAsFixed(2),
                     'netEtb': netEtb.toStringAsFixed(2),
@@ -581,10 +614,10 @@ class _PointsCashoutPayrollPageState extends State<PointsCashoutPayrollPage> {
               } catch (_) {}
               if (!mounted) return;
               setState(() => _sending = false);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('✅ Cashout (${netEtb.toStringAsFixed(2)} ETB) sent to $_channel!')));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('✅ Transferred ${pts.toStringAsFixed(0)} Diamonds (${netEtb.toStringAsFixed(2)} ETB) to $_channel (ID: ${_receiverIdCtrl.text.trim()})!')));
               Navigator.pop(context);
             },
-            child: Text(_sending ? 'Submitting...' : 'Submit Cashout to $_channel', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            child: Text(_sending ? 'Transferring...' : 'Transfer ${pts.toStringAsFixed(0)} Diamonds to $_channel', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           ),
         ],
       ),
