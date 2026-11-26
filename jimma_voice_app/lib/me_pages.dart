@@ -1777,7 +1777,9 @@ class _AgencyWebPortalPageState extends State<AgencyWebPortalPage> {
     );
   }
 
-         class TaskCenterFullPage extends StatefulWidget {
+         }
+
+class TaskCenterFullPage extends StatefulWidget {
   final VoidCallback onUpd;
   const TaskCenterFullPage({super.key, required this.onUpd});
   @override
