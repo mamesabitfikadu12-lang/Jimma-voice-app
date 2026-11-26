@@ -314,7 +314,7 @@ class _AgencyWebPortalPageState extends State<AgencyWebPortalPage> {
 
   @override
   Widget build(BuildContext context) {
-    const tiers =;
+    const tiers = [10000, 20000, 50000, 100000, 500000, 1000000, 10000000];
     return Scaffold(
       appBar: AppBar(title: const Text('Agency Coin Rate (ETB)')),
       body: ListView(
@@ -459,3 +459,135 @@ class AppSettingsPage extends StatelessWidget {
 }
 
 Widget MessagesTab({required VoidCallback onUpd}) => MomentsTab(onUpd: onUpd);
+
+class PointsCashoutPayrollPage extends StatefulWidget {
+  final VoidCallback onUpd;
+  const PointsCashoutPayrollPage({super.key, required this.onUpd});
+  @override
+  State<PointsCashoutPayrollPage> createState() => _PointsCashoutPayrollPageState();
+}
+
+class _PointsCashoutPayrollPageState extends State<PointsCashoutPayrollPage> {
+  static const String serverUrl = 'https://mosabitshob.com';
+  String _channel = 'Payroll Admin';
+  String _method = 'CBE Bank';
+  final _ptsCtrl = TextEditingController(text: '10000');
+  final _accCtrl = TextEditingController();
+  final _agencyIdCtrl = TextEditingController();
+  bool _sending = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final pts = double.tryParse(_ptsCtrl.text.trim()) ?? 0;
+    final grossEtb = (pts / 10000) * 190;
+    final taxRate = _channel == 'Agency' ? 0.15 : 0.05;
+    final taxEtb = grossEtb * taxRate;
+    final netEtb = grossEtb - taxEtb;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF090E1A),
+      appBar: AppBar(backgroundColor: const Color(0xFF1E1B4B), title: const Text('💸 Points Cashout & Payroll')),
+      body: ListView(
+        padding: const EdgeInsets.all(14),
+        children: [
+          Card(
+            color: const Color(0xFF1E293B),
+            child: ListTile(
+              leading: const Icon(Icons.diamond, color: Colors.cyanAccent, size: 32),
+              title: Text('Available Points: ${AppState.points.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
+              subtitle: const Text('Rate: 10,000 Points = 190 ETB (Before Tax)'),
+            ),
+          ),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<String>(
+            initialValue: _channel,
+            decoration: const InputDecoration(labelText: 'Select Payout Receiver (Agency or Payroll Admin)', border: OutlineInputBorder()),
+            items: const [
+              DropdownMenuItem(value: 'Payroll Admin', child: Text('Payroll Admin (5% Tax Deduction)')),
+              DropdownMenuItem(value: 'Agency', child: Text('My Agency (15% Agency Tax & Fee)')),
+            ],
+            onChanged: (v) => setState(() => _channel = v ?? 'Payroll Admin'),
+          ),
+          if (_channel == 'Agency') ...[
+            const SizedBox(height: 10),
+            TextField(controller: _agencyIdCtrl, decoration: const InputDecoration(labelText: 'Agency ID (e.g. AG1001)', border: OutlineInputBorder())),
+          ],
+          const SizedBox(height: 10),
+          TextField(
+            controller: _ptsCtrl,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Points to Cashout', border: OutlineInputBorder()),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<String>(
+            initialValue: _method,
+            decoration: const InputDecoration(labelText: 'Payment Method', border: OutlineInputBorder()),
+            items: const [
+              DropdownMenuItem(value: 'CBE Bank', child: Text('CBE Bank Account')),
+              DropdownMenuItem(value: 'Telebirr', child: Text('Telebirr Phone Number')),
+              DropdownMenuItem(value: 'USDT TRC20', child: Text('USDT (TRC20 Wallet)')),
+            ],
+            onChanged: (v) => setState(() => _method = v ?? 'CBE Bank'),
+          ),
+          const SizedBox(height: 10),
+          TextField(controller: _accCtrl, decoration: const InputDecoration(labelText: 'Account Number / Telebirr / Wallet', border: OutlineInputBorder())),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: const Color(0xFF151C2F), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.amber)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Gross Amount: ${grossEtb.toStringAsFixed(2)} ETB', style: const TextStyle(color: Colors.white70)),
+                Text('Tax Deducted (${(taxRate * 100).toInt()}% • $_channel): -${taxEtb.toStringAsFixed(2)} ETB', style: const TextStyle(color: Colors.redAccent)),
+                const Divider(color: Colors.white24),
+                Text('Net Payout: ${netEtb.toStringAsFixed(2)} ETB', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.greenAccent)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 14)),
+            onPressed: _sending ? null : () async {
+              if (pts <= 0 || _accCtrl.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter valid points and account details')));
+                return;
+              }
+              if (AppState.points < pts) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Insufficient Points balance')));
+                return;
+              }
+              setState(() => _sending = true);
+              AppState.points -= pts;
+              widget.onUpd();
+              try {
+                await http.post(
+                  Uri.parse('$serverUrl/api/cashout'),
+                  headers: {'Content-Type': 'application/json'},
+                  body: jsonEncode({
+                    'userId': AppState.userId,
+                    'userName': AppState.userName,
+                    'channel': _channel,
+                    'agencyId': _agencyIdCtrl.text.trim(),
+                    'points': pts,
+                    'grossEtb': grossEtb.toStringAsFixed(2),
+                    'taxEtb': taxEtb.toStringAsFixed(2),
+                    'netEtb': netEtb.toStringAsFixed(2),
+                    'method': _method,
+                    'account': _accCtrl.text.trim(),
+                  }),
+                );
+              } catch (_) {}
+              if (!mounted) return;
+              setState(() => _sending = false);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.green, content: Text('✅ Cashout (${netEtb.toStringAsFixed(2)} ETB) sent to $_channel!')));
+              Navigator.pop(context);
+            },
+            child: Text(_sending ? 'Submitting...' : 'Submit Cashout to $_channel', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ),
+        ],
+      ),
+    );
+  }
+}
