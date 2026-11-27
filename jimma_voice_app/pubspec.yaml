@@ -1,7 +1,7 @@
 name: jimma_voice_app
 description: Jimma Voice Chat Family Official App
 publish_to: 'none'
-version: 3.3.0+15
+version: 3.4.0+16
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
