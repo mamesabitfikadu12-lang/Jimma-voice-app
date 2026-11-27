@@ -134,18 +134,49 @@ class _GamesLobbyPageState extends State<GamesLobbyPage> {
                                       border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.7), width: 1.5),
                                     ),
                                   ),
-                                  Positioned(top: -12, left: -12, child: Container(width: 55, height: 55, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.16)))),
+                                  Positioned.fill(child: CustomPaint(painter: _Sunburst3DPainter())),
+                                  Positioned(
+                                    top: 6,
+                                    left: 6,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(3),
+                                      decoration: BoxDecoration(color: Colors.black38, shape: BoxShape.circle, border: Border.all(color: Colors.amberAccent, width: 1)),
+                                      child: const Icon(Icons.auto_awesome, size: 11, color: Colors.amberAccent),
+                                    ),
+                                  ),
                                   Center(
                                     child: Column(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        Text(g['em'] as String, style: const TextStyle(fontSize: 36)),
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                          decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.amberAccent, width: 0.8)),
-                                          child: Text((g['name'] as String).toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.w900, color: Colors.amberAccent, letterSpacing: 0.4)),
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: RadialGradient(colors: [Colors.white.withValues(alpha: 0.45), Colors.transparent]),
+                                            boxShadow: [BoxShadow(color: Colors.amber.withValues(alpha: 0.65), blurRadius: 14, spreadRadius: 1)],
+                                          ),
+                                          child: Text(g['em'] as String, style: const TextStyle(fontSize: 38, shadows: [Shadow(color: Colors.black87, blurRadius: 8, offset: Offset(0, 3))])),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Container(
+                                          margin: const EdgeInsets.symmetric(horizontal: 5),
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(colors: [Color(0xFF78350F), Color(0xFFB45309), Color(0xFF78350F)]),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(color: const Color(0xFFFDE047), width: 1.1),
+                                            boxShadow: const [BoxShadow(color: Colors.black87, blurRadius: 4, offset: Offset(0, 2))],
+                                          ),
+                                          child: Text((g['name'] as String).toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 8.2, fontWeight: FontWeight.w900, color: Color(0xFFFEF08A), letterSpacing: 0.3)),
                                         ),
                                       ],
+                                    ),
+                                  ),
+                                  Positioned.fill(
+                                    child: Image.network(
+                                      'https://mosabitshob.com\${Uri.encodeComponent(g['name'] as String)}.png',
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                                     ),
                                   ),
                                   Positioned(bottom: 4, left: 6, child: Text(g['sub'] as String, style: const TextStyle(fontSize: 16))),
